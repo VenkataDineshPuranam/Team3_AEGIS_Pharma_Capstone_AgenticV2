@@ -8,7 +8,7 @@ The improvement problem: V2 delivers governed pharma decision-support as a **sin
 document-driven** exercise — one prompt-in, one contract-out, evaluated by a deterministic
 grader harness. This is safe and well-governed, but does not exercise (and cannot teach)
 the operational realities of a **multi-agent, tool-using, cached, continuously observed**
-AI system, which is now the explicit target (user's decision, `evidence_register.md` §5).
+AI system, which is now the explicit target (user's decision, `discovery.md` §5).
 The problem this stage resolves: establish, from evidence, what carries forward from V2
 unchanged (domain, constraints, eval floor) versus what must be newly designed (agent
 topology, tool contracts, cache, governance, observability) — without inventing facts

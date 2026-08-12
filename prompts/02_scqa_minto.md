@@ -117,7 +117,7 @@ Carry forward and refine, rather than re-deriving from scratch:
 
 Write under `docs/product/scqa/` **and mirror** to `workshop/participant-output/02-scqa/`:
 
-- `scqa_minto_decision_narrative.md`
+- `scqa.md`
 - `dmaic_lens.md` (full Define/Measure/Analyze/Improve/Control)
 - `waste_register_downtime.md` (updated from Prompt 01)
 - `waste_register_ai_specific.md` (updated from Prompt 01)

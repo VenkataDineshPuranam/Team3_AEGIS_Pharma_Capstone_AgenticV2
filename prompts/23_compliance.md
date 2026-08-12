@@ -11,7 +11,7 @@
 ## Produce
 
 1. **EU AI Act risk classification** — classify each of the three governed workflows (GxP batch review, PV intake, supply planning) under the Act's risk tiers; state the reasoning (decision-support only, no autonomous terminal action — per the DDD prohibited-action boundary) and obligations that follow (transparency, human oversight, technical documentation, logging).
-2. **ISO 42001 control mapping** — map this repo's actual artefacts to ISO 42001 AI management system clauses (e.g. risk management → `security/threat-models/`; data governance → `docs/product/discovery/evidence_register.md`; human oversight → `docs/governance/hitl_control_model.md`).
+2. **ISO 42001 control mapping** — map this repo's actual artefacts to ISO 42001 AI management system clauses (e.g. risk management → `security/threat-models/`; data governance → `docs/product/discovery/discovery.md`; human oversight → `docs/governance/hitl_control_model.md`).
 3. **Gap assessment** — obligations/clauses with no corresponding artefact or control yet; owner and target stage/branch to close each gap.
 4. **Compliance evidence index** — links into `evidence/ai-assisted-changes/` and other `evidence/` subfolders proving each control actually operated (not just documented).
 

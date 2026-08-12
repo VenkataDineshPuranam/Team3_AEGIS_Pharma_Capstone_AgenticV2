@@ -1,7 +1,7 @@
 # Evidence Acquisition Backlog — Stage 01 (Discovery)
 
 Required because two AI FDE inputs (User workflow, Constraints) scored `Partial` in
-`evidence_register.md` §10. Framing mode remains `decision-ready` overall (see §10
+`discovery.md` §10. Framing mode remains `decision-ready` overall (see §10
 rationale), but these items should be closed before the stages they block.
 
 | ID | Item | Likely owner/source | Why it blocks | Blocks (stage) | Priority |
@@ -14,5 +14,5 @@ rationale), but these items should be closed before the stages they block.
 | EAB-6 | Quantify realistic token/cost budgets per workflow before committing to a specific agent count/topology | Architecture owner (Stage 10/15) | Prevents Stage 04 from committing to an over-built multi-agent topology that Stage 15 later has to walk back | 04, 15 | Blocks design |
 
 None of these items are severe enough to force a `hypothesis` framing mode for Stage 02
-(SCQA) — see `evidence_register.md` §10 for the reasoning. They should be tracked and
+(SCQA) — see `discovery.md` §10 for the reasoning. They should be tracked and
 closed opportunistically as their blocking stage is reached.

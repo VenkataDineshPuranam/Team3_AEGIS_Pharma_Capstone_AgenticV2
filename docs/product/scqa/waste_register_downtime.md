@@ -7,7 +7,7 @@ row: the **Transportation** row is now understood as directly addressed by the A
 governance-first sequencing strategy (see `dmaic_lens.md` in this folder), rather than an
 independently-mitigated risk. No entries were added or removed at Frame level.
 
-Assessed against V2's current-state workflow (as-observed, `evidence_register.md` §7) and
+Assessed against V2's current-state workflow (as-observed, `discovery.md` §7) and
 the transition to V3. Each entry: observed vs hypothesized, magnitude, impact,
 VA/business-required-NVA/pure-waste classification, and eliminate/simplify action.
 

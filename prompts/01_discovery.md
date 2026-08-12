@@ -107,7 +107,7 @@ This full analysis becomes a direct input to Prompt 02 (Frame/SCQA), not just a 
 
 Write under `docs/product/discovery/` **and mirror** to `workshop/participant-output/01-discovery/`:
 
-- `evidence_register.md` (includes sufficiency scores and framing mode)
+- `discovery.md` (includes sufficiency scores and framing mode)
 - `evidence_acquisition_backlog.md` (required if any input is Partial or Missing; otherwise note “none”)
 - `dmaic_lens.md` (full Define/Measure/Analyze/Improve/Control)
 - `waste_register_downtime.md` (full 8-category DOWNTIME register)

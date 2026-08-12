@@ -1,7 +1,7 @@
 # SCQA & Minto Pyramid — Stage 02 (Frame)
 
 **Executes:** `prompts/02_scqa_minto.md`
-**Builds on:** `docs/product/discovery/evidence_register.md` (Stage 01)
+**Builds on:** `docs/product/discovery/discovery.md` (Stage 01)
 
 ---
 
@@ -29,7 +29,7 @@ Project AEGIS-PHARMA V2 is a complete, evidence-grounded FDE capstone: 84 inject
 starter codebase, and a 30-artefact/180-point rubric, all built around three governed
 pharma decision-support workflows — GxP batch-review evidence reconciliation,
 pharmacovigilance intake/signal support, and supply-shortage/cold-chain option planning
-(`case/INTEGRATED_CASE.md`, `evidence_register.md` §1). V2's solution pattern is
+(`case/INTEGRATED_CASE.md`, `discovery.md` §1). V2's solution pattern is
 **single-shot**: one governed request in, one JSON-contracted response out, evaluated by a
 from-scratch deterministic grader harness against 12 required categories
 (`evaluation/EVALUATION_PLAN.md`, `submission/evaluation/graders/`). This pattern is
@@ -44,7 +44,7 @@ agents collaborating (with governance, control, and observability layers), using
 a Redis-backed cache, and LangSmith-based tracing/evals — while performing the *same* three
 governed workflows under the *same* non-negotiables (synthetic data only; no agent makes a
 terminal safety/release/allocation decision; full evidence provenance)
-(`evidence_register.md` §5, `README.md` non-negotiables). This is a compound problem across
+(`discovery.md` §5, `README.md` non-negotiables). This is a compound problem across
 several dimensions simultaneously:
 
 - **Technical:** multi-agent orchestration, tool contracts, and shared state did not exist
@@ -52,21 +52,21 @@ several dimensions simultaneously:
   needs re-examination for agent/authority boundaries, not rewriting.
 - **Governance/regulatory:** the single hardest constraint to preserve — no prohibited
   terminal decision — is *more* fragile in a multi-agent design, because authority can leak
-  across an agent handoff in a way a single-shot app cannot exhibit (`evidence_register.md`
+  across an agent handoff in a way a single-shot app cannot exhibit (`discovery.md`
   §9, H5).
 - **Operational/cost:** multi-agent designs multiply LLM calls per request; token/cost
   economics were never a first-order concern in V2 and must become one before agent
-  topology is locked (`evidence_register.md` §9, H8; §11, EAB-6).
+  topology is locked (`discovery.md` §9, H8; §11, EAB-6).
 - **Data/caching:** introducing a response cache creates a new failure mode V2's authority/
   freshness rules never had to guard against — a cache hit silently serving an answer based
-  on since-superseded evidence (`evidence_register.md` §9, H6).
+  on since-superseded evidence (`discovery.md` §9, H6).
 - **Compliance (new):** V3 additionally takes on EU AI Act and ISO 42001 obligations that
   V2 never carried, likely landing the three governed workflows in a high-risk-adjacent
   classification given the GxP/PV domain plus required human oversight
-  (`evidence_register.md` §9, H9).
+  (`discovery.md` §9, H9).
 - **Infrastructure (new, unresolved):** LangSmith is a hosted service; V2 was framed as
   offline-compatible. Whether V3 preserves that framing, splits into hosted/air-gapped
-  modes, or abandons it, is not yet decided (`evidence_register.md` §11, EAB-2).
+  modes, or abandons it, is not yet decided (`discovery.md` §11, EAB-2).
 
 ### Question
 
@@ -100,7 +100,7 @@ are stable.
 - EU AI Act risk classification and ISO 42001 control mapping exist with evidence, not just
   as an end-of-project addendum.
 
-**Measurable outcomes** (baselines marked known vs unknown, per `evidence_register.md` §2 DMAIC Measure):
+**Measurable outcomes** (baselines marked known vs unknown, per `discovery.md` §2 DMAIC Measure):
 - Eval pass rate on V2's 12 categories: **baseline unknown** (V2's actual scorecard was not
   read this pass) — must be established at Stage 02→14 transition.
 - Token/cost per workflow run: **unknown**, target to be set at Stage 04/15.
@@ -117,7 +117,7 @@ stages); it is revisited at Stage 04 (final state) once cost/architecture constr
 quantified, and again at Stage 08 (ADR-0001, runtime stack ratification).
 
 **Evidence boundary / authority boundary:** this Answer rests on the V2 evidence cited above
-and the user's explicit decisions recorded in `evidence_register.md` §5. It does not rest on
+and the user's explicit decisions recorded in `discovery.md` §5. It does not rest on
 any measured V3 performance data, because none exists yet.
 
 **Explicit exclusions (what this decision does NOT cover):**
@@ -167,8 +167,8 @@ agent topology is locked; build the app last.**
 
 | Point | Support (fact/derivation) | Labeled assumption (if any) |
 |---|---|---|
-| 1 | V2's `case/` pack, `evaluation/EVALUATION_PLAN.md`, and 143-CSV/32-doc knowledge base directly describe unchanged domain rules (Fact, `evidence_register.md` §1) | Assumes no domain-rule changes were separately requested — none observed in this conversation |
-| 2 | H5 in `evidence_register.md` §9 (derivation); DDD Stage 06 prompt already requires naming agent authority limits explicitly (`prompts/04_ddd.md` §10, as adapted) | — |
+| 1 | V2's `case/` pack, `evaluation/EVALUATION_PLAN.md`, and 143-CSV/32-doc knowledge base directly describe unchanged domain rules (Fact, `discovery.md` §1) | Assumes no domain-rule changes were separately requested — none observed in this conversation |
+| 2 | H5 in `discovery.md` §9 (derivation); DDD Stage 06 prompt already requires naming agent authority limits explicitly (`prompts/04_ddd.md` §10, as adapted) | — |
 | 3 | Token waste named explicitly as highest-magnitude AI-specific risk (`waste_register_ai_specific.md`, Token row); `prompts/19_performance_tuning.md` exists specifically for this | Magnitude is hypothesized, not measured — flagged |
 | 4 | Cache-correctness eval requirement is written directly into `prompts/18_eval_ai_cache.md` (Fact — prompt content) | — |
 | 5 | User's explicit instruction to cover EU AI Act/ISO 42001 (Fact, this conversation) | Risk-tier classification itself is not yet determined — explicitly excluded from this Answer |

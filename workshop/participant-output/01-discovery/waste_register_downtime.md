@@ -1,6 +1,6 @@
 # DOWNTIME Waste Register — Stage 01 (Discovery)
 
-Assessed against V2's current-state workflow (as-observed, `evidence_register.md` §7) and
+Assessed against V2's current-state workflow (as-observed, `discovery.md` §7) and
 the transition to V3. Each entry: observed vs hypothesized, magnitude, impact,
 VA/business-required-NVA/pure-waste classification, and eliminate/simplify action.
 
