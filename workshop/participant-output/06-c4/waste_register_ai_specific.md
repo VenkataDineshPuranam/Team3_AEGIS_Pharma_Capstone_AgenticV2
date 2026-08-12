@@ -1,0 +1,32 @@
+# AI-Specific Waste Register — Stage 03 (C4), updated from DDD
+
+**C4-stage update:** carried forward from `docs/architecture/ddd/waste_register_ai_specific.md`.
+One row refined with an architecture-level finding: **Observability** — the separate
+Audit/Evidence Log Store container (`c4_containers.md`) is now the concrete architectural
+mitigation, addressing the specific risk that a hosted, external LangSmith dependency alone
+would leave compliance-critical audit records without an independently-owned home. Also
+newly measured (not just hypothesized): hop count for the common Batch Review path is 7
+container/component crossings one-way (`dmaic_lens.md` Measure) — this is now a concrete
+Transportation-adjacent baseline, no longer purely hypothesized. No entries added or
+removed at C4 level; all Stage 01/02 findings still hold.
+
+Eight categories per `prompts/01_discovery.md`: Token, Retrieval, Model, Human-review,
+Evaluation, Integration, Context, Observability. Each: where/how it appears, evidence
+trace, magnitude, impact, recommended treatment.
+
+| Category | Where/how it appears | Evidence trace | Magnitude | Impact | Recommended treatment |
+|---|---|---|---|---|---|
+| **Token** | Multi-agent designs multiply LLM calls per user request versus V2's single-shot call. Every agent turn, every tool-result summarization, every critic/verifier pass consumes tokens V2 never spent. | Hypothesized — no V3 agent exists yet to measure; the *risk* is a direct consequence of the multi-agent decision (`discovery.md` §5) | High — named explicitly as the top Stage 15 concern (`prompts/19_performance_tuning.md`) | Direct cost impact, denial-of-wallet risk | Token/cost budget per node (Stage 08 §I2 technical design), denial-of-wallet hook (Stage 20 governance) |
+| **Retrieval** | If agents query raw documents instead of the planned semantic layer (Stage 13), retrieval could pull unranked, unbounded context — a waste category V2's simpler retrieval (if any existed in the single-shot app) likely didn't stress as hard. | Hypothesized | Medium-high | Cost + quality (irrelevant context degrades answer quality) | Ontology/semantic layer (Stage 13) as the retrieval interface, not raw RAG |
+| **Model** | Risk of "blind retry" — an agent retrying a failed tool call or a failed generation without diagnosing why, burning model calls without fixing the root cause. Flagged generically in `prompts/08_technical_design.md`'s DMAIC lens ("error/retry rules that avoid blind Model waste"). | Hypothesized | Medium | Cost + latency | Explicit retry/backoff and diagnosis rules in Stage 08 technical design |
+| **Human-review** | V2's rubric-driven, single-shot design likely routes many/most outputs through human review by default (safe but expensive). A poorly-designed V3 HITL model (Stage 16) could either (a) over-route to human review, wasting reviewer time on low-risk cases, or (b) under-route, creating safety risk. | Hypothesized — V2's actual HITL routing logic not read this pass | Medium-high | Reviewer capacity + safety risk if miscalibrated | Risk-tiered HITL design (Stage 16), calibrated against actual case risk, not blanket routing |
+| **Evaluation** | Running the full 12+ eval categories (V2's floor) plus V3's new agent-specific categories (Stage 14) on every change, without a fast-feedback subset, could make evaluation itself a bottleneck ("evaluation waste" — metrics that don't affect release decisions, per `prompts/12_assurance.md`'s DMAIC lens). | Hypothesized | Medium | Developer velocity | Eval-AI-Cache harness (Stage 14) should define a fast-subset vs full-regression split |
+| **Integration** | Each new MCP tool server (Stage 11) is an integration point that can silently drift from its contract. V2 had no MCP integrations to manage at all — this is a wholly new waste surface. | Fact of new surface (V2 has zero MCP integrations; V3 will have N > 0) | Medium | Reliability | Tool contract tests (`tests/contract/`), versioned MCP schemas (Stage 11) |
+| **Context** | Reconstructing domain state at every agent turn (instead of using LangGraph's shared state schema properly) would be a direct context-waste failure mode unique to multi-agent systems. | Hypothesized | Medium-high | Cost + correctness (state drift between agents) | LangGraph state schema as the single source of truth (Stage 10/08 §I2), not per-agent ad-hoc context reconstruction |
+| **Observability** | V2 had no agent traces to observe (single-shot request/response, evaluated post-hoc by the grader harness). V3 introduces LangSmith tracing (Stage 17) specifically to close this gap — but a poorly-scoped tracing design (too much/too little captured) is itself a new waste risk (noise burying signal, or PII leaking into traces). | New surface (fact: V2 has no agent-trace observability at all); risk of miscalibration is hypothesized | Medium | Debuggability + privacy risk if over-captured | Tracing design with explicit redaction rules (Stage 17), reviewed against governance policy register (Stage 16) |
+
+**Note:** as with the DOWNTIME register, most entries are hypothesized risk categories
+introduced by the multi-agent redesign itself, since V3 has no running system yet. Several
+categories that are entirely new relative to V2 (Integration, Observability) are marked
+as facts-of-new-surface rather than hypothesized magnitude, since their *existence* as a
+new concern is certain even though their *severity* is not yet measurable.
