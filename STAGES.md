@@ -9,10 +9,10 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 02 | Domain-Driven Design | stage-02-ddd | stable (provisional artifact — see domain_model.md) |
 | 03 | C4 architecture | stage-03-c4 | stable (provisional artifact — inherits from DDD) |
 | 04 | ADRs | stage-04-adr | stable (8 ADRs: 4 accepted, 4 proposed; review = conditional) |
-| 05 | Current state of the repo | stage-05-current-state | stable (content carried from old Stage 02) |
-| 06 | Interim state | stage-06-interim-state | not started |
-| 07 | Final state | stage-07-final-state | not started |
-| 08 | Graphical views | stage-08-graphical | not started |
+| 05 | Current state of the repo | stage-05-current-state | stable (re-measured post-ADR) |
+| 06 | Interim state | stage-06-interim-state | stable (provisional artifact) |
+| 07 | Final state | stage-07-final-state | stable (provisional artifact) |
+| 08 | Graphical views | stage-08-graphical | stable |
 | 09 | DMAIC/Lean workbook | stage-09-dmaic-lean | not started |
 | 10 | Agentic architecture (LangGraph) | stage-10-agentic-architecture | not started |
 | 11 | MCP servers/tools | stage-11-mcp | not started |
