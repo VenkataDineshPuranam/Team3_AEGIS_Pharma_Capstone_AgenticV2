@@ -5,7 +5,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | # | Stage | Branch | Status |
 |---|---|---|---|
 | 00 | Foundation & SDD charter | stage-00-foundation | spec drafted |
-| 01 | Process discovery & SCQA | stage-01-discovery-scqa | not started |
+| 01 | Process discovery & SCQA | stage-01-discovery-scqa | stable |
 | 02 | Current state of the repo | stage-02-current-state | not started |
 | 03 | Interim state | stage-03-interim-state | not started |
 | 04 | Final state | stage-04-final-state | not started |
