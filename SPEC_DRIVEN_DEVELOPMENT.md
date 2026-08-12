@@ -27,6 +27,43 @@ This repo follows the `.claude`-based "AI-Assisted SDLC Repository" scaffold
 See `README.md` for the full folder map and `STRUCTURE_MANIFEST.json` for the
 machine-readable tree.
 
+## 1b. Authoritative SDD reference
+
+The SDD methodology this repo follows is defined by the course material at
+`/Users/puranamdinesh/Documents/FDE-training/Day-27/1785208772944-Deck/`:
+- `Spec-Driven-Development-Techademy.pdf` — the method deck
+- `VisionScan-POS-SDD-Techademy.pdf` + `visionscan-pos-spec.md` — a worked example SDD
+
+**Core principles (from the deck):**
+- *"Layered specifications that reduce ambiguity one stage at a time."*
+- The anti-pattern is the single enormous spec: business context buried beside definitions,
+  nobody reads it end to end, changing one thing forces rewriting the whole file, retrieval
+  pulls in irrelevant pages, and review becomes impossible so review stops happening.
+- What works instead: **small documents, each with one job**; ambiguity removed
+  progressively; version-controlled alongside the code; retrievable in isolation so the
+  agent reads only what it needs; reviewable in one sitting by one person.
+- *"The question is never PRD or SRS — it is which question this particular file is
+  answering."* Each layer takes the output of the one above and makes **one more category of
+  decision explicit**, so that by the time you reach implementation tasks there is nothing
+  left for the agent to guess, and nothing was written twice.
+- *"Value to an AI agent rises as ambiguity falls. That is the whole mechanism."*
+
+**Layer → question → this repo's stage:**
+
+| Layer | Question it answers | Stage here |
+|---|---|---|
+| PRD | What problem are we solving? | 01 (Discovery/SCQA) |
+| SRS | What should the system do? | 02–04 (DDD/C4/ADR) |
+| High SRS | Exactly how should it behave? | Technical design (`prompts/08_technical_design.md`) |
+| Design / Architecture | How will we build it? | 10–19 (agentic, MCP, governance, eval, security) |
+| Implementation tasks | What code needs writing? | 20 (app build, last) |
+
+`visionscan-pos-spec.md` is the structural template for the technical-design layer
+(FR-NNN with Input/Processing/Output, measurable NFR table, BR-NNN business rules, AC-NNN
+acceptance criteria, standard error envelope, and the Appendix A traceability matrix with
+its explicit "gaps surfaced" section). `prompts/08_technical_design.md` already encodes this
+format — it is the layer where exact behavior gets pinned down.
+
 ## 2. Method: Spec-Driven Development (SDD)
 
 **Process discovery and design come first; the app is built last.** Every stage

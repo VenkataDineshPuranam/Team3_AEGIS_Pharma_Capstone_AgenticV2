@@ -10,7 +10,7 @@ required `gen_ai_boundaries.md` output: rules vs AI, RAG, agents, HITL, audit, e
 | Decision | Rules (deterministic) | AI reasoning (probabilistic) |
 |---|---|---|
 | Is this action prohibited? | **Always rules** — schema-level unrepresentability + runtime hook (Stage 16), never AI judgment | Never |
-| Is this evidence source authoritative? | **Always rules** — document status lookup (`approved`/`superseded`/`untrusted`/`draft`/jurisdiction-local) | Never — no "the AI decides this document seems trustworthy" |
+| Is this evidence source authoritative? | **Always rules** — document status lookup; **both `untrusted` and `superseded` are non-citable** (corrected by [ADR-003](../../adr/ADR-003-evidence-authority-deterministic-gate.md), verified against V2's `authority_grader.py`) | Never — no "the AI decides this document seems trustworthy" |
 | Is this a duplicate PV case? | Threshold/rule component **if** V2's existing logic is rule-based (unconfirmed — verify against `submission/evaluation/graders/` in Stage 06/07) | Candidate-matching/ranking may be AI-assisted, final duplicate flag should remain rule-gated pending verification |
 | How should reconciled evidence be summarized for a human reviewer? | N/A | **AI** — natural-language synthesis |
 | Which shortage options rank highest given already-filtered constraints? | Constraint filtering is rules | Ranking within the filtered set may be AI |
@@ -20,9 +20,9 @@ required `gen_ai_boundaries.md` output: rules vs AI, RAG, agents, HITL, audit, e
 - Retrieval is **scoped per bounded context** — a domain agent never retrieves outside its
   own workflow's evidence scope.
 - Routed through the Evidence & Provenance context's semantic layer (Stage 13 dependency).
-- **Out of retrieval scope, by construction, not by instruction:** any `untrusted`-status
-  document (V2's poisoned-trap knowledge entries) must be filtered before it ever enters a
-  domain agent's context window.
+- **Out of retrieval scope, by construction, not by instruction:** any `untrusted`- **or
+  `superseded`**-status document must be filtered before it ever enters a domain agent's
+  context window (per ADR-003 — V2's release gate fails on either).
 - Cross-workflow retrieval (e.g. a Batch Review agent reading PV evidence) is out of scope
   entirely — if a workflow genuinely needs cross-context evidence, that need routes through
   Evidence & Provenance's shared model, never a direct cross-context RAG call.

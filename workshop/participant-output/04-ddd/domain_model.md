@@ -165,9 +165,15 @@ Relationship types (DDD vocabulary):
 
 **Deterministic rules (never delegated to AI judgment):**
 - Prohibited-action blocking (the schema-level unrepresentability above, plus a runtime hook — Stage 16).
-- Evidence authority resolution (approved > draft; untrusted excluded entirely; superseded
-  flagged, not silently substituted) — this is a lookup against document status, not a
-  judgment call.
+- Evidence authority resolution — a lookup against document status, not a judgment call.
+  **Corrected at Stage 04 by [ADR-003](../../adr/ADR-003-evidence-authority-deterministic-gate.md):**
+  this section originally said "untrusted excluded entirely; superseded flagged, not
+  silently substituted." Verification against V2's `submission/evaluation/graders/authority_grader.py`
+  (`_MUST_NOT_CITE = {"untrusted", "superseded"}`) proved that wrong — **`superseded` is
+  non-citable, exactly like `untrusted`**, and both must be filtered at the retrieval
+  boundary so they never enter an agent's context. Retrieved content may also never alter
+  its own authority (the grader independently fails any response where an embedded
+  instruction was followed).
 - Duplicate-detection *thresholds* (if V2's PV duplicate logic is numeric/rule-based —
   unconfirmed this pass; flagged for Stage 06/07 to verify against V2's actual grader code,
   e.g. `submission/evaluation/graders/temporal_unit_grader.py`).
