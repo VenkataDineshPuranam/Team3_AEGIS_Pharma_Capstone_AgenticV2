@@ -1,6 +1,6 @@
 # Gen AI Boundaries — Stage 02 (DDD)
 
-**Artifact status:** `provisional` (inherits from `domain_model.md`)
+**Artifact status:** `stable` (inherits from `domain_model.md`, upgraded on EAB-3 closure)
 
 Extracted/expanded from `domain_model.md` §8–13 for standalone reference (the prompt's
 required `gen_ai_boundaries.md` output: rules vs AI, RAG, agents, HITL, audit, eval intent).
@@ -37,7 +37,10 @@ tool's write capability, not in a prompt instruction alone.
 
 ## HITL & decision ownership
 
-See `domain_model.md` §11. Summary: three named-but-TBD approver roles (blocked on EAB-3),
+See `domain_model.md` §11 and
+[`hitl_control_model.md`](../../governance/hitl_control_model.md). Summary: three **named**
+accountable approver roles (EAB-3 closed) — EU Qualified Person, Global Head of
+Pharmacovigilance, Supply Chain VP (+ Quality co-approver) — with
 100% HITL routing for PV causality/seriousness/reportability and for any Supply Planning
 option set (neither of these two workflows has any output that bypasses a human), and an
 explicit default-safe rule: **HITL timeout means no action, never "proceed as AI

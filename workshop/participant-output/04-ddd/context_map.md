@@ -1,6 +1,6 @@
 # Context Map — Stage 02 (DDD)
 
-**Artifact status:** `provisional` (inherits from `domain_model.md`)
+**Artifact status:** `stable` (inherits from `domain_model.md`, upgraded on EAB-3 closure)
 
 Extracted from `domain_model.md` §4–5 for standalone reference (the prompt's required
 `context_map.md` output). See `domain_model.md` for full bounded-context definitions,
@@ -10,11 +10,11 @@ including owners and the events/entities each context governs.
 
 | Context | Type | Owner |
 |---|---|---|
-| Batch Review | Core | Quality/QA function (TBD, EAB-3) |
-| PV Intake | Core | Pharmacovigilance/Safety function (TBD, EAB-3) |
-| Supply Planning | Core | Supply Chain function (TBD, EAB-3) |
+| Batch Review | Core | Chief Quality Officer / EU Qualified Person |
+| PV Intake | Core | Global Head of Pharmacovigilance |
+| Supply Planning | Core | Supply Chain VP (+ Quality co-approval) |
 | Evidence & Provenance | Supporting | Platform/shared |
-| Governance & Oversight | Supporting | Compliance/Risk function (TBD, EAB-3) |
+| Governance & Oversight | Supporting | Chief Quality Officer, CISO, Data Protection Officer |
 | Agent Orchestration | Generic | Engineering/Platform |
 
 ## Map
@@ -70,5 +70,5 @@ including owners and the events/entities each context governs.
 - Whether Agent Orchestration is one LangGraph deployment hosting all three core contexts'
   agents, or three separate deployments — this map takes no position; it is a C4/ADR
   decision, not a domain one.
-- Real owner names for the three TBD roles (EAB-3) — blocks moving this map from
-  `provisional` to `stable`.
+- ~~Real owner names for the three TBD roles (EAB-3)~~ — **closed**, see
+  [`hitl_control_model.md`](../../governance/hitl_control_model.md).

@@ -2,8 +2,9 @@
 
 **Executes:** `prompts/06_c4.md`
 **Builds on:** `docs/architecture/ddd/domain_model.md`, `context_map.md` (Stage 02)
-**Artifact status: `provisional`** (inherits from DDD, per prompt rule: C4 inherits DDD's
-status unless new evidence justifies an upgrade — no such evidence exists yet).
+**Artifact status: `provisional`** — narrowed reason. DDD is now `stable` (EAB-3 closed),
+but this view still depends on **EAB-2** (air-gap requirement), which governs whether the
+hosted dependencies below — LLM provider and LangSmith — belong in the architecture at all.
 
 ---
 
@@ -17,10 +18,10 @@ supply-shortage planning.
 
 | Role | Relationship to system | Status |
 |---|---|---|
-| QA Reviewer | HITL approver for Batch Review outputs | Named as a role type; real accountable person **TBD** (EAB-3) |
-| PV Safety Physician / Qualified Person | HITL approver for PV Intake outputs (100% of causality/seriousness/reportability determinations) | TBD (EAB-3) |
-| Supply Chain Lead | HITL approver for Supply Planning option sets (100%) | TBD (EAB-3) |
-| Compliance/Risk Officer | Owns the Governance & Oversight policy contract | TBD (EAB-3) |
+| **EU Qualified Person** | HITL approver for Batch Review outputs | **Named** (EAB-3 closed) — "final certification remains human-only" |
+| **Global Head of Pharmacovigilance** | HITL approver for PV Intake outputs (100% of causality/seriousness/reportability determinations) | **Named** — "final safety decisions remain human-only" |
+| **Supply Chain VP** (+ Quality co-approver) | HITL approver for Supply Planning option sets (100%) | **Named** — "planning; regulated execution needs approvals" |
+| **Chief Quality Officer** (with CISO, DPO) | Owns the Governance & Oversight policy contract | **Named** |
 | FDE/Engineering team | Builds, operates, and extends the system across Stages 10–21 | This session's operator |
 
 ## External systems
@@ -60,6 +61,6 @@ container in this system with outbound write capability to any brownfield source
                                                                         │ never a terminal
                                                                         │ action
                                                                         ▼
-                                            [QA Reviewer] [PV Safety Physician] [Supply Chain Lead]
-                                              (human sign-off, per DDD §11 — TBD names, EAB-3)
+                              [EU Qualified Person] [Global Head of PV] [Supply Chain VP]
+                                    (named accountable approvers — EAB-3 closed)
 ```

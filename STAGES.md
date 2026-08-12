@@ -6,9 +6,9 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 |---|---|---|---|
 | 00 | Foundation & SDD charter | stage-00-foundation | spec drafted |
 | 01 | Process discovery & SCQA | stage-01-discovery-scqa | stable |
-| 02 | Domain-Driven Design | stage-02-ddd | stable (provisional artifact — see domain_model.md) |
+| 02 | Domain-Driven Design | stage-02-ddd | **stable** (artifact upgraded to stable on EAB-3 closure) |
 | 03 | C4 architecture | stage-03-c4 | stable (provisional artifact — inherits from DDD) |
-| 04 | ADRs | stage-04-adr | stable (8 ADRs: 4 accepted, 4 proposed; review = conditional) |
+| 04 | ADRs | stage-04-adr | stable (8 ADRs: **7 accepted, 1 proposed**; review = conditional) |
 | 05 | Current state of the repo | stage-05-current-state | stable (re-measured post-ADR) |
 | 06 | Interim state | stage-06-interim-state | stable (provisional artifact) |
 | 07 | Final state | stage-07-final-state | stable (provisional artifact) |

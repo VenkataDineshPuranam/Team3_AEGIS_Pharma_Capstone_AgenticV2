@@ -1,6 +1,6 @@
 # ADR-008 — One LangGraph deployment, one graph per workflow, no cross-workflow agent calls
 
-**Status:** `proposed`
+**Status:** `accepted` (upgraded when DDD reached `stable`)
 **Evidence basis:** Derivation from `docs/architecture/ddd/context_map.md` (peer contexts,
 no direct coupling) and `domain_model.md` §14 (minimum governed workflow).
 

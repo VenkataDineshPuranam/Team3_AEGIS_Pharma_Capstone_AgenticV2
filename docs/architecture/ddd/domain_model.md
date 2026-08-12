@@ -2,16 +2,16 @@
 
 **Executes:** `prompts/04_ddd.md`
 **Builds on:** `docs/product/discovery/discovery.md` (Stage 01), `docs/product/scqa/scqa.md` (Stage 01)
-**Artifact status: `provisional`**
+**Artifact status: `stable`** (upgraded from `provisional` when EAB-3 closed)
 
-**Why provisional:** the SCQA narrative's framing mode is `decision-ready` overall, but
-EAB-3 from `docs/product/discovery/evidence_acquisition_backlog.md` ("determine if a
-V3-specific case/stakeholder-pack addendum is needed for agent authority ownership, HITL
-role definitions") is still **open**, and this is exactly the kind of critical
-ubiquitous-language/source-of-truth question `prompts/04_ddd.md` names as a trigger for
-`provisional` status. Per the prompt's rule: prefer rules + HITL over autonomous AI
-throughout, and treat the model as revisable once EAB-3 resolves. Nothing here should be
-read as a locked domain model.
+**Upgrade note:** this model was `provisional` because EAB-3 — accountable owners and HITL
+role definitions — was open. **EAB-3 is now closed** (see
+[`docs/governance/hitl_control_model.md`](../../governance/hitl_control_model.md)): the
+accountable roles were taken verbatim from V2's `case/STAKEHOLDER_PACK.md`, which already
+defines 15 stakeholders with explicit decision authority — including the EU Qualified
+Person, Global Head of Pharmacovigilance, and Supply Chain VP, whose stated authorities map
+exactly onto the three workflows. Owners below are no longer TBD. The design principle
+(rules + HITL over autonomous AI) is retained on merit, not merely as provisional caution.
 
 ---
 
@@ -76,16 +76,17 @@ three core contexts):
 
 | Context | Owner (business) | Decisions it owns |
 |---|---|---|
-| **Batch Review** | Quality/QA function (TBD — named QA reviewer role not yet confirmed, EAB-3) | Evidence reconciliation completeness, deviation/gap flagging — **not** release/reject |
-| **PV Intake** | Pharmacovigilance/Safety function (TBD, EAB-3) | Duplicate detection, terminology normalization, signal triage/prioritization — **not** causality/seriousness/reportability |
-| **Supply Planning** | Supply Chain function (TBD, EAB-3) | Option generation, constraint flagging — **not** allocation/shipment/recall |
+| **Batch Review** | **Chief Quality Officer** (policy) / **EU Qualified Person** (per-batch) | Evidence reconciliation completeness, deviation/gap flagging — **not** release/reject |
+| **PV Intake** | **Global Head of Pharmacovigilance** | Duplicate detection, terminology normalization, signal triage/prioritization — **not** causality/seriousness/reportability |
+| **Supply Planning** | **Supply Chain VP** (planning only; Quality co-approval for quality status) | Option generation, constraint flagging — **not** allocation/shipment/recall |
 | **Evidence & Provenance** | Platform/shared (cross-functional) | Evidence authority resolution, conflict/supersession rules — an **upstream service** to the three core contexts, not a decision-owner itself |
-| **Governance & Oversight** | Compliance/Risk function (TBD, EAB-3) | HITL routing rules, prohibited-action enforcement, audit trail requirements — enforces boundaries on all three core contexts |
+| **Governance & Oversight** | **Chief Quality Officer** (AI-MS owner), **CISO**, **Data Protection Officer** | HITL routing rules, prohibited-action enforcement, audit trail requirements — enforces boundaries on all three core contexts |
 | **Agent Orchestration** (generic/technical) | Engineering/Platform | Graph execution, state management — no business decisions, hosts the above |
 
-**All three core-context owners are marked TBD** — this is the direct consequence of EAB-3
-being unresolved. The domain model can proceed provisionally with role *types* named, but
-cannot assign real accountable individuals until EAB-3 closes.
+**All owners are now named** (EAB-3 closed). Accountability attaches to the **role**, not an
+individual — roles persist across staff turnover and keep the audit trail valid, which is
+standard GxP practice and what ISO 42001 expects. See
+[`hitl_control_model.md`](../../governance/hitl_control_model.md) §1.
 
 ### 5. Context map
 
@@ -223,9 +224,9 @@ abstention flag, prohibited-action-adjacent flag).
 
 | Workflow | Named approver role | Escalation trigger |
 |---|---|---|
-| Batch Review | QA reviewer (**TBD**, EAB-3) | Any deviation/gap the agent cannot fully reconcile; any output flagged by the Critic/Verifier |
-| PV Intake | PV safety physician / qualified person (**TBD**, EAB-3) | Any case touching causality/seriousness/reportability by definition (100% of PV determinations, since the agent structurally cannot make them) |
-| Supply Planning | Supply chain lead (**TBD**, EAB-3) | Any option set presented for consideration (100% — options are never self-executing) |
+| Batch Review | **EU Qualified Person** (escalation: Chief Quality Officer) | Any deviation/gap the agent cannot fully reconcile; any output flagged by the Critic/Verifier |
+| PV Intake | **Global Head of Pharmacovigilance** (escalation: Chief Medical Officer) | Any case touching causality/seriousness/reportability by definition (100% of PV determinations, since the agent structurally cannot make them) |
+| Supply Planning | **Supply Chain VP** + Quality co-approver where quality status is implicated | Any option set presented for consideration (100% — options are never self-executing) |
 
 Default-safe behavior on HITL timeout: **no action taken, not "proceed with AI
 recommendation"** — silence from a human reviewer must never be treated as approval. This
@@ -273,21 +274,21 @@ contract is too coarse or too strict.
 
 ### 16. Production readiness concerns (domain view)
 
-Not production-ready: no real HITL owners named (EAB-3), no runtime enforcement yet exists
-for any of the schema-level "unrepresentable prohibited action" invariants described above
-(that's Stage 06/07/08/20 work). Domain ownership, ops, and support owners are all **TBD**
-pending EAB-3. This is exactly why the artifact status is `provisional` rather than
-`stable`.
+Not production-ready: no runtime enforcement yet exists for any of the schema-level
+"unrepresentable prohibited action" invariants described above (Stage 10–20 work). Domain
+ownership **is** now assigned (EAB-3 closed, §4/§11), which is what allowed this artifact to
+reach `stable`. Remaining gap to production is implementation and its evidence, not
+governance ambiguity.
 
 ---
 
 ## Exit criteria checklist
 
-- [x] Artifact status (`provisional`) stated with reason.
+- [x] Artifact status (`stable`) stated with reason; upgraded on EAB-3 closure.
 - [x] Ubiquitous language and bounded contexts explicit; one unresolved term flagged
       ("agent" — resolved by using "domain agent" vs "Claude Code agent" throughout).
 - [x] Rules vs AI vs HITL boundaries written down (§8, §11).
-- [x] AI autonomy minimized given `provisional` status — every domain agent is
+- [x] AI autonomy minimized on merit — every domain agent is
       structurally blocked (schema/tool-capability level) from its workflow's prohibited
       action, not just instructed not to attempt it.
 - [x] RAG/agent responsibilities map to domain artefacts (bounded contexts), not tech

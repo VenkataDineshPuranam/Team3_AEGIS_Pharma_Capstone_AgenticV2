@@ -1,7 +1,6 @@
 # ADR-005 — Governance/Policy Engine is a separate container, not embedded in the Orchestrator
 
-**Status:** `proposed` (C4/DDD are `provisional`; per the ADR prompt, material decisions
-stay `proposed` until validation evidence exists)
+**Status:** `accepted` (upgraded when EAB-3 closed and DDD reached `stable`)
 **Evidence basis:** Derivation from `docs/architecture/ddd/context_map.md`'s open-host-service
 relationship; no measured evidence yet.
 

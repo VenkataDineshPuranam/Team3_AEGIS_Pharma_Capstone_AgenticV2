@@ -1,6 +1,6 @@
 # ADR-006 — Compliance audit records live in an owned store, separate from LangSmith traces
 
-**Status:** `proposed`
+**Status:** `accepted` (upgraded on EAB-3 closure; nothing further blocked it)
 **Evidence basis:** Derivation (compliance retention needs, Stage 19) + fact (LangSmith is an
 external hosted service outside our operational control).
 
