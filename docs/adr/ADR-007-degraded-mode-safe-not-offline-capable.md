@@ -1,9 +1,10 @@
 # ADR-007 — V3 is "degraded-mode-safe," not "offline-capable"
 
-**Status:** `proposed`
+**Status:** `accepted` — sponsor confirmed cloud-connected operation is acceptable
+(EAB-2 closed). The reframing below is ratified, not assumed.
 **Evidence basis:** Fact (V2's `CLAUDE.md` requires "an offline deterministic mode and
-AI-disabled continuity path"; ADR-001's stack introduces networked dependencies) +
-assumption (that sponsor accepts this reframing — **flagged for Stage 21 sponsor input**).
+AI-disabled continuity path"; ADR-001's stack introduces networked dependencies; sponsor
+decision on EAB-2).
 
 ## Context
 
@@ -59,8 +60,18 @@ No fallback may trade correctness for availability. "Fail closed" for authorizat
 Stage 14: run the eval suite with each dependency disabled in turn; all correctness gates
 must still pass (capability may reduce).
 
+## Known limitation (recorded, not papered over)
+
+This decision is correct for the capstone/workshop deployment context. **A real deployment
+inside a GxP manufacturing network would likely require the air-gapped variant** — self-hosted
+open-weight models on on-prem GPUs and a self-hosted trace backend — which would change model
+choice, cost model, eval approach, and probably output quality. That variant is out of scope
+here by explicit sponsor decision, and is recorded so the limitation is visible to anyone
+reading this as a production design rather than discovered later.
+
 ## Revisit triggers
 
-**Immediately, if sponsor confirms a hard air-gap requirement** (EAB-2 is still formally
-open — this ADR proposes the resolution but does not have sponsor confirmation, which is why
-its status is `proposed`, not `accepted`).
+If the deployment target changes to a GxP manufacturing network or any environment without
+outbound internet, this ADR and ADR-001 both reopen. The V2 non-negotiable that motivated
+the original tension ("AI-disabled continuity path") remains satisfied either way by the
+deterministic rules layer.

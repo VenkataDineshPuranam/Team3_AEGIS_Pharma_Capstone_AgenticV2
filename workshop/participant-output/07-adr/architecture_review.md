@@ -1,10 +1,15 @@
 # Architecture Review / Defense — Stage 04
 
-**Review status: `conditional`**
+**Review status: `pass`** (upgraded from `conditional` when both blockers closed)
 
-Per `prompts/07_adrs.md`: under `provisional` DDD/C4, prefer `conditional` unless evidence
-supports `pass`. DDD and C4 are both `provisional` (EAB-3 open), so `conditional` is the
-correct outcome — with named conditions below.
+This review was originally `conditional` because DDD and C4 were `provisional` and four ADRs
+were `proposed`, pending two open backlog items. **Both are now closed:**
+- **EAB-3** — accountable HITL approvers named from V2's `case/STAKEHOLDER_PACK.md`
+  (see [`../governance/hitl_control_model.md`](../governance/hitl_control_model.md)). DDD → `stable`.
+- **EAB-2** — sponsor confirmed cloud-connected operation. ADR-007 ratified, C4 → `stable`.
+
+All 8 ADRs are `accepted`; no artifact rests on an unconfirmed assumption. `pass` is now the
+evidence-supported outcome.
 
 ## Defensibility checks
 
@@ -18,14 +23,17 @@ correct outcome — with named conditions below.
 
 ## Open issues
 
-### Blockers (must resolve before the stage they block)
+### Blockers
 
-1. **EAB-2 / ADR-007 — air-gap requirement unconfirmed.** If the sponsor requires true
-   offline operation, ADR-001's entire stack reopens. Blocks: nothing today, but blocks
-   Stage 20 build if unresolved by then. **Escalate at Stage 21 sponsor review at the
-   latest — earlier if convenient.**
-2. **EAB-3 — no real HITL/context owners named.** Keeps DDD and therefore C4/ADRs
-   `provisional`. Blocks Stage 16 (governance) from naming actual approvers.
+**None remaining.** Both former blockers are closed:
+
+1. ~~EAB-2 / ADR-007 — air-gap requirement~~ — **closed.** Sponsor confirmed cloud-connected
+   operation. The air-gapped production variant is recorded as a known limitation in ADR-007
+   rather than silently dropped, so a future reader evaluating this as a production design
+   sees the constraint.
+2. ~~EAB-3 — no real HITL/context owners~~ — **closed.** Named from V2's existing stakeholder
+   pack, including the negative constraint that Manufacturing VP is explicitly not a batch
+   approver.
 
 ### Accept as residual risk
 
@@ -48,12 +56,14 @@ actual verified behavior — is real, and that verification catches it.**
 
 ## Go-forward decision
 
-**Proceed to the technical-design layer (`prompts/08_technical_design.md`)** under these
-named conditions:
+**Proceed to the technical-design layer (`prompts/08_technical_design.md`) and Stages 09+
+without conditions on artifact status.** All 8 ADRs are ratified and DDD/C4 are `stable`.
 
-1. Technical design must treat ADR-005/006/007/008 as `proposed`, not settled — contracts
-   derived from them carry the same provisional status.
-2. EAB-2 must be escalated to the sponsor before Stage 20 begins.
-3. Any further claim about matching V2 behavior must be verified against V2 code/data, per
-   ADR-002's guardrail — not inferred from filenames. The ADR-003 correction is the
-   precedent.
+Two standing rules carry forward (obligations, not blockers):
+
+1. **Any claim about matching V2 behavior must be verified against V2 code/data**, per
+   ADR-002's guardrail — never inferred from filenames. The ADR-003 correction is the
+   precedent for why this rule exists.
+2. **Interim-state assumptions 1 and 2 remain stop-the-line conditions** — if
+   prohibited-action or evidence-authority enforcement fails in practice, ADR-004 or ADR-003
+   is invalidated and the design must be reopened regardless of this `pass`.

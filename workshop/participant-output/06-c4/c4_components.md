@@ -1,6 +1,6 @@
 # C4 Level 3 — Components — Stage 03
 
-**Artifact status:** `provisional`. Scoped to the containers with the most decision-workflow
+**Artifact status:** `stable` (EAB-2/EAB-3 closed). Scoped to the containers with the most decision-workflow
 risk: Orchestrator API, MCP Tool Servers, Governance/Policy Engine — per the prompt's
 guidance to deepen only where risk warrants.
 

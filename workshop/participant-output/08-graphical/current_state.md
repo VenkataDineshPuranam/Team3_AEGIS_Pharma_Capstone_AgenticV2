@@ -9,9 +9,9 @@
 flowchart TB
     subgraph done["COMPLETE — design artefacts (docs/)"]
         S1["Stage 01<br/>Discovery + SCQA<br/><i>stable</i>"]
-        S2["Stage 02<br/>DDD<br/><i>provisional</i>"]
-        S3["Stage 03<br/>C4<br/><i>provisional</i>"]
-        S4["Stage 04<br/>ADR — 4 accepted, 4 proposed<br/>review: <i>conditional</i>"]
+        S2["Stage 02<br/>DDD<br/><i>stable</i>"]
+        S3["Stage 03<br/>C4<br/><i>stable</i>"]
+        S4["Stage 04<br/>ADR — all 8 accepted<br/>review: <i>pass</i>"]
         S5["Stage 05<br/>Current state<br/><i>this measurement</i>"]
         S1 --> S2 --> S3 --> S4 --> S5
     end
@@ -23,18 +23,18 @@ flowchart TB
         P4["Stage 20–21<br/>implementation · documentation"]
     end
 
-    subgraph blocked["OPEN BLOCKERS — need human input"]
-        B1["EAB-2 — air-gap requirement?<br/>can reopen ADR-001"]
-        B2["EAB-3 — named HITL approvers?<br/>keeps DDD provisional"]
+    subgraph resolved["BLOCKERS — both now CLOSED"]
+        B1["EAB-2 — air-gap? <b>CLOSED</b><br/>cloud-connected confirmed"]
+        B2["EAB-3 — HITL approvers? <b>CLOSED</b><br/>named from V2 stakeholder pack"]
     end
 
     done --> pending
-    B1 -.blocks.-> P4
-    B2 -.blocks.-> P3
+    B1 -.unblocked.-> P4
+    B2 -.unblocked.-> P3
 
     classDef complete fill:#d4edda,stroke:#28a745,color:#155724
     classDef todo fill:#f8f9fa,stroke:#adb5bd,color:#495057
-    classDef blocker fill:#f8d7da,stroke:#dc3545,color:#721c24
+    classDef blocker fill:#d4edda,stroke:#28a745,color:#155724
     class S1,S2,S3,S4,S5 complete
     class P1,P2,P3,P4 todo
     class B1,B2 blocker

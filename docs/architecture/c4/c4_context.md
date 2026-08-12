@@ -2,9 +2,11 @@
 
 **Executes:** `prompts/06_c4.md`
 **Builds on:** `docs/architecture/ddd/domain_model.md`, `context_map.md` (Stage 02)
-**Artifact status: `provisional`** — narrowed reason. DDD is now `stable` (EAB-3 closed),
-but this view still depends on **EAB-2** (air-gap requirement), which governs whether the
-hosted dependencies below — LLM provider and LangSmith — belong in the architecture at all.
+**Artifact status: `stable`** — both blockers closed. DDD reached `stable` on EAB-3 closure,
+and **EAB-2 is resolved**: the sponsor confirmed cloud-connected operation, so the hosted
+dependencies below (LLM provider, LangSmith) are ratified parts of the architecture. See
+[ADR-007](../../adr/ADR-007-degraded-mode-safe-not-offline-capable.md) for the accepted
+degraded-mode model and its recorded production limitation.
 
 ---
 

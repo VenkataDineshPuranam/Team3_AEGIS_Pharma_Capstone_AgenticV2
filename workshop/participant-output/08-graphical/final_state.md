@@ -84,7 +84,7 @@ flowchart LR
         I1["1 workflow"]
         I2["2 MCP tools"]
         I3["no cache"]
-        I4["placeholder approver"]
+        I4["1 approver (QP)"]
         I5["tracing only"]
         I6["no compliance evidence"]
     end
@@ -92,7 +92,7 @@ flowchart LR
         F1["3 workflows"]
         F2["4 MCP tools"]
         F3["Redis + correctness evals"]
-        F4["named accountable people"]
+        F4["all 3 approvers incl.<br/>Supply dual-approval"]
         F5["dashboards · alerts · SLOs"]
         F6["EU AI Act + ISO 42001 evidence"]
     end
@@ -103,22 +103,24 @@ flowchart LR
     I5 --> F5
     I6 --> F6
 
-    classDef gated fill:#f8d7da,stroke:#dc3545,color:#721c24
+    classDef gated fill:#d4edda,stroke:#28a745,color:#155724
     class F4 gated
 ```
 
-The red box is gated on **EAB-3**, which is still open. A governed system with an unnamed
-approver is not governed — so this delta cannot close on engineering effort alone.
+EAB-3 is **closed** — all three approver roles are named from V2's stakeholder pack. Note
+that Supply Planning requires **dual approval** (Supply Chain VP *plus* Quality wherever
+quality status is implicated), because the stakeholder pack limits the VP to planning and
+states that "regulated execution needs approvals".
 
 ## Completion gates
 
 ```mermaid
 flowchart TB
     G1["1 · All 7 interim<br/>assumptions passed"]
-    G2["2 · EAB-3 closed —<br/>named approvers"]
-    G3["3 · EAB-2 resolved —<br/>air-gap decision"]
-    G4["4 · DDD + C4 → stable"]
-    G5["5 · ADRs 005–008 ratified"]
+    G2["2 · EAB-3 closed —<br/>named approvers ✓"]
+    G3["3 · EAB-2 resolved —<br/>cloud-connected ✓"]
+    G4["4 · DDD + C4 → stable ✓"]
+    G5["5 · all 8 ADRs ratified ✓"]
     G6["6 · Zero prohibited-action<br/>findings"]
     G7["7 · Compliance evidence<br/>from real runs"]
     DONE{{"FINAL STATE<br/>COMPLETE"}}
@@ -130,9 +132,11 @@ flowchart TB
     G6 --> DONE
     G7 --> DONE
 
-    classDef human fill:#f8d7da,stroke:#dc3545,color:#721c24
-    class G2,G3 human
+    classDef human fill:#d4edda,stroke:#28a745,color:#155724
+    class G2,G3,G4,G5 human
 ```
 
-Gates 2 and 3 (red) require **human answers, not engineering work**. Until they are
-answered, the final state cannot be declared complete no matter how much gets built.
+Gates 2–5 (green) are **satisfied**. Gates 2 and 3 required human answers rather than
+engineering work, and both have been given: approvers named from V2's stakeholder pack, and
+cloud-connected operation confirmed. The three remaining gates (1, 6, 7) cannot be closed by
+design work at all — they require the system to actually run.

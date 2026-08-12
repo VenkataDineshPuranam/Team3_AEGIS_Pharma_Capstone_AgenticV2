@@ -8,22 +8,21 @@
 | [004](ADR-004-prohibited-actions-structurally-unrepresentable.md) | Prohibited actions structurally unrepresentable | `accepted` | All three core contexts + Governance | Aggregate schemas, MCP tools, Prohibited-Action Guard | Fact (V2 case pack) + derivation | No |
 | [005](ADR-005-governance-as-separate-container.md) | Governance/Policy Engine as separate container | `accepted` | Governance & Oversight | Governance/Policy Engine container | Derivation | No |
 | [006](ADR-006-audit-store-separate-from-langsmith.md) | Audit store separate from LangSmith | `accepted` | Governance & Oversight (audit) | Audit/Evidence Log Store | Derivation | No |
-| [007](ADR-007-degraded-mode-safe-not-offline-capable.md) | Degraded-mode-safe, not offline-capable | `proposed` | Cross-cutting | All hosted dependencies | Fact + **assumption (sponsor acceptance)** | **Yes — EAB-2**, needs sponsor confirmation (flag for Stage 21) |
+| [007](ADR-007-degraded-mode-safe-not-offline-capable.md) | Degraded-mode-safe, not offline-capable | `accepted` | Cross-cutting | All hosted dependencies | Fact (incl. sponsor decision on EAB-2) | No — closed |
 | [008](ADR-008-one-graph-per-workflow-single-deployment.md) | One deployment, one graph per workflow | `accepted` | All three core contexts | Orchestrator API | Derivation | No |
 
 ## Status summary
 
-- **7 `accepted`** — 001–006 and 008. ADRs 005/006/008 were upgraded from `proposed` when
-  **EAB-3 closed** and DDD reached `stable` (see
-  [`hitl_control_model.md`](../governance/hitl_control_model.md)).
-- **1 `proposed`** — ADR-007 only, still blocked on **EAB-2** (air-gap requirement), which is
-  the sole remaining human-input blocker.
+- **All 8 `accepted`.** ADRs 005/006/008 were upgraded when **EAB-3 closed** (DDD reached
+  `stable`); ADR-007 was upgraded when **EAB-2 closed** (sponsor confirmed cloud-connected
+  operation). No ADR now rests on an unconfirmed assumption.
 
 ## Blocked on evidence acquisition backlog
 
-- **ADR-007 / EAB-2** — needs sponsor confirmation on whether a true air-gap is required.
-  This is now the **only** open blocker, and the single decision most capable of reopening
-  the whole stack (ADR-001).
+**None.** Both blockers are closed:
+- ~~EAB-2 (air-gap requirement)~~ — **closed**; sponsor confirmed cloud-connected operation
+  is acceptable. The air-gapped production variant is recorded as a known limitation in
+  ADR-007 rather than silently dropped.
 - ~~EAB-3 (real HITL/context owners)~~ — **closed**; roles taken verbatim from V2's
   `case/STAKEHOLDER_PACK.md`.
 

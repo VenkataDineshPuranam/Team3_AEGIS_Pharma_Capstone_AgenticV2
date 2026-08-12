@@ -1,6 +1,6 @@
 # C4 Level 2 — Containers — Stage 03
 
-**Artifact status:** `provisional` (inherits from DDD/Context)
+**Artifact status:** `stable` (EAB-2 and EAB-3 both closed)
 
 Each container maps to a folder in this repo's Stage 20 build target (`apps/`, `services/`,
 `packages/`) — the mapping is listed so the eventual implementation has an unambiguous home.

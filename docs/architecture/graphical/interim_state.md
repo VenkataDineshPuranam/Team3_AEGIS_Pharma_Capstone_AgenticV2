@@ -7,7 +7,7 @@ One workflow (Batch Review) end-to-end, proving seven assumptions before replica
 
 ```mermaid
 flowchart TB
-    User(["QA Reviewer<br/><i>placeholder role — EAB-3 open</i>"])
+    User(["EU Qualified Person<br/><i>named approver — EAB-3 closed</i>"])
 
     subgraph app["Web App"]
         UI["Batch Review view"]

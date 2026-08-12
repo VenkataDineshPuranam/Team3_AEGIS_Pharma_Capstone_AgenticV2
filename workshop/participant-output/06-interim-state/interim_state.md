@@ -2,7 +2,7 @@
 
 **Executes:** `prompts/03_prd_vision.md` (transition-state scope)
 **Builds on:** Stage 05 current state; DDD `domain_model.md` §14–15; ADR-004/007/008
-**Artifact status: `provisional`** (inherits from DDD/C4)
+**Artifact status: `stable`** (DDD and C4 both `stable`; EAB-2/EAB-3 closed)
 
 ---
 
@@ -37,7 +37,7 @@ evidence/authority-oriented, which is Batch Review's core concern.
 |---|---|---|
 | Domain agents | **One** — Batch-Review Agent | PV-Intake, Supply-Planning agents (final) |
 | Critic/Verifier | Yes — required, since it is the prohibited-action checkpoint | — |
-| HITL interrupt | Yes — with a **placeholder** approver role, since EAB-3 is open | Real named approvers (final) |
+| HITL interrupt | Yes — **EU Qualified Person** is the named approver for Batch Review (EAB-3 closed) | Approvers for the other two workflows (final) |
 | MCP tools | **Two** — Evidence Retrieval (scoped) + Reconciliation | Duplicate-Check, Option-Generation (final) |
 | Governance/Policy Engine | Yes — Prohibited-Action Guard must exist from day one (ADR-004) | Full policy register (Stage 16) |
 | Evidence & Provenance | Yes — with the ADR-003 status gate (`untrusted`/`superseded` non-citable) | Full ontology/semantic layer (Stage 13) |
@@ -93,9 +93,10 @@ system that has actually run.
 
 ## 5. Risks specific to the interim state
 
-1. **Placeholder HITL approver (EAB-3 open).** The interim state can prove the *mechanism*
-   works, but cannot prove the right people are in the loop. Final state must not inherit the
-   placeholder.
+1. **Single-approver validation.** The interim state exercises HITL with one named approver
+   role (EU Qualified Person). It proves the *mechanism*, but the other two workflows' routing
+   — notably Supply Planning's dual Supply-Chain-VP-plus-Quality approval — is untested until
+   the final state.
 2. **Single-workflow bias.** Batch Review's evidence-reconciliation shape may not generalize
    to PV's duplicate/clock semantics or Supply's option-ranking. Mitigation: Stage 07's final
    state must explicitly re-check each interim conclusion against the other two workflows

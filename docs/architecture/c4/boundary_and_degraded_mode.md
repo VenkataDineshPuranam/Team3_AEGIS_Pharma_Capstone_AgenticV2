@@ -1,6 +1,6 @@
 # Boundaries & Degraded Mode — Stage 03 (C4)
 
-**Artifact status:** `provisional`
+**Artifact status:** `stable` (EAB-2 and EAB-3 both closed)
 
 ## Trust boundary
 

@@ -2,8 +2,10 @@
 
 **Executes:** `prompts/03_prd_vision.md` (target-state scope)
 **Builds on:** Stage 06 interim state; DDD/C4/ADR (Stages 02–04)
-**Artifact status: `provisional`** (inherits from DDD/C4; several elements below are
-conditional on ADRs still marked `proposed`)
+**Artifact status: `stable`** — DDD and C4 are both `stable` and all 8 ADRs are `accepted`
+(EAB-2 and EAB-3 closed). Four of the seven completion gates below are now satisfied; the
+remaining three (interim assumptions, zero prohibited-action findings, compliance evidence)
+require the system to actually run and cannot be closed by design work.
 
 ---
 
@@ -57,7 +59,7 @@ carrying a write capability to any brownfield system.
 | Domain agents | 1 + Critic | 3 + Critic per graph |
 | MCP tools | 2 | 4 |
 | Cache | None | Redis, tiered TTL by risk, with cache-correctness evals |
-| HITL approvers | Placeholder role | **Named accountable people (requires EAB-3 closed)** |
+| HITL approvers | EU Qualified Person (Batch Review only) | All three: + Global Head of PV, Supply Chain VP (+ Quality co-approver) |
 | Observability | Tracing only | Dashboards, alerting, SLOs (Stage 17) |
 | Compliance | None | Risk classification + control mapping + evidence index (Stage 19) |
 | Security | Design only | Threat model + negative tests executed (Stage 18) |
@@ -69,13 +71,13 @@ These are hard gates, not aspirations:
 
 1. **All seven interim-state assumptions passed** (`../interim/interim_state.md` §3). If
    assumption 1 or 2 failed, the design itself is invalid, not just incomplete.
-2. **EAB-3 closed** — real named approvers exist for all three workflows. The placeholder
-   must not survive; a governed system with an unnamed approver is not governed.
-3. **EAB-2 resolved** — air-gap requirement confirmed or excluded. If air-gap is required,
-   ADR-001 reopens and this final state is materially wrong.
-4. **DDD and C4 upgraded from `provisional` to `stable`** — which conditions 2 and 3 enable.
-5. **The four `proposed` ADRs (005–008) resolved to `accepted` or superseded** — a final
-   state resting on unratified decisions is not final.
+2. ~~**EAB-3 closed**~~ — **SATISFIED.** Named approvers exist for all three workflows
+   (EU Qualified Person, Global Head of Pharmacovigilance, Supply Chain VP + Quality
+   co-approver). The interim state's placeholder must still not survive into implementation.
+3. ~~**EAB-2 resolved**~~ — **SATISFIED.** Sponsor confirmed cloud-connected operation;
+   air-gapped variant recorded as a known limitation in ADR-007.
+4. ~~**DDD and C4 upgraded to `stable`**~~ — **SATISFIED.**
+5. ~~**The four `proposed` ADRs resolved**~~ — **SATISFIED.** All 8 ADRs `accepted`.
 6. **Zero prohibited-action findings** across evals (Stage 14) and red-team (Stage 18).
 7. **Compliance evidence produced from real runs** (Stage 19) — not documented intent.
 
