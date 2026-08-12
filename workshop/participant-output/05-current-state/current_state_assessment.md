@@ -1,129 +1,103 @@
 # Current State of the Repo — Stage 05
 
-**Executes:** `prompts/01_discovery.md`, applied reflexively to this V3 repository itself
-(per `SPEC_DRIVEN_DEVELOPMENT.md`'s stage table: Stage 05's driving prompt).
-**DMAIC focus:** Measure (this stage is not a designated full-DMAIC stage; see `dmaic_lens.md`).
-**Measured as of:** 2026-08-12, branch `stage-02-current-state` (renamed to
-`stage-05-current-state`), forked from `stage-01-discovery-scqa` at commit `2bf4e53`.
+**Executes:** `prompts/01_discovery.md`, applied reflexively to this V3 repository itself.
+**DMAIC focus:** Measure.
+**Measured as of:** 2026-08-12, branch `stage-05-current-state`, forked from
+`stage-04-adr` at commit `0961cc5`.
 
-**Renumbering note:** this stage was originally run as Stage 02 (before DDD/C4/ADR). A
-sequencing correction moved current/interim/final-state and graphical views to run *after*
-ADR instead (see `SPEC_DRIVEN_DEVELOPMENT.md` §3 "Sequencing note") — this content is
-unchanged from the original run except for stage numbers and forward references below.
+**Re-measured note:** an earlier version of this document was produced when this stage ran
+as Stage 02, before DDD/C4/ADR existed. A sequencing correction moved it to run *after* ADR
+(`SPEC_DRIVEN_DEVELOPMENT.md` §3), which made the original measurement stale — it counted
+184 files when only Stage 01 had real content. The numbers below are re-measured against
+the repo as it actually stands now, which is the whole point of a "current state" document.
 
 ---
 
-## 1. Repository map (measured, not estimated)
-
-Direct counts via `git ls-files`, this session:
+## 1. Repository map (measured)
 
 | Top-level folder | Tracked files | Real content vs. stub |
 |---|---|---|
-| `docs/` | 30 | **Mixed** — `docs/product/discovery/`, `docs/product/scqa/` have real Stage 01 content (10 files); `docs/adr/`, `docs/engineering/`, `docs/operations/`, `docs/security/` are still README-only stubs (1 file each) |
-| `eval-ai-cache/` | 29 | **Real** — user-seeded brownfield evals/Redis/OTel runbook library (24-file runbook + 2 docx + 1 zip + 1 png), not yet consumed by any stage |
-| `prompts/` | 25 | **Real** — 13 ported+adapted V2 prompts, 10 new V3 prompts (14–23), `PROMPT_LIBRARY.md`, `ADAPTATION_NOTES.md` |
-| `workshop/` | 14 | **Mixed** — `participant-output/01-discovery/`, `02-scqa/` have real mirrored content (8 files); `scenarios/`, `labs/`, `checkpoints/`, `assessments/` are README-only stubs |
-| `templates/` | 10 | **Stub** — 10 blank artefact templates (`adr.md`, `threat-model.md`, etc.), none filled in yet |
-| `evidence/` | 10 | **Stub** — all 9 subfolders are README-only; no actual evidence recorded (expected — nothing has shipped yet) |
-| `.claude/` | 9 | **Partial** — `mcp.json`, `hooks.json`, `settings.json` exist as empty scaffolds; `skills/skills.md`, `hooks/hooks.md` are indexes with zero rows; `agents/`, `rules/` are README-only stubs |
-| `tests/` | 8 | **Stub** — all 8 subfolders README-only, zero actual tests |
-| `security/`, `ops/`, `infra/` | 6 each | **Stub** — README-only |
-| `packages/` | 5 | **Stub** — README-only |
-| `quality/`, `deploy/` | 4 each | **Stub** — README-only |
-| `services/`, `plans/` | 3 each | **Stub** — README-only (`plans/active|completed|superseded/` all empty of actual specs — see gap below) |
-| `apps/` | 2 | **Stub** — README-only |
-| `knowledge/`, `evaluation/`, `runbooks/` | **0 → 1 each** | **Gap, closed this stage** — these three folders had zero tracked files, not even a README (see §4); seeded with README stubs as part of this stage's own next-actions (NAB-1) rather than left open |
-| Root files | 10 | **Real** — `README.md`, `SPEC_DRIVEN_DEVELOPMENT.md`, `STAGES.md`, `STRUCTURE_MANIFEST.json`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `REPO_MAP.md`, `LICENSE`, `.gitignore` |
+| `docs/` | 59 | **Substantially real** — `docs/adr/` (14), `docs/architecture/` (20: ddd + c4), `docs/product/` (16: discovery, scqa, state) all hold Stage 01–04 output. `docs/engineering/`, `docs/operations/`, `docs/security/` remain README-only stubs (1 each), owned by later stages |
+| `workshop/` | 47 | **Real mirrors** of Stages 01–04 output (`01-discovery`, `02-scqa`, `04-ddd`, `05-current-state`, `06-c4`, `07-adr`) + README-only stubs for `scenarios/`, `labs/`, `checkpoints/`, `assessments/` |
+| `eval-ai-cache/` | 29 | **Real, unconsumed** — user-seeded brownfield-evals/Redis/OTel runbook library. Stage 14 is its first consumer; still untouched |
+| `prompts/` | 25 | **Real** — 13 adapted V2 prompts + 10 new V3 prompts (14–23) + library/adaptation notes |
+| `templates/` | 10 | **Stub** — blank artefact templates, none filled |
+| `evidence/` | 10 | **Stub** — all 9 subfolders README-only. Correct for now: nothing has shipped, so there is no execution evidence to record. Becomes load-bearing at Stage 19 (compliance) |
+| `.claude/` | 9 | **Partial** — `mcp.json`/`hooks.json`/`settings.json` are empty scaffolds; `skills.md`/`hooks.md` are zero-row indexes. Stage 11/12 own populating them |
+| `tests/` | 8 | **Stub** — zero actual tests. Correct: no implementation exists to test (Stage 20 is last) |
+| `security/`, `ops/`, `infra/` | 6 each | **Stub** — owned by Stages 15–18 |
+| `packages/` | 5 | **Stub** — owned by Stage 20 |
+| `quality/`, `deploy/` | 4 each | **Stub** |
+| `services/`, `plans/` | 3 each | **Stub** |
+| `apps/` | 2 | **Stub** — Stage 20 |
+| `knowledge/`, `evaluation/`, `runbooks/` | 1 each | **Seeded this stage's earlier run** (was 0 — see §4) |
 
-**Total tracked files: 184 at measurement time, 187 after closing NAB-1 within this stage
-(README stubs added to `knowledge/`, `evaluation/`, `runbooks/`).**
+**Total tracked files: 249** (up from 184 at the original Stage 02 measurement; the delta is
+Stages 02–04's DDD/C4/ADR output plus its `workshop/` mirrors).
 
 ## 2. Branch/commit state
 
 | Item | Value |
 |---|---|
-| `main` | at `57d0b92` ("Stage 01: execute Discovery + SCQA/Minto…") — **one commit behind** the stage branches by explicit user instruction (do not auto-sync renames to `main`) |
-| All 21 `stage-NN-*` branches | fast-forwarded to `2bf4e53` ("Rename Stage 01/02 primary documents…") as of the rename work |
-| Stage 01 | **stable** per `STAGES.md` — only stage with real design-artefact content |
-| Stages 02–21 | **not started** per `STAGES.md`, though scaffolding (folders + README stubs) exists for all of them from Stage 00 |
+| `main` | at `57d0b92` — deliberately **not** kept in sync, per standing user instruction (work syncs across stage branches, not to `main`) |
+| Stage branches | 21 branches, `stage-01`…`stage-21`, renamed once during the resequencing |
+| Stages complete | 01 (discovery/SCQA), 02 (DDD), 03 (C4), 04 (ADR) — 4 of 21 |
+| Artifact statuses | DDD and C4 are `provisional`; 4 ADRs `accepted`, 4 `proposed`; architecture review `conditional` |
 
-## 3. Entities (repo-reflexive reading of Prompt 01 §2)
+## 3. Material gaps and open items (measured now, not assumed)
 
-Applying "entities, identifiers, timestamp semantics" to the repo itself:
+1. **Two blockers carried from the architecture review** (`docs/adr/architecture_review.md`):
+   - **EAB-2** — air-gap requirement unconfirmed. Escalated in this session's summary to the
+     user; still unanswered. Can reopen ADR-001 (the entire runtime stack).
+   - **EAB-3** — no real HITL/context owner names. This is what keeps DDD `provisional`, and
+     transitively keeps C4 `provisional` and 4 ADRs `proposed`.
+2. **`plans/active/` remains empty** (NAB-2 from the original run, still open). The
+   `SPEC_DRIVEN_DEVELOPMENT.md` method says stage specs go there first, but every stage so
+   far has been driven directly by its `prompts/` file. Either the method doc should be
+   corrected to say prompt-driven stages need no separate plan file, or the practice should
+   change. **Unresolved — recommend correcting the method doc**, since duplicating a spec
+   that already exists in `prompts/` is exactly the "nothing was written twice" violation the
+   SDD reference warns against.
+3. **`knowledge/`, `evaluation/`, `runbooks/` hold README stubs only** (NAB-3, open). Whether
+   V2's 32 knowledge docs and evaluation fixtures should be copied locally or kept as
+   cross-repo references is still a scope decision. ADR-002 (build separately) leans toward
+   local copies for self-containment, but does not settle it.
+4. **`eval-ai-cache/`'s 29-file runbook library remains entirely unconsumed** — 24 numbered
+   brownfield-eval playbook files plus Redis and OpenTelemetry runbooks. This is the single
+   largest body of directly-applicable material sitting unused; Stages 14/15/17 should draw
+   on it rather than deriving equivalents from scratch.
 
-- **Stage** — identified by two-digit number + slug (`00-foundation` … `21-documentation`), tracked in `STAGES.md`. Status values: `not started` → `spec drafted` → `in review` → `stable`.
-- **Branch** — one per stage, named `stage-NN-slug`, currently all pointer-equal (no stage has diverged content from another except 01).
-- **Prompt** — numbered `01`–`23` in `prompts/`, each declares its own entry/exit criteria (its own internal "identifier scheme" independent of the stage numbering — see the Driving-prompt column in `SPEC_DRIVEN_DEVELOPMENT.md` §3 for the mapping, since prompt numbers and stage numbers diverge from Stage 10 onward: e.g. Stage 10 is driven by Prompt 14).
-- **Artefact** — a file under `docs/`, `evidence/`, etc.; "real" vs "stub" is the only status distinction measured this pass (no finer artefact-status metadata exists yet).
+## 4. Closed since the original measurement
 
-## 4. Material inconsistencies, gaps, and conflicts (measured this pass)
+- **NAB-1 (closed).** `knowledge/`, `evaluation/`, `runbooks/` had zero tracked files despite
+  `README.md` claiming they were carried forward from V2 — a documented-vs-actual
+  contradiction. Seeded with README stubs stating their purpose and current
+  reference-not-copy status.
+- **The "verify V2 grader behavior" action item (closed).** Raised at Stage 03, executed at
+  Stage 04, and it found a real error — see ADR-003.
 
-1. **`knowledge/`, `evaluation/`, `runbooks/` were empty — not even a README.** These three
-   folders were created in the very first (pre-canonical-structure) scaffold pass and never
-   re-seeded when the repo pivoted to the `.claude`-based 15-section pattern
-   (`README.md`'s "carried forward / extended from V2" list names them, but nothing was
-   actually carried forward into them). This was a **direct contradiction between
-   `README.md`'s stated structure and the actual filesystem** — a defect, not a design
-   choice. **Closed within this stage** (NAB-1, §7) with README stubs stating what each
-   folder is for and that it currently references V2's sibling directory rather than
-   holding a local copy — the local-copy decision itself remains NAB-3, still open.
-2. **`plans/active/`, `plans/completed/`, `plans/superseded/` are empty of actual specs.**
-   `SPEC_DRIVEN_DEVELOPMENT.md` §2 step 1 says "write the stage's spec doc (in
-   `plans/active/`) before any code/diagram," but Stage 01's work went straight to
-   `docs/product/discovery/` and `docs/product/scqa/` without an intermediate
-   `plans/active/01-discovery-scqa.md`. This is a **process deviation from the documented
-   method**, not a content gap — either the method should be followed going forward, or
-   `SPEC_DRIVEN_DEVELOPMENT.md` should be corrected to reflect that the prompt files
-   themselves serve as the spec (making a separate `plans/active/` entry redundant for
-   prompt-driven stages).
-3. **`.claude/skills/skills.md` and `.claude/hooks/hooks.md` are empty indexes.** This is
-   expected at this point (Stage 12 owns populating them) but is worth noting as a measured
-   fact: zero governance enforcement exists in the repo today beyond documentation.
-4. **No conflict found** between the reference-image repo pattern and V2's document
-   lifecycle in the content produced so far (Stage 01's output landed cleanly in
-   `docs/product/discovery/` and `docs/product/scqa/` as planned).
-
-## 5. Current-state workflow sketch (as observed — how V3 has actually been built so far)
-
-1. Stage 00: repo scaffolded twice — first as an ad-hoc structure, then replaced with the
-   `.claude`-based canonical structure after the user supplied a reference image. The first
-   pass's `knowledge/`, `evaluation/`, `runbooks/` folders survived the replacement but were
-   never re-seeded (root cause of gap #1 above).
-2. Stage 00 (continued): V2's 13 prompts were copied in by the user, reviewed for relevance,
-   adapted (4 files modified, 9 unchanged beyond path remap), and 10 new prompts (14–23)
-   authored for V3-only concerns.
-3. Stage 01: Prompt 01 (Discovery) and Prompt 02 (SCQA/Minto) executed against real V2
-   evidence, producing `discovery.md` and `scqa.md` (renamed from V2's original filenames
-   for clarity, per explicit user request) plus DMAIC lenses and waste registers, mirrored
-   to `workshop/participant-output/`.
-4. Git workflow so far: work happens on the current stage's branch; downstream branches are
-   fast-forwarded to keep them current; `main` is **only** updated on explicit instruction
-   (established this session — a refinement to `SPEC_DRIVEN_DEVELOPMENT.md` §4's "merged to
-   `main` only when exit criteria are met" rule, which did not originally specify that
-   intermediate stage branches could be updated independently of `main`).
-
-## 6. Fact / derivation / assumption / question register
+## 5. Fact / derivation / assumption / question register
 
 | # | Item | Class |
 |---|---|---|
-| 1 | 184 files tracked in git as of this measurement | **Fact** |
-| 2 | `knowledge/`, `evaluation/`, `runbooks/` have zero tracked files | **Fact** |
-| 3 | `main` is one commit behind the stage branches | **Fact** |
-| 4 | Only Stage 01 has real design content; Stages 02–21 are scaffold-only | **Fact** |
-| 5 | The `plans/active/` gap is a process deviation rather than an intentional method change | **Derivation** — inferred from comparing `SPEC_DRIVEN_DEVELOPMENT.md`'s stated method to actual Stage 01 execution |
-| 6 | Whether `plans/active/` should be retroactively populated for Stage 01, or the method documentation corrected instead | **Question** — open, see §7 |
+| 1 | 249 tracked files; 4 of 21 stages complete | **Fact** (measured this pass) |
+| 2 | DDD/C4 `provisional`; 4 ADRs `proposed`; review `conditional` | **Fact** |
+| 3 | `eval-ai-cache/` is unconsumed | **Fact** |
+| 4 | Correcting the method doc is the right resolution for the `plans/active/` gap rather than retro-filling plan files | **Derivation** — follows from the SDD reference's "nothing was written twice" principle |
+| 5 | Whether V2's knowledge/eval content should be copied locally | **Question** — open (NAB-3) |
 
-## 7. Next-actions backlog (this stage's equivalent of Prompt 01's evidence acquisition backlog)
+## 6. Next-actions backlog
 
-| ID | Item | Owner | Blocks | Priority |
-|---|---|---|---|---|
-| NAB-1 | Seed `knowledge/`, `evaluation/`, `runbooks/` with README stubs matching every other folder's convention | This stage | — | **Closed** (done this stage) |
-| NAB-2 | Decide: does `SPEC_DRIVEN_DEVELOPMENT.md`'s `plans/active/` step apply to prompt-driven stages (01–19, which already have a spec in `prompts/`), or only to stages without a pre-written prompt (20, 21)? Update the method doc to match actual practice. | User / method owner | Stage 02 onward, so the same ambiguity doesn't repeat | Low-medium |
-| NAB-3 | Carry forward V2's `knowledge/`, `evaluation/` reference content (32 knowledge docs, evaluation plan/fixtures/contracts) into the equivalent V3 folders if they are meant to be actively used, not just referenced from the V2 sibling directory | User (scope decision) | Stage 02 (DDD may need knowledge docs), Stage 14 (eval-ai-cache needs V2's evaluation plan as a floor) | Medium |
+| ID | Item | Blocks | Priority |
+|---|---|---|---|
+| NAB-2 | Resolve the `plans/active/` method-vs-practice mismatch (recommend: correct the method doc) | Nothing hard; a documentation-accuracy issue | Low-medium |
+| NAB-3 | Decide whether to copy V2's `knowledge/`/`evaluation/` content locally | Stage 13 (ontology needs domain knowledge), Stage 14 (eval floor) | Medium |
+| NAB-4 (new) | Draw on `eval-ai-cache/`'s runbook library when Stages 14/15/17 begin, rather than re-deriving | Stages 14, 15, 17 | Medium |
+| EAB-2 | **Air-gap requirement** — sponsor/user confirmation | Stage 20; can reopen ADR-001 | **High** |
+| EAB-3 | **Real HITL/context owners** | Stage 16; unblocks DDD → `stable` | **High** |
 
 ---
 
 ## Lean / DMAIC lens
 
-See `dmaic_lens.md` (this folder) — thin, Measure-focused (Stage 05 is not a designated
-full-DMAIC stage).
+See `dmaic_lens.md` (this folder).

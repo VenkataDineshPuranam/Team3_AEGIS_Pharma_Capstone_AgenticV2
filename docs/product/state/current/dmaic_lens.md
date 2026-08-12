@@ -1,53 +1,51 @@
 # DMAIC Lens — Stage 05 (Current State of the Repo)
 
-**Thin lens** (Measure-focused; Stage 05 is not one of the designated full-DMAIC stages —
-those are Discovery/01, Frame/01(SCQA), DDD/02, C4/03, ADR/04).
-
-**Renumbered:** this was originally Stage 02, run before DDD/C4/ADR. Per a sequencing
-correction (see `SPEC_DRIVEN_DEVELOPMENT.md` §3 "Sequencing note"), current/interim/final
-state and graphical views were moved to run *after* ADR (now Stages 05–08), since they
-synthesize/visualize the domain model rather than needing to precede it. Content below is
-unchanged from the original run; only the stage number and forward references were updated.
+**Thin lens** (Measure-focused; the designated full-DMAIC stages are Discovery/01,
+Frame/01(SCQA), DDD/02, C4/03, ADR/04 — all now complete).
 
 ## Define
 
-The improvement problem this stage resolves: before designing interim/final target states
-(Stages 06–07), establish a **measured**, not assumed, baseline of what actually exists in
-this repository right now — distinguishing real content from scaffold stubs, and surfacing
-any drift between documented structure (`README.md`) and actual filesystem state.
+Establish a **measured** baseline of what exists in this repository right now, after the
+design stages (DDD/C4/ADR) have completed, so that the interim-state (Stage 06) and
+final-state (Stage 07) documents describe a transition from something real rather than
+something assumed.
 
 ## Measure (primary focus)
 
-- 184 tracked files total.
-- 1 of 21 stages (Stage 01) has real design-artefact content; 20 are scaffold-only.
-- 3 folders (`knowledge/`, `evaluation/`, `runbooks/`) are completely empty despite being
-  named in `README.md`'s folder map as "carried forward / extended from V2" — a measured
-  0% carry-forward rate against that stated intent.
-- `main` is 1 commit behind the stage branches (intentional, per explicit user instruction
-  this session, not drift).
-
-These are the Measure-stage baselines this document establishes; see
-`current_state_assessment.md` §1–2 for the full breakdown.
+- 249 tracked files (up from 184 when this stage originally ran before the resequencing).
+- 4 of 21 stages complete (01–04).
+- Design-artifact maturity: DDD `provisional`, C4 `provisional`, 4/8 ADRs `accepted`,
+  architecture review `conditional`.
+- Zero implementation: `apps/`, `services/`, `packages/`, `tests/` are all stubs — correct
+  and intentional, since Stage 20 is deliberately last.
+- Zero evidence records: `evidence/`'s 9 subfolders are all empty — correct, nothing has
+  executed yet.
+- 29 files of directly-applicable reference material in `eval-ai-cache/` remain unconsumed.
 
 ## Analyze (brief)
 
-The `knowledge/`/`evaluation/`/`runbooks/` gap traces to a specific root cause: these three
-folders were created during the *first*, pre-canonical-structure scaffold pass and were not
-included in either (a) the second pass's explicit folder-and-README seeding script, or (b)
-any subsequent stage's file-writing. No one has needed them yet, since Stage 01's actual
-work (V2 evidence citation) referenced the V2 sibling directory directly rather than a local
-copy — so the gap has had no functional impact so far, but will become load-bearing once a
-stage (Stage 02 DDD, Stage 14 eval-ai-cache) actually needs locally-held knowledge/eval
-content rather than cross-repo references.
+Two open blockers (EAB-2 air-gap, EAB-3 HITL owners) are the binding constraints on
+artifact status, not on progress — the design stages completed and produced real decisions
+despite them, by marking status honestly (`provisional`/`proposed`) rather than overclaiming.
+That is the intended behavior of the method, so it is working as designed.
+
+The one genuine process inconsistency is `plans/active/` sitting empty while the method doc
+says stage specs go there first. Analysis: this is a **method-doc defect, not a practice
+defect** — the `prompts/` files already serve as the per-stage spec, and duplicating them
+into `plans/active/` would violate the SDD reference's core "nothing was written twice"
+principle. Recommend correcting the doc.
 
 ## Improve (deferred)
 
-Not this stage's job — `current_state_assessment.md` §7 (next-actions backlog) hands
-concrete items to whichever stage owns fixing them (NAB-1 through NAB-3). This stage
-measures and analyzes; it does not redesign.
+Not this stage's job — §6's backlog hands items to their owning stages. The one item worth
+acting on soon is NAB-4: Stages 14/15/17 should consume `eval-ai-cache/`'s runbook library
+rather than re-deriving equivalents, which would be direct Overproduction waste given the
+material is already in the repo.
 
-## Control (deferred)
+## Control
 
-Revisit trigger: if Stage 02 (DDD) or Stage 14 begins and `knowledge/`/`evaluation/` are still
-empty, that stage's own Discovery/Measure step should re-flag NAB-3 rather than silently
-working around the gap.
+Revisit triggers:
+- If Stage 14 begins and `eval-ai-cache/` is still unconsumed, that stage's Measure step
+  must explicitly justify why it is deriving rather than reusing.
+- If Stage 16 begins with EAB-3 still open, it cannot name real approvers and must escalate
+  rather than inventing placeholder owners.
