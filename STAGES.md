@@ -28,3 +28,6 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 21 | Documentation & final defense pack | stage-21-documentation | not started |
 
 See `SPEC_DRIVEN_DEVELOPMENT.md` for the full method and DMAIC-Lean requirements per stage.
+
+**Delivery sequence for stages 10–21:** [`plans/active/EXECUTION_PLAN.md`](plans/active/EXECUTION_PLAN.md)
+— waves, dependencies, the 20a/20b split around **Gate M**, and the decisions that need a human.

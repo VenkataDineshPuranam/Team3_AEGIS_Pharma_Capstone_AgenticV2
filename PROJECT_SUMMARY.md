@@ -43,6 +43,9 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 - **`SPEC_DRIVEN_DEVELOPMENT.md`** — method + full stage table (each stage's driving prompt)
 - **`STAGES.md`** — live status tracker
+- **`plans/active/EXECUTION_PLAN.md`** — delivery plan for stages 10–21: four waves, the
+  **20a/20b split around Gate M** (measurement only exists once code runs), the 5 decisions
+  that need a human, and local-first environment guidance
 - **`prompts/`** — 23 prompts: 01–13 adapted from V2, 14–23 new for V3-only concerns.
   `ADAPTATION_NOTES.md` records what changed and why.
 
