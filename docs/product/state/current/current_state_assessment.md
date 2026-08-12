@@ -1,10 +1,15 @@
-# Current State of the Repo — Stage 02
+# Current State of the Repo — Stage 05
 
 **Executes:** `prompts/01_discovery.md`, applied reflexively to this V3 repository itself
-(per `SPEC_DRIVEN_DEVELOPMENT.md`'s stage table: Stage 02's driving prompt).
+(per `SPEC_DRIVEN_DEVELOPMENT.md`'s stage table: Stage 05's driving prompt).
 **DMAIC focus:** Measure (this stage is not a designated full-DMAIC stage; see `dmaic_lens.md`).
-**Measured as of:** 2026-08-12, branch `stage-02-current-state`, forked from
-`stage-01-discovery-scqa` at commit `2bf4e53`.
+**Measured as of:** 2026-08-12, branch `stage-02-current-state` (renamed to
+`stage-05-current-state`), forked from `stage-01-discovery-scqa` at commit `2bf4e53`.
+
+**Renumbering note:** this stage was originally run as Stage 02 (before DDD/C4/ADR). A
+sequencing correction moved current/interim/final-state and graphical views to run *after*
+ADR instead (see `SPEC_DRIVEN_DEVELOPMENT.md` §3 "Sequencing note") — this content is
+unchanged from the original run except for stage numbers and forward references below.
 
 ---
 
@@ -113,12 +118,12 @@ Applying "entities, identifiers, timestamp semantics" to the repo itself:
 | ID | Item | Owner | Blocks | Priority |
 |---|---|---|---|---|
 | NAB-1 | Seed `knowledge/`, `evaluation/`, `runbooks/` with README stubs matching every other folder's convention | This stage | — | **Closed** (done this stage) |
-| NAB-2 | Decide: does `SPEC_DRIVEN_DEVELOPMENT.md`'s `plans/active/` step apply to prompt-driven stages (01–19, which already have a spec in `prompts/`), or only to stages without a pre-written prompt (20, 21)? Update the method doc to match actual practice. | User / method owner | Stage 03 onward, so the same ambiguity doesn't repeat | Low-medium |
-| NAB-3 | Carry forward V2's `knowledge/`, `evaluation/` reference content (32 knowledge docs, evaluation plan/fixtures/contracts) into the equivalent V3 folders if they are meant to be actively used, not just referenced from the V2 sibling directory | User (scope decision) | Stage 06 (DDD may need knowledge docs), Stage 14 (eval-ai-cache needs V2's evaluation plan as a floor) | Medium |
+| NAB-2 | Decide: does `SPEC_DRIVEN_DEVELOPMENT.md`'s `plans/active/` step apply to prompt-driven stages (01–19, which already have a spec in `prompts/`), or only to stages without a pre-written prompt (20, 21)? Update the method doc to match actual practice. | User / method owner | Stage 02 onward, so the same ambiguity doesn't repeat | Low-medium |
+| NAB-3 | Carry forward V2's `knowledge/`, `evaluation/` reference content (32 knowledge docs, evaluation plan/fixtures/contracts) into the equivalent V3 folders if they are meant to be actively used, not just referenced from the V2 sibling directory | User (scope decision) | Stage 02 (DDD may need knowledge docs), Stage 14 (eval-ai-cache needs V2's evaluation plan as a floor) | Medium |
 
 ---
 
 ## Lean / DMAIC lens
 
-See `dmaic_lens.md` (this folder) — thin, Measure-focused (Stage 02 is not a designated
+See `dmaic_lens.md` (this folder) — thin, Measure-focused (Stage 05 is not a designated
 full-DMAIC stage).

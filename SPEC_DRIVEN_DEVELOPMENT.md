@@ -53,13 +53,13 @@ Each stage doc includes a DMAIC-Lean block:
 |---|---|---|---|---|---|
 | 00 | Foundation: repo scaffold + SDD charter | — | `stage-00-foundation` | root, `.claude/`, this file | Define |
 | 01 | Process discovery & SCQA | `prompts/01_discovery.md`, `02_scqa_minto.md` | `stage-01-discovery-scqa` | `docs/product/` | Define |
-| 02 | Current state of the repo | `prompts/01_discovery.md` (applied to this repo) | `stage-02-current-state` | `docs/product/state/current/` | Measure |
-| 03 | Interim state (transition architecture) | `prompts/03_prd_vision.md` | `stage-03-interim-state` | `docs/product/state/interim/` | Analyze/Improve |
-| 04 | Final state (target agentic architecture) | `prompts/03_prd_vision.md` | `stage-04-final-state` | `docs/product/state/final/` | Improve |
-| 05 | Graphical views (current/interim/final) | `prompts/06_c4.md` (visual views) | `stage-05-graphical` | `docs/architecture/graphical/` | Improve (visual control) |
-| 06 | Domain-Driven Design | `prompts/04_ddd.md` | `stage-06-ddd` | `docs/architecture/ddd/`, `packages/domain/` | Analyze |
-| 07 | C4 architecture | `prompts/06_c4.md` | `stage-07-c4` | `docs/architecture/c4/` | Improve |
-| 08 | ADRs | `prompts/07_adrs.md` | `stage-08-adr` | `docs/adr/` | Improve/Control |
+| 02 | Domain-Driven Design | `prompts/04_ddd.md` | `stage-02-ddd` | `docs/architecture/ddd/`, `packages/domain/` | Analyze |
+| 03 | C4 architecture | `prompts/06_c4.md` | `stage-03-c4` | `docs/architecture/c4/` | Improve |
+| 04 | ADRs | `prompts/07_adrs.md` | `stage-04-adr` | `docs/adr/` | Improve/Control |
+| 05 | Current state of the repo | `prompts/01_discovery.md` (applied to this repo) | `stage-05-current-state` | `docs/product/state/current/` | Measure |
+| 06 | Interim state (transition architecture) | `prompts/03_prd_vision.md` | `stage-06-interim-state` | `docs/product/state/interim/` | Analyze/Improve |
+| 07 | Final state (target agentic architecture) | `prompts/03_prd_vision.md` | `stage-07-final-state` | `docs/product/state/final/` | Improve |
+| 08 | Graphical views (current/interim/final) | `prompts/06_c4.md` (visual views) | `stage-08-graphical` | `docs/architecture/graphical/` | Improve (visual control) |
 | 09 | DMAIC/Lean consolidated workbook | `prompts/09_lean_dmaic.md` | `stage-09-dmaic-lean` | `docs/quality/dmaic-lean/` | Control |
 | 10 | Agentic architecture (LangGraph multi-agent design) | `prompts/14_agentic_architecture.md` | `stage-10-agentic-architecture` | `docs/architecture/agentic/`, `packages/domain/` | Improve |
 | 11 | MCP servers/tools | `prompts/15_mcp.md` | `stage-11-mcp` | `services/integration/`, `packages/contracts/`, `.claude/mcp.json` | Improve |
@@ -74,11 +74,17 @@ Each stage doc includes a DMAIC-Lean block:
 | 20 | Repo implementation — **app building (last)** | `prompts/11_product_and_build.md` | `stage-20-repo-implementation` | `apps/`, `services/`, `deploy/` | Improve |
 | 21 | Documentation & final defense pack | `prompts/13_solution_proposal.md`, `12_assurance.md` | `stage-21-documentation` | `workshop/`, `runbooks/`, root docs | Control |
 
-Stages 01–09 mirror V2's document lifecycle (Discovery → SCQA → DDD → C4 → ADR → DMAIC);
-10–19 are V3-specific agentic/governance/eval/security/compliance additions; **20 (app
-build) is deliberately last** — no code is written until discovery, SCQA, DDD, C4, ADR,
-and the agentic/governance/eval design are stable. 21 closes the loop with a defensible
-submission, matching V2's `requirements/FINAL_DEFENCE.md` pattern.
+**Sequencing note (revised from the original draft):** Stages 01–04 follow the user's
+explicit instruction verbatim — discovery → SCQA → DDD → C4 → ADR — with no state-assessment
+stages inserted in between. Stages 05–08 (current/interim/final state, graphical views) were
+originally placed *before* DDD but were moved to **after** ADR: they now synthesize and
+visualize the domain/architecture model once it is stable, rather than speculating about
+state before the domain model exists. Stage 09 (DMAIC/Lean) consolidates everything from
+01–08 before Stage 10 begins the V3-specific agentic/governance/eval/security/compliance
+additions (10–19). **Stage 20 (app build) remains deliberately last** — no code is written
+until discovery, SCQA, DDD, C4, ADR, and the agentic/governance/eval design are stable.
+Stage 21 closes the loop with a defensible submission, matching V2's
+`requirements/FINAL_DEFENCE.md` pattern.
 
 ## 4. Git Workflow
 
