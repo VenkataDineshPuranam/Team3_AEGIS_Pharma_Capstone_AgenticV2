@@ -1,0 +1,3 @@
+# manifests
+
+Deployment manifests.

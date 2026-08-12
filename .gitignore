@@ -1,0 +1,15 @@
+# V2 is reference context only (983MB) — not part of the V3 repo
+Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/
+
+.DS_Store
+.pytest_cache/
+__pycache__/
+*.pyc
+.env
+.env.*
+node_modules/
+.next/
+dist/
+build/
+*.log
+.deepeval/

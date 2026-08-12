@@ -1,0 +1,4 @@
+{
+  "_comment": "MCP server registry for this repo's agents. Populated in Stage 11 (mcp/ contracts) and Stage 20 (implementation). Empty scaffold for now.",
+  "mcpServers": {}
+}

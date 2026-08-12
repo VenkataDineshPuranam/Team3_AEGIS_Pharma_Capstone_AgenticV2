@@ -1,0 +1,4 @@
+{
+  "_comment": "Lifecycle hook bindings. See .claude/hooks/hooks.md for the human-readable index. Populated in Stage 12.",
+  "hooks": {}
+}
