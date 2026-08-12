@@ -13,7 +13,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 06 | Interim state | stage-06-interim-state | stable |
 | 07 | Final state | stage-07-final-state | stable |
 | 08 | Graphical views | stage-08-graphical | stable |
-| 09 | DMAIC/Lean workbook | stage-09-dmaic-lean | not started |
+| 09 | DMAIC/Lean workbook | stage-09-dmaic-lean | **stable** (9 lenses reconciled; structural gate = `cleared`) |
 | 10 | Agentic architecture (LangGraph) | stage-10-agentic-architecture | not started |
 | 11 | MCP servers/tools | stage-11-mcp | not started |
 | 12 | Skills & Hooks | stage-12-skills-hooks | not started |

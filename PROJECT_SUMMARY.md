@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 08 + ADR-009 (Azure).
+> **Last updated:** end of Stage 09 (DMAIC/Lean consolidation).
 
 ---
 
@@ -54,7 +54,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 9 of 21 stages complete
+## 3. Status: 10 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -66,8 +66,9 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 06 | Interim state | `stage-06-interim-state` | stable |
 | 07 | Final state | `stage-07-final-state` | stable |
 | 08 | Graphical views | `stage-08-graphical` | stable |
-| 09 | **DMAIC/Lean workbook** | `stage-09-dmaic-lean` | **← NEXT** |
-| 10–13 | Agentic arch (LangGraph) · MCP · Skills/Hooks · Ontology-KG | | not started |
+| 09 | **DMAIC/Lean workbook** | `stage-09-dmaic-lean` | stable — 9 lenses reconciled; gate `cleared` |
+| 10 | **Agentic arch (LangGraph)** | `stage-10-agentic-architecture` | **← NEXT** |
+| 11–13 | MCP · Skills/Hooks · Ontology-KG | | not started |
 | 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
 | 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
@@ -143,6 +144,32 @@ Supply tool has no allocation write method · zero write integrations to any bro
 
 ---
 
+## 6b. Lean/DMAIC consolidation (Stage 09, `docs/quality/dmaic-lean/`)
+
+Nine prior `dmaic_lens.md` files + five register pairs reconciled into **one governing set**
+(`lens_rollup.md`, `dmaic_plan.md`, two registers, `build_constraints_from_lean.md`,
+`structural_reopen.md`). **24 distinct wastes merged; 11 still open.**
+
+- **Mode = Measure-first.** Framing is `decision-ready`, but *every* baseline that matters is
+  Unknown — nothing has ever been measured on a running system. Instrumentation outranks
+  feature scale-out; no waste is described as "fixed," only as "decided, proof scheduled."
+- **Three findings no single prior lens contained:**
+  1. **C3 / RR-1** — Stage 01 said quantify token cost *before* locking topology. It wasn't:
+     ADR-008 was accepted with cost still Unknown. Now an explicit accepted debt with revisit
+     trigger **T-3** (bad interim cost number ⇒ reopen ADR-008 before building 3×).
+  2. **G3** — "blind retry" (Model waste) lost its owner in the stage resequencing; assigned
+     to Stage 10 (BC-5).
+  3. **C1** — ontology-vs-agent ordering was resolved in practice but never written: Stage 10
+     designs against an ontology **contract**, Stage 13 fills it in (BC-4).
+- **12 must-fix-before-build constraints (BC-1…BC-12)** are binding input to Stage 10, with a
+  recommended task order: guard + state schema + graph isolation first, then contract-first
+  retrieval / retry rules / Critic scope, then instrumentation before any node is "done."
+- **10 revisit triggers T-1…T-10** are now programme-level, incl. two stop-the-line ones
+  (interim assumptions 1 and 2).
+- **Structural gate: `cleared`** — no Improve action reopens C4, an ADR, or a contract.
+  Two *documentation* defects recorded instead: **ADR-009 is missing from `decision_index.md`
+  and `architecture_review.md`** (both still say "8 ADRs"), and NAB-2.
+
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
 | Concern | Choice |
@@ -176,6 +203,7 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 | NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? | Stages 13, 14 |
 | NAB-4 | **`eval-ai-cache/` (29 files) is entirely unconsumed** — 24-part brownfield-evals runbook + Redis + OpenTelemetry runbooks. Stages 14/15/17 must draw on it, not re-derive | Stages 14, 15, 17 |
 | EAB-6 | Token/cost budgets still Unknown — first measured in the interim state | Stage 15 |
+| **S09-D1** | **ADR-009 absent from `decision_index.md` and `architecture_review.md`** (both still state "8 ADRs"). Traceability defect, not a design defect — review verdict `pass` stands | Stage 21 defense pack |
 
 **Closed:** EAB-2 (air-gap → cloud-connected confirmed), EAB-3 (approvers named), NAB-1.
 
