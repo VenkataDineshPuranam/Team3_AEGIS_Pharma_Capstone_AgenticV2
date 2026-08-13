@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegis-pharma.internal/contracts/tool/batch.reconcile",
+  "title": "batch.reconcile",
+  "description": "Structured, rule-based evidence-completeness and conflict check for a batch, over evidence already retrieved and gated. Produces the candidate finding set the Batch-Review Agent is allowed to synthesize prose from — it does not itself synthesize. Deterministic given the same evidence set.",
+  "contract_version": "1.0.0",
+  "owning_context": "Batch Review",
+  "read_only": true,
+  "authorization_requirement": "Caller must present a batch_review graph-run credential. No PV or Supply run may hold this credential (ADR-008).",
+  "rate_limit": {
+    "per_run_ceiling": 1,
+    "server_ceiling_per_minute": 60
+  },
+  "idempotency": {
+    "guarantee": "Deterministic given the same evidence_ids and policy_contract_version.",
+    "key": "hash(evidence_ids[], policy_contract_version)"
+  },
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["run_id", "batch_id", "evidence_ids", "policy_contract_version"],
+    "properties": {
+      "run_id": { "type": "string" },
+      "batch_id": { "type": "string" },
+      "evidence_ids": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1,
+        "description": "Must be a subset of evidence_ids returned by evidence.retrieve (batch scope) in this run. The tool rejects any id it cannot trace to this run's retrieval."
+      },
+      "policy_contract_version": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["reconciliation_complete", "findings", "tool_accounting"],
+    "properties": {
+      "reconciliation_complete": {
+        "type": "boolean",
+        "description": "Whether every required evidence category (genealogy, lab results, environmental monitoring, deviations, CAPA, change control, validation state, supplier evidence) has at least one citable item."
+      },
+      "findings": {
+        "type": "array",
+        "description": "Structured findings only. No field here or anywhere in this schema represents a disposition — see 'What this schema cannot express' below.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["category", "status", "evidence_ids"],
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": ["genealogy", "lab_results", "environmental_monitoring", "deviations", "capa", "change_control", "validation_state", "supplier_evidence", "release_packet_completeness"]
+            },
+            "status": {
+              "type": "string",
+              "enum": ["complete", "gap", "conflict"],
+              "description": "Structural completeness/conflict status of the evidence in this category. Never a judgment about whether the batch is releasable."
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "gap_description": {
+              "type": ["string", "null"],
+              "description": "Present only when status is 'gap' or 'conflict'. Factual description of what evidence is missing or in conflict — never a recommendation for what to do about it."
+            }
+          }
+        }
+      },
+      "tool_accounting": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["latency_ms"],
+        "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  },
+  "what_this_schema_cannot_express": [
+    "release_recommended", "reject_recommended", "reprocess_recommended", "relabel_recommended", "recall_recommended",
+    "Any of these fields would make this tool capable of what DDD domain_model.md §7 requires the Batch aggregate itself to be incapable of representing. This tool's output type is a second, independent enforcement of the same invariant (ADR-004 layer 1 + layer 2)."
+  ],
+  "errors": [
+    { "code": "EVIDENCE_ID_NOT_IN_RUN", "meaning": "An evidence_id was not returned by this run's own retrieval call.", "graph_response": "abstain — treat as a gate defect, do not silently drop the id" },
+    { "code": "POLICY_VERSION_MISMATCH", "meaning": "Policy version stale.", "graph_response": "abstain, resubmit" },
+    { "code": "RATE_LIMITED", "graph_response": "abstain, dependency_unavailable" }
+  ]
+}

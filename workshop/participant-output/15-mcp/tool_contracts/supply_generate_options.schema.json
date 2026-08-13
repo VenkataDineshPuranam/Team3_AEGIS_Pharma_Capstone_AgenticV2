@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegis-pharma.internal/contracts/tool/supply.generate_options",
+  "title": "supply.generate_options",
+  "description": "Constraint-filtered, non-executing candidate option generation for supply-shortage/cold-chain planning. This is the tool named explicitly in DDD domain_model.md §10 and C4 c4_components.md as structurally incapable of an allocation/reservation write — see 'what_this_schema_cannot_express' and services/integration/prohibited_write_enforcement.md for the full argument. Provisional (20b scope).",
+  "contract_version": "0.1.0-provisional",
+  "owning_context": "Supply Planning",
+  "read_only": true,
+  "authorization_requirement": "Caller must present a supply_planning graph-run credential.",
+  "rate_limit": {
+    "per_run_ceiling": 1,
+    "server_ceiling_per_minute": 60
+  },
+  "idempotency": {
+    "guarantee": "NOT safely replayable across inventory_snapshot_version changes — a retry after the snapshot has moved must re-run, not replay the cached response (tool_inventory.md §6).",
+    "key": "hash(constraint_set, inventory_snapshot_version)"
+  },
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["run_id", "product_id", "constraint_set", "evidence_ids"],
+    "properties": {
+      "run_id": { "type": "string" },
+      "product_id": { "type": "string" },
+      "constraint_set": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "market_authorization_scope": { "type": "array", "items": { "type": "string" } },
+          "cold_chain_requirements": { "type": "array", "items": { "type": "string" } },
+          "trial_demand_reservations": { "type": "array", "items": { "type": "string" } },
+          "compassionate_use_constraints": { "type": "array", "items": { "type": "string" } },
+          "cmo_capacity_window": { "type": "string" }
+        },
+        "description": "Filters applied deterministically before any option is generated. The agent ranks within the result; it cannot widen this set."
+      },
+      "evidence_ids": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1,
+        "description": "Evidence ids from this run's evidence.retrieve (supply scope) call."
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["options", "inventory_snapshot_version", "tool_accounting"],
+    "properties": {
+      "options": {
+        "type": "array",
+        "description": "ShortageOption value objects (DDD domain_model.md §7) — always paired with their constraint set, never carrying an allocated_quantity-shaped field.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["option_id", "description", "constraints_satisfied", "cold_chain_evidence_ids", "transport_notes"],
+          "properties": {
+            "option_id": { "type": "string" },
+            "description": {
+              "type": "string",
+              "description": "Factual description of a non-executing candidate option (e.g. 'redirect CMO-B capacity within existing market authorization for region X') — never phrased as an instruction to execute."
+            },
+            "constraints_satisfied": { "type": "array", "items": { "type": "string" } },
+            "cold_chain_evidence_ids": { "type": "array", "items": { "type": "string" } },
+            "transport_notes": { "type": "string" }
+          }
+        }
+      },
+      "inventory_snapshot_version": {
+        "type": "string",
+        "description": "Every option is only valid as of this snapshot. The Supply-Planning Agent's output must carry this version forward so a human reviewer knows exactly how fresh the options are."
+      },
+      "tool_accounting": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["latency_ms"],
+        "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  },
+  "what_this_schema_cannot_express": [
+    "allocated_quantity", "reserved_for", "ship_to", "release_authorization", "recall_scope",
+    "There is no field, in this schema or any schema in this repo, through which a call to this tool could write an allocation, a reservation, a shipment, or a recall. This is not a permission the caller chooses not to exercise — the method does not exist (ADR-004 layer 2; DDD domain_model.md §10: 'this agent has no tool capable of that write, by design'). Adding such a field to this file would itself be the ADR-004 violation; any future change proposing one must go through a new ADR, not a schema PR."
+  ],
+  "errors": [
+    { "code": "CONSTRAINT_SET_EMPTY_RESULT", "meaning": "No option satisfies the constraint set.", "graph_response": "abstain — agent has nothing to rank, per agent_roster.md §2's escalation condition" },
+    { "code": "INVENTORY_SNAPSHOT_UNAVAILABLE", "graph_response": "abstain, dependency_unavailable" },
+    { "code": "RATE_LIMITED", "graph_response": "abstain, dependency_unavailable" }
+  ]
+}

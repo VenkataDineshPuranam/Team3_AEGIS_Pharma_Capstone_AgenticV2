@@ -1,4 +1,4 @@
 {
-  "_comment": "MCP server registry for this repo's agents. Populated in Stage 11 (mcp/ contracts) and Stage 20 (implementation). Empty scaffold for now.",
+  "_comment": "MCP server registry for this repo's agentic runtime. Stage 11 designed 6 server registrations and 7 tool contracts against services/integration/tool_inventory.md and packages/contracts/tool_contracts/*.schema.json. mcpServers is deliberately left empty here: none of the six servers (evidence-retrieval-batch, evidence-retrieval-pv, evidence-retrieval-supply, batch-review-tools, pv-intake-tools, supply-planning-tools) have implementation code yet -- Stage 20 is deliberately last -- and registering commands that don't exist would make this repo's own Claude Code session attempt to launch nonexistent processes on startup. Per standing instruction: register only servers that are real and needed, not speculative ones. Stage 20 populates mcpServers with the real entries when the server code lands, using tool_inventory.md's table verbatim.",
   "mcpServers": {}
 }

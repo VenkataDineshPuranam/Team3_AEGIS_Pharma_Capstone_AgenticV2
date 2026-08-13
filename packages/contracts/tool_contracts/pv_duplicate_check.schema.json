@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegis-pharma.internal/contracts/tool/pv.duplicate_check",
+  "title": "pv.duplicate_check",
+  "description": "Structured duplicate-suspicion evaluation for a PV case. Per DDD domain_model.md §7, this must complete before SignalTriaged can fire — enforced as a graph edge (langgraph_design.md §7), not by this tool refusing to be called out of order, since the tool has no way to observe graph state. Provisional: designed by analogy to batch.reconcile, not yet built (20b scope, tool_inventory.md §3).",
+  "contract_version": "0.1.0-provisional",
+  "owning_context": "PV Intake",
+  "read_only": true,
+  "authorization_requirement": "Caller must present a pv_intake graph-run credential.",
+  "rate_limit": {
+    "per_run_ceiling": 1,
+    "server_ceiling_per_minute": 60
+  },
+  "idempotency": {
+    "guarantee": "Idempotent for a fixed comparison_window_version; NOT idempotent across window versions, since new cases can arrive.",
+    "key": "hash(case_id, comparison_window_version)"
+  },
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["run_id", "case_id", "case_summary_evidence_ids"],
+    "properties": {
+      "run_id": { "type": "string" },
+      "case_id": { "type": "string" },
+      "case_summary_evidence_ids": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1,
+        "description": "Evidence ids from this run's evidence.retrieve (pv scope) call describing the incoming case."
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["duplicate_suspected", "comparison_window_version", "candidates", "tool_accounting"],
+    "properties": {
+      "duplicate_suspected": { "type": "boolean" },
+      "comparison_window_version": {
+        "type": "string",
+        "description": "Version stamp of the case set this comparison ran against. A cached result is invalid once this version advances — see prohibited_write_enforcement.md and tool_inventory.md §6 caching note for pv.duplicate_check."
+      },
+      "candidates": {
+        "type": "array",
+        "description": "Candidate matching cases with a structural similarity score. Ranking within this set is the PV-Intake Agent's job (agent_roster.md §2); this tool does not rank or conclude.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate_case_id", "similarity_score", "matched_fields"],
+          "properties": {
+            "candidate_case_id": { "type": "string" },
+            "similarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+            "matched_fields": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["patient_identifiers", "product", "event_date", "reporter", "narrative_similarity"] }
+            }
+          }
+        }
+      },
+      "tool_accounting": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["latency_ms"],
+        "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  },
+  "what_this_schema_cannot_express": [
+    "This tool has no field that constitutes a duplicate determination as a final safety conclusion. 'duplicate_suspected' is a triage signal only — DDD domain_model.md §10 requires the PV-Intake Agent to escalate any output touching causality/seriousness/expectedness/reportability, and this tool's output has no such fields to escalate incorrectly."
+  ],
+  "errors": [
+    { "code": "COMPARISON_STORE_UNAVAILABLE", "graph_response": "abstain, dependency_unavailable" },
+    { "code": "RATE_LIMITED", "graph_response": "abstain, dependency_unavailable" }
+  ],
+  "open_items": [
+    "Duplicate-detection threshold logic (numeric vs. rule-based) is unconfirmed against V2's actual grader code (domain_model.md §8) — must be verified before this leaves provisional status, per the ADR-002 standing rule (never claim V2 behaviour without reading V2 code)."
+  ]
+}

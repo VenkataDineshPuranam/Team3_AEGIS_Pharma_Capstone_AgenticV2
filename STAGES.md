@@ -15,7 +15,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 08 | Graphical views | stage-08-graphical | stable |
 | 09 | DMAIC/Lean workbook | stage-09-dmaic-lean | **stable** (9 lenses reconciled; structural gate = `cleared`) |
 | 10 | Agentic architecture (LangGraph) | stage-10-agentic-architecture | **stable** for `batch_review`; `provisional` for PV/Supply graphs (RR-2) |
-| 11 | MCP servers/tools | stage-11-mcp | not started |
+| 11 | MCP servers/tools | stage-11-mcp | **stable** for batch tools (evidence.retrieve, batch.reconcile); `provisional` for PV/Supply tools |
 | 12 | Skills & Hooks | stage-12-skills-hooks | not started |
 | 13 | Ontology / Knowledge Graph | stage-13-ontology-kg | not started |
 | 14 | Eval-AI-Cache | stage-14-eval-ai-cache | not started |

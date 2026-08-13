@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 09 (DMAIC/Lean consolidation).
+> **Last updated:** end of Stage 11 (MCP tool contracts).
 
 ---
 
@@ -57,7 +57,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 10 of 21 stages complete
+## 3. Status: 11 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -70,8 +70,10 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 07 | Final state | `stage-07-final-state` | stable |
 | 08 | Graphical views | `stage-08-graphical` | stable |
 | 09 | **DMAIC/Lean workbook** | `stage-09-dmaic-lean` | stable — 9 lenses reconciled; gate `cleared` |
-| 10 | **Agentic arch (LangGraph)** | `stage-10-agentic-architecture` | **← NEXT** |
-| 11–13 | MCP · Skills/Hooks · Ontology-KG | | not started |
+| 10 | **Agentic arch (LangGraph)** | `stage-10-agentic-architecture` | stable for `batch_review`; provisional for PV/Supply |
+| 11 | **MCP tool contracts** | `stage-11-mcp` | stable for batch tools; provisional for PV/Supply tools |
+| 12 | **Skills & Hooks** | `stage-12-skills-hooks` | **← NEXT** |
+| 13 | Ontology-KG | | not started |
 | 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
 | 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
@@ -172,6 +174,59 @@ Nine prior `dmaic_lens.md` files + five register pairs reconciled into **one gov
 - **Structural gate: `cleared`** — no Improve action reopens C4, an ADR, or a contract.
   Two *documentation* defects recorded instead: **ADR-009 is missing from `decision_index.md`
   and `architecture_review.md`** (both still say "8 ADRs"), and NAB-2.
+
+**Execution plan** (`plans/active/EXECUTION_PLAN.md`, not a stage spec): Stage 20 splits into
+**20a (Batch Review interim slice, no cache) → Gate M → 20b (full build)**, because every
+Unknown baseline becomes measurable only once code runs. Governance (16) and eval/observability
+*design* passes (14/17) are sequenced **before** 20a; their *measured* passes come after.
+5 human decisions named, the binding one being the **LLM route** (ADR-009) before 20a runs.
+
+## 6c. Agentic architecture + MCP (Stages 10–11, `docs/architecture/agentic/`, `services/integration/`)
+
+**Stage 10 — LangGraph design.** 11 nodes, **2 of them LLM nodes** (domain-agent synthesis +
+Critic/Verifier); every control is deterministic (schema, status lookup, pattern match, edge
+condition). Two decisions made and justified, not defaulted into: **no planner agent** (the
+sequence is a constant; a planner would be a new authority surface and pure token waste) and
+**no long-term agent memory** (a remembered conclusion has no citable source/status — it would
+be a second, unaudited cache). DMAIC lens states plainly that **the multi-agent split is a net
+token/context/transportation cost to buy one defect control** (the Critic doubles happy-path
+LLM calls, 1→2) — most of the actual safety benefit comes from the deterministic nodes and the
+absent schema fields, not from having multiple agents.
+
+**HITL timeout = a four-tier escalation ladder** (T0 interrupt → T1 reminder → T2 conditional
+escalation → T3 expiry/no-action), not a single deadline. Escalation only **widens** who may
+approve (adds a role, never replaces or auto-approves) and only proceeds if, checked at that
+moment: an escalation role is named for the workflow, that role has a **live** authorization
+right now, the draft is still guard-clear, the policy version is still current, and the role's
+own authority covers the decision. Any failed condition ⇒ audit-logged skip, run stays with the
+primary on schedule. **Supply's planning leg has no escalation role at all** (V2's stakeholder
+pack names none above the Supply Chain VP — not invented here) and its dual approval survives
+escalation intact (both legs still required). PV's advisory veto (Patient Safety Rep) sits
+outside the ladder — registrable at any tier, never overridden.
+
+**Status split:** `batch_review` graph = `stable` (20a slice). `pv_intake`/`supply_planning` =
+`provisional`, designed by analogy — RR-2/T-10 require re-checking, not assuming transfer.
+Open gap flagged, not papered over: PV's reporting-clock reconstruction fits neither a tool
+node nor a synthesis node yet (20b).
+
+**Stage 11 — MCP tool contracts.** 7 tool operations across 6 server registrations. **Every
+tool is read-only** — the real design question was retrieval-scope enforcement, not
+read/write. Decision: **one server per bounded context for `evidence.retrieve`, with `scope`
+absent from the input schema entirely** (fixed at server-binding time, not agent-supplied) —
+applying ADR-004's "don't rely on the caller passing the right value" one layer down, to tools.
+`prohibited_write_enforcement.md` walks the three-layer argument (schema/tool-method/runtime
+guard) through a worked example on `supply.generate_options`, the contract closest to a write.
+
+**Caching finding for Stage 15:** "read-only ⇒ cacheable" is wrong for two tools —
+`pv.duplicate_check` (a case can become a duplicate as new cases arrive) and
+`supply.generate_options` (inventory/quality status are the most volatile data in the system;
+a stale cached option set can recommend against inventory that no longer exists). Both marked
+do-not-cache-by-default pending an invalidation design.
+
+`.claude/mcp.json` deliberately left with `mcpServers: {}` — registering commands for
+unimplemented servers would make this repo's own Claude Code session try to launch nonexistent
+processes. Per standing instruction: **register only real, needed MCP servers**, not
+speculative ones; Stage 20 populates it for real when server code exists.
 
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
