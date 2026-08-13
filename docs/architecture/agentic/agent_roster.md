@@ -131,6 +131,8 @@ single candidate set, and may not fit Supply's dual approval or PV's clock recon
 - [x] Every HITL interrupt matches a domain-critical decision from DDD §11 — see
       `langgraph_design.md` §5; all three approver roles are the ones named in
       `hitl_control_model.md`, with **Manufacturing VP explicitly excluded** for Batch Review.
-- [x] Loop guards and budgets are numeric — `failure_and_loop_guards.md` §2–3. One number
-      (the HITL timeout) is marked provisional and needs Stage 16 confirmation.
+- [x] Loop guards and budgets are numeric — `failure_and_loop_guards.md` §2–3. The HITL
+      timeout is a four-tier escalation ladder (§5), with durations set per workflow;
+      Stage 16 confirms them with the accountable roles, and PV's 24h expiry additionally
+      needs verification against V2's actual reporting-clock material before it is final.
 - [x] Artifact status stated, split by graph, with the reason for the split.

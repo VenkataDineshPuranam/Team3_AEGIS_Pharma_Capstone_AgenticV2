@@ -127,9 +127,13 @@ class GovernedState(TypedDict):           # base — shared by all three graphs
 
     # --- human oversight ---
     hitl_required: bool
-    approver_roles: list[str]              # list, not scalar — Supply needs two
+    approver_roles: list[str]              # eligible-to-approve set; widens at T2, never shrinks
+    hitl_required_legs: list[str]          # e.g. ["supply_planning", "quality"] — all must approve
+    hitl_approved_legs: list[str]          # append-only; approval is never revocable by escalation
     hitl_status: Literal["pending", "approved", "rejected", "timed_out"] | None
-    hitl_deadline: datetime | None
+    hitl_tier: Literal["T0", "T1", "T2", "T3"] | None   # escalation-ladder position
+    hitl_deadline: datetime | None         # next tier transition, recomputed at intake resume
+    veto_recorded: bool                    # Patient Safety Rep advisory veto (PV only) — forces rejected, unaffected by tier
 
     # --- budgets (BC-7: emitted from the first run, not added later) ---
     llm_calls: int
@@ -164,8 +168,11 @@ gaps), `PVPayload` (duplicate status, normalized terms + confidence, reconstruct
 
 ### Reducer rules
 
-- `evidence`, `critic_reason_codes`, budget counters: **append/increment only**. A node cannot
-  shrink the evidence list or reset a counter — that would be the obvious way to evade a cap.
+- `evidence`, `critic_reason_codes`, budget counters, `hitl_approved_legs`: **append/increment
+  only**. A node cannot shrink the evidence list, reset a counter, or un-approve a leg — that
+  would be the obvious way to evade a cap or unwind an accountable decision.
+- `approver_roles`: **append-only widening at T2**. No node may remove an entry — escalation
+  adds eligibility, it never revokes the primary's.
 - `guard_verdict`, `policy_contract_version`, `authorization_checked_at`: writable **only** by
   their owning governance node. Enforced by node-level write scoping, not convention.
 - `draft_output`: overwritten by `synthesize` only, and only while `llm_calls` is under cap.
@@ -199,22 +206,23 @@ availability and correct for a GxP audit trail.
 
 One interrupt node per graph. Every one matches a DDD §11 domain-critical decision.
 
-| Graph | Interrupt fires when | Approver role(s) | Escalation | On timeout |
+| Graph | Interrupt fires when | Primary approver | T2 escalation (conditional) | On expiry (T3) |
 |---|---|---|---|---|
-| `batch_review` | Any deviation/gap the agent could not fully reconcile; any Critic rejection with a repeated reason; **always** before any output reaches the requester | **EU Qualified Person** — *never* Manufacturing VP | Chief Quality Officer | **No action.** Record `timed_out`, notify escalation role. Never auto-proceed |
-| `pv_intake` | **100% of runs** — by construction, since the agent structurally cannot make the determination | **Global Head of Pharmacovigilance** | Chief Medical Officer; Patient Safety Representative holds an advisory veto | No action |
-| `supply_planning` | **100% of runs** — options are never self-executing | **Supply Chain VP** **and** a Quality co-approver (EU QP or CQO) where quality status is implicated | — | No action; **partial approval is not approval** — one of two roles approving leaves the run pending, then times out to no action |
+| `batch_review` | Any deviation/gap the agent could not fully reconcile; any Critic rejection with a repeated reason; **always** before any output reaches the requester | **EU Qualified Person** — *never* Manufacturing VP | **Chief Quality Officer** — added as an eligible approver, not a replacement | **No action.** `hitl_status = timed_out` |
+| `pv_intake` | **100% of runs** — by construction, since the agent structurally cannot make the determination | **Global Head of Pharmacovigilance** | **Chief Medical Officer** — added, not a replacement. Patient Safety Representative's advisory veto is available at every tier and is not an approval path | No action |
+| `supply_planning` | **100% of runs** — options are never self-executing | **Supply Chain VP** (planning leg) **+** Quality co-approver (quality leg) where quality status is implicated | **Quality leg only:** EU QP → CQO. **No escalation role exists for the planning leg** — no role is invented for it | No action; **partial approval is not approval** — one leg approving leaves the run pending, then expires |
 
-**Supply's dual approval is why `approver_roles` is a list and `hitl_status` advances only on
-*all* required approvals.** This is the field that a Batch-Review-shaped design would have got
-wrong as a scalar — it is called out here because it is exactly the RR-2 generalization risk,
-and it is untested until 20b.
+**`approver_roles` is a list, not a scalar, because Supply needs two concurrent legs and the
+ladder can widen either one independently.** This is the field a Batch-Review-shaped design
+would have got wrong by default — flagged because it is exactly the RR-2 generalization risk,
+untested until 20b.
 
-**Timeout duration is not set here.** `hitl_control_model.md` names the roles and the
-default-safe behaviour but no duration, and inventing a GxP review window would be exactly the
-kind of unmeasured number Stage 09 refused to produce. **Open item for Stage 16:** confirm the
-duration with the accountable roles. Proposed starting point for 20a only, to be confirmed:
-24h to first escalation, 72h to `timed_out`. See `failure_and_loop_guards.md` §5.
+**Timeout is a four-tier escalation ladder, not a single deadline.** T0 interrupt → T1 reminder
+→ T2 conditional escalation (widens who may approve; never auto-approves; only proceeds if the
+role has a live authorization and the draft is still guard-clear) → T3 expiry (`timed_out`, no
+action). Durations, escalation eligibility conditions, and the per-workflow escalation-role
+table are in `failure_and_loop_guards.md` §5 — including why Supply's planning leg has no
+escalation role at all rather than an invented one.
 
 ## 6. Degraded-mode behaviour per node (ADR-007)
 

@@ -82,24 +82,106 @@ is recorded each loop. An identical fingerprint on consecutive iterations means 
 changed nothing — terminate as `abstained`, reason `no_progress`, regardless of remaining
 budget. This catches the case where the model "fixes" the output by rewording it.
 
-## 5. HITL timeout — the one number this stage will not invent
+## 5. HITL timeout ladder
 
-`hitl_control_model.md` establishes the behaviour (**timeout ⇒ no action, never
-auto-proceed**) and the escalation roles, but no duration. A batch-review approval window is a
-GxP operational parameter belonging to the accountable role, not to this document.
+`hitl_control_model.md` establishes the behaviour (**timeout ⇒ no action, never auto-proceed**)
+and names the escalation roles, but sets no durations. This section sets them, as a **four-tier
+ladder** per workflow. Tiers are configuration, not code — Stage 16 confirms the values with
+each accountable role, and changing one is a config change with an audit entry, not a
+redeployment.
 
-**Proposed for 20a only, explicitly provisional:**
+### 5.1 The ladder
 
-| Step | Proposed | Confirm with |
+| Tier | What happens | Changes who may approve? |
 |---|---|---|
-| First escalation notice | 24 h | EU Qualified Person (Batch) |
-| `timed_out` ⇒ no action | 72 h | Chief Quality Officer |
+| **T0** | Interrupt fires. Primary approver role notified | — |
+| **T1 — reminder** | Primary re-notified. Escalation role notified **for awareness only** | **No** |
+| **T2 — escalation** | Escalation role becomes an **additional** eligible approver, *if the §5.3 conditions hold* | **Adds** one; never removes or replaces the primary |
+| **T3 — expiry** | `hitl_status = timed_out`, terminal state `abstained`, reason `hitl_timeout`. **No action taken** | Approval is no longer possible; resubmission required |
 
-**Open item for Stage 16:** confirm both durations per workflow with the accountable roles.
-PV and Supply may need different windows — a PV reporting clock is a regulatory constraint,
-not an SLA preference, and Supply's dual approval needs a rule for the case where one approver
-responds and the other does not. **Partial approval is not approval**; the run stays pending
-and times out to no action.
+**The ladder only ever widens who may say yes. It never lowers what "yes" requires, and no
+tier auto-approves.** T3 is silence resolving to nothing, which is the whole point of the
+default-safe rule.
+
+### 5.2 Durations
+
+| Workflow | Clock | T1 reminder | T2 escalation | T3 expiry | Why this shape |
+|---|---|---|---|---|---|
+| **Batch Review** | Business hours, approver's regional calendar | **8 bh** | **16 bh** | **24 bh** (≈3 business days) | Batch evidence review is not hour-critical, but a request must not sit for a week. A business-hours clock stops a Friday submission from expiring unseen over a weekend |
+| **PV Intake** | **Wall clock — does not pause** | **4 h** | **8 h** | **24 h** | Safety clocks do not observe weekends. The window is set deliberately short so that human review of a *decision-support output* can never become the reason a downstream reporting clock is missed. See the verification note below |
+| **Supply Planning** | Business hours | **8 bh** | **16 bh** (Quality leg only — see §5.4) | **24 bh** | Shortage planning is time-sensitive but produces non-executing options; nothing degrades because an option set expired |
+
+**Verification note (PV).** The 24 h expiry is chosen on a *principle* — the system must never
+sit on the critical path of a regulatory reporting clock — not by deriving it from a specific
+clock. The actual expedited-reporting windows in scope must be **verified against V2's PV
+material** (`knowledge/`, and whatever the PV reporting-clock fixtures encode) at Stage 13/14
+before this value is finalized. Per the ADR-002 standing rule, this document does not assert V2
+clock semantics it has not read. If a verified clock turns out to be shorter than 24 h for any
+case class, this expiry drops below it.
+
+### 5.3 Escalation conditions — "if we can do it at that time"
+
+At T2 the graph **attempts** escalation. It proceeds only if **all** of these hold, evaluated
+at that moment rather than at submission:
+
+| # | Condition | Why |
+|---|---|---|
+| E1 | An escalation role is **named** for this workflow | Supply's primary leg has none — see §5.4. No named role, no escalation |
+| E2 | The escalation role has an **active assignment right now** (Entra group membership checked at escalation time) | "Current authorization at execution time" is a required operating property. An empty or lapsed role assignment is not an approver |
+| E3 | The pending output's `guard_verdict` is `clear` and no `PROHIBITION_ADJACENT` reason code is present | A blocked or prohibition-adjacent draft is never approvable **by anyone**. Escalation must not become a path to a higher-ranked yes on something the guard rejected |
+| E4 | `policy_contract_version` is still in force | If policy changed mid-wait, the run is judged under a version nobody approved. Abstain and ask for resubmission (`langgraph_design.md` §4 resume semantics) |
+| E5 | The escalation role's own stated authority **covers this decision** | See §5.4. Escalation transfers approval of the *AI output*, never the primary's regulatory authority |
+
+If any condition fails, **escalation is skipped silently to the approver but recorded loudly to
+the audit store** (`hitl_escalation_skipped` with the failing condition). The run stays pending
+with the primary approver and proceeds to T3 on schedule. A failed escalation never shortens or
+extends the ladder.
+
+### 5.4 Who the escalation role is, per workflow
+
+| Workflow | Primary | T2 escalation role | Authority basis |
+|---|---|---|---|
+| **Batch Review** | EU Qualified Person | **Chief Quality Officer** | The CQO's stated authority is "quality-system policy and risk acceptance," which covers accepting the risk of releasing a reconciliation summary. It does **not** cover batch certification — and does not need to, because the system never certifies. **Manufacturing VP remains ineligible at every tier** |
+| **PV Intake** | Global Head of Pharmacovigilance | **Chief Medical Officer** | Stated authority: "clinical governance and escalation." The **Patient Safety Representative holds an advisory veto** — see below |
+| **Supply Planning** | Supply Chain VP **and** Quality co-approver | **Quality leg only:** EU QP → Chief Quality Officer. **Supply leg: no escalation** | V2's stakeholder pack names no escalation role above the Supply Chain VP. Rather than invent one, the supply leg simply cannot escalate and expires at T3 |
+
+**The Patient Safety Representative's advisory veto is not an approval path.** It may be
+registered at any tier and forces `hitl_status = rejected` immediately. It can never count
+toward an approval, and it is not weakened by escalation — a CMO approval does not override a
+registered veto.
+
+**Supply's dual approval survives escalation intact.** At T2 the Quality leg's eligible set
+becomes {EU QP, CQO}; the supply leg stays {Supply Chain VP}. **Two approvals are still
+required.** One approval plus one escalated-but-unfilled leg is still pending, and
+**partial approval is not approval** — it expires to no action like any other incomplete
+approval.
+
+### 5.5 What T3 produces
+
+- `hitl_status = timed_out`, `terminal_state = abstained`, `abstention_reason = hitl_timeout`.
+- Audit: `AgentRun` closed, plus a `HumanOverrideRecorded`-adjacent entry recording **that no
+  decision was made and by which roles it was not made** — the absence is the record.
+- The requester is told **"no decision was made; resubmit"** — explicitly *not* "the system
+  found nothing," which a reader could mistake for a clean result.
+- Escalation-role notification of the expiry, so a lapsed approval is visible to the person
+  accountable for the queue rather than dying quietly.
+- **No cached or partial output is released.** The reconciliation work is discarded; a
+  resubmission re-runs it against evidence that is current at that time, which also removes any
+  chance of serving a conclusion built on since-superseded evidence.
+
+### 5.6 Control metrics for the ladder (feeds Stage 17)
+
+| Metric | Expected | Alert on |
+|---|---|---|
+| `hitl_escalated` rate | Low | A rise — approvers are not being reached at T0/T1 |
+| `hitl_escalation_skipped` by condition | **Zero for E2** | Any E2 skip means a role assignment is empty or lapsed, which is a governance defect, not a scheduling one |
+| `hitl_timed_out` rate | Low | A rise means approver capacity, not system correctness |
+| Approvals arriving **at T2 by the escalation role** | Low | A sustained rise means the primary role is effectively not staffed — the ladder is masking an org problem it should be exposing |
+| Any approval recorded after T3 | **Zero** | Any occurrence means expiry is not enforced |
+
+The fourth row is the one worth watching. A ladder that quietly routes most approvals to the
+escalation role has not solved a latency problem; it has moved accountability away from the
+role the stakeholder pack assigned it to.
 
 ## 6. Failure taxonomy — what the graph does when it cannot make progress
 
