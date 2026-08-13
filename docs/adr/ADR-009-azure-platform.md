@@ -1,7 +1,7 @@
 # ADR-009 — Azure is the target cloud platform
 
-**Status:** `accepted` (platform choice) with **one open sub-decision** — the model-hosting
-route, flagged in §Open question below.
+**Status:** `accepted`, fully — the model-hosting route (§below) was confirmed as **Route A**
+ahead of Stage 20a, closing the last open sub-decision.
 **Evidence basis:** Fact (explicit user/sponsor directive) — not a technical derivation.
 **Amends:** [ADR-001](ADR-001-runtime-stack.md) (runtime stack) and
 [ADR-007](ADR-007-degraded-mode-safe-not-offline-capable.md) (degraded-mode model).
@@ -21,7 +21,7 @@ Target **Microsoft Azure**. Component mapping:
 |---|---|---|
 | Orchestration | LangGraph | **Unchanged** — LangGraph is a library, not a service; hosted on **Azure Container Apps** (or AKS if scale/network policy demands) |
 | Compute — API + workers | Orchestrator API, Agent Workers | Azure Container Apps (separate apps, so the async worker scales independently per `c4_containers.md`) |
-| LLM inference | Anthropic Claude API | **Open sub-decision — see below** |
+| LLM inference | Anthropic Claude API | **Route A confirmed — see below** |
 | Cache | Redis | **Azure Cache for Redis** — direct substitution, no design change |
 | Observability | LangSmith | LangSmith retained (SaaS, permitted under ADR-007) **plus Azure Monitor / Application Insights** for platform-level telemetry. OpenTelemetry remains the instrumentation layer, so the trace backend stays swappable |
 | Audit / evidence store (ADR-006) | "Owned store, separate from LangSmith" | **Azure Blob Storage with immutability (WORM) policies**, optionally Azure SQL for queryable metadata |
@@ -42,21 +42,24 @@ Target **Microsoft Azure**. Component mapping:
    by an application-managed database, and it directly supports the Stage 19 compliance
    evidence requirement.
 
-## Open question — model hosting route (needs confirmation)
+## Model hosting route — confirmed: Route A (Claude via Azure AI Foundry)
 
-"Use Azure" does not by itself determine where inference runs. Two routes:
+"Use Azure" does not by itself determine where inference runs. Two routes were weighed:
 
 | Route | Notes |
 |---|---|
-| **A — Claude via Azure AI Foundry (recommended)** | Keeps the Claude models the design assumes, inside the Azure boundary (billing, networking, governance). Preserves ADR-003/004 reasoning unchanged, since model behavior is unchanged. |
-| **B — Azure OpenAI (GPT models)** | Fully Azure-native, but changes the model family. Would require re-validating prompt behavior, abstention characteristics, and the eval baselines at Stage 14 — none of the design reasoning depends on a specific model, but the *measured* results would all need re-running. |
+| **A — Claude via Azure AI Foundry — CONFIRMED** | Keeps the Claude models the design assumes, inside the Azure boundary (billing, networking, governance). Preserves ADR-003/004 reasoning unchanged, since model behavior is unchanged. |
+| **B — Azure OpenAI (GPT models)** | Fully Azure-native, but changes the model family. Would require re-validating prompt behavior, abstention characteristics, and the eval baselines at Stage 14 — none of the design reasoning depends on a specific model, but the *measured* results would all need re-running. Not selected. |
 
-**Recommendation: Route A**, because it changes the platform without changing the model
-variable at the same time — keeping one variable fixed while the other moves is what makes
-the interim state's assumption tests interpretable. **Confirm before Stage 20.**
+**Confirmed as Route A**, because it changes the platform without changing the model variable
+at the same time — keeping one variable fixed while the other moves is what makes the interim
+state's assumption tests interpretable. This matches every design decision made since
+Stage 10, which is built around Claude's specific abstention and citation-discipline behavior.
 
 Model availability on any given Azure service changes over time; verify current availability
 in the target region at implementation time rather than trusting this document's snapshot.
+**This does not reopen the route decision** — it is a deployment-time availability check, not
+a re-evaluation of Route A vs. B.
 
 ## Azure is the DEPLOYMENT target, not a DEVELOPMENT requirement
 

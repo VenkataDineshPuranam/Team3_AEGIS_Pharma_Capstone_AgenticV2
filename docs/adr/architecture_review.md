@@ -8,9 +8,9 @@ were `proposed`, pending two open backlog items. **Both are now closed:**
   (see [`../governance/hitl_control_model.md`](../governance/hitl_control_model.md)). DDD → `stable`.
 - **EAB-2** — sponsor confirmed cloud-connected operation. ADR-007 ratified, C4 → `stable`.
 
-All 9 ADRs are `accepted` (ADR-009, added at Stage 16, has one open internal sub-decision —
-LLM-hosting route — tracked as trigger T-6, not an unaccepted status); no artifact rests on an
-unconfirmed assumption. `pass` is now the evidence-supported outcome.
+All 9 ADRs are `accepted`, with no open sub-decisions (ADR-009's LLM-hosting route, added at
+Stage 16, confirmed **Route A** ahead of Stage 20a); no artifact rests on an unconfirmed
+assumption. `pass` is now the evidence-supported outcome.
 
 ## Defensibility checks
 
@@ -59,8 +59,8 @@ actual verified behavior — is real, and that verification catches it.**
 
 **Proceed to the technical-design layer (`prompts/08_technical_design.md`) and Stages 09+
 without conditions on artifact status.** All 9 ADRs are ratified and DDD/C4 are `stable`
-(ADR-009 added at Stage 16; its LLM-route sub-decision is tracked as trigger T-6, not a
-ratification blocker).
+(ADR-009 added at Stage 16; its LLM-route sub-decision resolved to Route A ahead of
+Stage 20a).
 
 Two standing rules carry forward (obligations, not blockers):
 
