@@ -2,10 +2,12 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 20b (full build — all 3 workflows + Redis). Stages 16–19 and
-> Stage 20 (both interim and full) were completed in the same session that also fixed a
-> stale-doc gap here — this file had not been updated since Stage 15 despite three more
-> stages landing on top of it before this session started.
+> **Last updated:** after building the FastAPI + Next.js app on top of Stage 20b (§6m).
+> Stages 16–19, Stage 20 (interim and full), and this app were all completed in the same
+> session that also fixed a stale-doc gap here — this file had not been updated since Stage 15
+> despite three more stages landing on top of it before this session started. §6k (Compliance)
+> and §6l (Stage 20b) were also missing their narrative sections until this pass — only the
+> status table had been kept current for those two.
 
 ---
 
@@ -60,7 +62,9 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 19 of 21 stages complete, plus Stage 20 (full implementation, all 3 workflows) built and running
+## 3. Status: 19 of 21 stages complete, plus Stage 20 (full implementation, all 3 workflows)
+built and running, plus a real app (FastAPI + Next.js) on top of it — not itself a numbered
+stage, but the first interface a human can actually use
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -504,6 +508,87 @@ retry cap first (Groq did, under a full-suite run). The actual safety invariant 
 property. Also moved `test_interim_assumptions.py` under the `live` pytest marker — it had been
 making real API calls even during `-m "not live"` filtered runs.
 
+## 6k. Compliance (Stage 19, `docs/governance/compliance/`)
+
+**EU AI Act classification is reasoned, explicitly not a legal determination** — matches V2's
+own `REGULATORY_BOUNDARY_PACK.md` framing ("research anchors, not legal conclusions"), read this
+stage per the standing ADR-002 rule rather than inventing classification criteria. Points toward
+decision-support (not an Annex III-listed high-risk category), but whether it's a "safety
+component" under Article 6(1) is a determination this project cannot make with legal authority —
+recorded as **Gap G-1**, not silently treated as resolved.
+
+**ISO 42001 mapping across 16 clauses**, most backed by real operating evidence (99+ real
+`AgentRun` records, live Neo4j, Stage 18's real red-team results) rather than documents alone.
+Several clauses (internal audit, management review) are named as **structurally premature** —
+they need an operating organization that doesn't exist yet, not more code.
+
+**Found and fixed a second real audit-write gap**, same pattern as Stage 18: `HumanOverrideRecorded`
+had a schema and passing unit tests (`escalation_override_log_design.md`) but the running graph
+never actually wrote one — 0 rows despite 99+ real `AgentRun` records. Fixed: `hitl_interrupt`
+now calls `write_human_override`/`write_hitl_expired`, verified against a real live run producing
+a real row. Justification field is a stated placeholder (no approver-input UI existed at the
+time). **Still open**: the app built in 6m has a real approve/reject/veto UI now, but its
+`DecisionButtons` component doesn't collect a justification string either — Gap G-10 (no
+structured justification input) is not closed, just not made any worse.
+
+**10 gaps (G-1…G-10)**, each with a named owner — including a real, previously-unflagged one:
+zero dependency supply-chain control anywhere in this repo (no lockfile, no SBOM), re-flagged
+from Stage 18 as an ISO 42001 clause gap in its own right, not just a security nice-to-have.
+
+## 6l. Implementation — Full Build (Stage 20b, `services/api/pv_graph.py`, `supply_graph.py`, `packages/config/redis_client.py`)
+
+**PV Intake and Supply Planning built and proven independently** (RR-2/T-10 — nothing assumed
+from Batch Review): PV's Patient Safety Representative veto (forces `rejected`, never
+overridden — enforced at the audit-store write layer, not by convention) and Supply's **real**
+dual-approval (Supply Chain VP + Quality legs, both required — proven via LangGraph's
+multi-interrupt-per-node pattern across separate `invoke()` calls that one leg approving alone
+never completes the run).
+
+**Redis response cache wired end-to-end** — the exact ADR-003 target scenario (a cache hit on
+evidence that's since transitioned to `superseded` must be caught, not served) is a real passing
+test against live Redis + live Neo4j, not a design citation. Real hit/miss counters (not a
+proxy), feeding a new `dashboard_data.py` module that makes the Stage 17 dashboard panels
+computable from real data across all three workflows for the first time (155/46/38 real runs
+respectively, as of this stage).
+
+**Two more real bugs found and fixed**, both on paths no prior test had ever completed end to
+end: `guard()`'s "blocked" branch wrote its own `agent_run` record, and `finalize` wrote a
+*second* one for the same `run_id` — a PRIMARY KEY, so this crashed with `IntegrityError` the
+**first time any guard block, in any workflow, across the whole programme, ever actually
+finished**. And a live model returning `verdict: "reject"` with no `reason_code` crashed the
+router with `IndexError` — fixed at both the parse layer (now a proper `CONTRACT_VIOLATION`) and
+the router (defense in depth: an empty reason-code list escalates to a human instead of
+crashing).
+
+## 6m. The App — FastAPI Orchestrator API + Next.js Approver Dashboard (`services/api/main.py`, `apps/web/`)
+
+**Not a numbered stage** — built at explicit request, after Stage 20 proved the engine worked
+but nothing let an actual human interact with it (every run through Stage 20b had been driven by
+a script). `services/api/main.py` (FastAPI) wraps the three existing graphs over HTTP with
+**zero changes to their internal logic**; `apps/web` (Next.js 16, TypeScript, Tailwind) is the
+Approver Dashboard — queue of pending decisions, expand to see the draft + citations,
+approve/reject/veto or dual-leg-approve.
+
+**Found a third serious bug, this time via the real HTTP flow specifically** — the kind of bug
+none of the prior in-process test scripts could have caught: `response_cache`'s cache key hashed
+only `evidence_ids`, but every batch/case/product in a workflow retrieves the *same* evidence set
+(query terms are workflow-scoped, not subject-scoped) — so **the cache served one batch's
+reconciliation findings for a completely different batch's request.** Worse than the ADR-003
+staleness scenario already tested: factually wrong content, not merely stale content. Fixed:
+`cache_key()` now includes `subject_id`; new regression test
+(`test_cache_is_isolated_per_subject_id`) proves two subjects sharing evidence never share a
+cache entry. A fourth, smaller bug (Supply Planning's dual-approval progress not visible
+mid-flow, due to LangGraph only persisting a node's state once it fully returns) was also found
+and fixed, tracked in the API layer instead of read back from the graph's not-yet-caught-up
+snapshot.
+
+**Stated honestly as basic, not polished**: functionally real (live LLM calls, live HITL, live
+audit trail, verified via curl against real Neo4j/Redis/Groq) but minimal — default Tailwind
+styling only, no auth (Entra ID is the real ADR-009 target, not built here), polling instead of
+push updates, no run-history view. `services/api/pending_queue.py` is explicitly in-memory/
+single-process, same disclosed-simplification pattern as `denial_of_wallet_guardrail.py`'s own
+docstring — the audit trail itself is unaffected and remains the real record regardless.
+
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
 | Concern | Choice |
@@ -515,6 +600,9 @@ making real API calls even during `-m "not live"` filtered runs.
 | Audit/evidence store | **Azure Blob Storage with immutability (WORM)** + optional Azure SQL for queryable metadata |
 | Secrets | **Azure Key Vault** |
 | Identity / approver authorization | **Microsoft Entra ID** — approver roles become Entra groups, making "current authorization at execution time" enforceable infra; Supply's dual approval = membership in two groups |
+| Orchestrator API | **FastAPI** (`services/api/main.py`) — the C4 "Orchestrator API" container, filled in for real (6m). Wraps the LangGraph engine over HTTP, not itself a design change |
+| Approver UI | **Next.js 16 (App Router, TypeScript) + Tailwind** (`apps/web`) — no charting library; observability renders as real stat cards/tables, not synthetic visuals |
+| Knowledge graph | **Neo4j** (AuraDB this session) — added at user request during Stage 20a; **no ADR selected this**, Stage 13 specifies the ontology, not a storage engine. Known risk, see §9 |
 
 **Guardrail:** no Azure-specific API may leak into domain or agent logic — platform bindings
 live in `packages/config` and `infra/`.
@@ -535,11 +623,13 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 | NAB-2 | `plans/active/` empty while method doc says specs go there. Recommended fix: **correct the method doc** (prompts already are the spec; duplicating violates "nothing written twice") | Doc accuracy only |
 | NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? — **half-resolved**: `knowledge/` copied and SHA-256 verified (Stage 13), now also live-ingested into Neo4j (Stage 20a). `data/`/`evaluation/` fixtures still cross-repo | Stage 20b |
 | **NAB-4 (partial)** | `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (`eval-ai-cache/*OpenTelemetry Brownfield Implementation Runbook.docx`) was **never actually cited or consumed** by Stage 17's `packages/observability/` docs, despite the stage's own prompt saying it should draw on it. Stages 14/15 did consume their respective parts of `eval-ai-cache/`; Stage 17 did not | Should be revisited before Stage 20b's real dashboards/alerting are built |
-| **P-07 partially closed / P-08+P-09 still open** | HITL timeout (P-07) now has real evidence — `test_assumption_3` exercises `hitl_interrupt`'s timeout path against a live graph (Stage 18). Escalation (P-08, E1–E5 conditions) and PV veto (P-09) are still untested — escalation was never actually triggered, and PV doesn't exist to test the veto against | Stage 20b (escalation needs a longer-running scenario; veto needs PV Intake to exist) |
-| **20a results provisional** | Interim-assumption results (`interim_state_results.md`) were run under Groq (dev-only), not Claude. Token-economics number (assumption 6) is real but not the Route A number | Must re-run under `LLM_PROVIDER=anthropic` before Gate M can evaluate real evidence |
+| **P-07/P-09 closed, P-08 still open** | HITL timeout (P-07) and PV veto (P-09) now both have real evidence against a live graph (`test_assumption_3`, `test_veto_forces_rejected_and_is_never_overridden`, Stage 20b). Escalation (P-08, E1–E5 conditions) is still untested — never actually triggered, since no real HITL clock is wired for any workflow (durations are config values the graph doesn't yet enforce against wall-clock time) | Needs real clock wiring, not scoped to any stage yet |
+| **20a/20b results provisional** | Interim-assumption results (`interim_state_results.md`) and everything run through the app (6m) were run under Groq (dev-only), not Claude. Token-economics numbers are real but not the Route A numbers | Must re-run under `LLM_PROVIDER=anthropic` before Gate M can evaluate real evidence |
 | Stale checkpointer warning | LangGraph's `MemorySaver` deserializes our custom pydantic types (`EvidenceItem`, `BatchPayload`, etc.) via an unregistered-type fallback that "will be blocked in a future version" | Register `allowed_msgpack_modules` or add custom serializers before upgrading LangGraph |
-| **No dependency supply-chain control** | Zero lockfile/version pinning/SBOM for any package this session installed (`anthropic`, `openai`, `neo4j`, `langgraph`, `pydantic`, `jsonschema`, `python-dotenv`) — found during Stage 18's T-10 analysis | Should close before Stage 20b adds more dependencies (Redis client, PV/Supply packages) |
+| **No dependency supply-chain control** | Zero lockfile/version pinning/SBOM for any Python package, **now also true of `apps/web`'s npm dependencies** (a real `package-lock.json` exists there, but nothing enforces it's checked/audited) | Should close before any real deployment |
 | **Guard evadable by paraphrase** | `prohibited_action_guard.py` matches literal banned terms/phrases — a model complying with an injection without using any listed term wouldn't be caught (Stage 18, T-01 residual risk) | Needs a design decision (semantic check vs. expanded phrase list) before it's closed, not a quick patch |
+| **No approver-justification capture (G-10)** | Neither the 20a/20b placeholder nor the app's (6m) `DecisionButtons` UI collects a real justification string for an approve/reject/veto — `HumanOverrideRecorded.justification` is still a hardcoded placeholder | A real approver-input form field, not built yet |
+| **App has no auth** | `apps/web` has no login — requester role is a free-text field. Entra ID is the real ADR-009 target | Before any real deployment, not a demo-scope concern |
 
 **Closed:** EAB-2 (air-gap → cloud-connected confirmed), EAB-3 (approvers named), NAB-1,
 **ADR-009's LLM route** (confirmed Route A), **S09-D1** (ADR-009 now listed in both
