@@ -59,7 +59,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 17 of 21 stages complete, plus the Stage 20a interim slice built and running
+## 3. Status: 18 of 21 stages complete, plus the Stage 20a interim slice built and running
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -80,7 +80,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 15 | **Performance tuning** | `stage-15-performance-tuning` | stable — cost/latency models awaiting U1/U2; denial-of-wallet ceiling enforced (7/7 tests) |
 | 16 | **Governance & Control** | `stage-16-governance-control` | stable — 13 policies (P-01…P-13) registered, all traced to an existing ADR/BC/hook; 3 (HITL timeout/escalation/veto) flagged with no executable eval yet |
 | 17 | **Observability** | `stage-17-observability` | stable — 11-node tracing design, RBAC model (new — no prior RBAC coverage existed), severity taxonomy (SEV-1…4), redaction ruleset. **Gap:** never actually cites `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (NAB-4 not fully closed for this stage) |
-| 18 | AI Security | `stage-18-ai-security` | not started — needs a running system to red-team; unblocked now that 20a exists |
+| 18 | **AI Security** | `stage-18-ai-security` | stable — full DMAIC pass, 12 threats catalogued, **3 actually attempted against the live 20a system** (T-01 indirect injection, T-06 evidence-authority bypass, T-11 denial-of-wallet). Found and fixed a real gap: the denial-of-wallet guard was never wired into `services/api/graph.py` despite `hooks.md` calling it "implemented and tested" |
 | 19 | Compliance | `stage-19-compliance` | not started — needs evidence from real runs |
 | **20a** | **Implementation — interim slice** (`batch_review` only) | `stage-20-repo-implementation` | **built and running** — real code for the first time since Stage 14. 6/7 interim assumptions pass (1 correctly `NOT_OBSERVABLE`); results are **provisional** (run on Groq, dev-only substitute; Route A/Claude re-run still owed per ADR-009). 3 real routing bugs found and fixed. See `docs/product/state/interim/interim_state_results.md` |
 | 20b | Implementation — full build (+PV, +Supply, +Redis) | | not started |
@@ -461,6 +461,48 @@ approving quickly. Not a code defect — the loop guards worked exactly as desig
 evidence for ADR-009's own rationale (keep the model variable fixed while the platform moves):
 a weaker model changes the *shape* of a run, not just its prose quality.
 
+## 6j. AI Security (Stage 18, `security/threat-models/`, `security/abuse-cases/`, `tests/security/`)
+
+**12 threats catalogued (T-01…T-12) against the real Stage 20a code**, not the design docs —
+plus 3 more (T-13…T-15) named as not-yet-buildable until PV/Supply exist. Full DMAIC, per the
+stage's own prompt (security is designated full-DMAIC alongside Discovery/DDD/C4/ADR, not a
+thin lens).
+
+**Three threats actually attempted, not just modeled:**
+- **T-01 (indirect prompt injection).** Confirmed by code inspection first: `EvidenceItem.
+  content_excerpt` is never sent to the LLM, but `batch_reconcile`'s `findings[].
+  gap_description` *is*. Built a real adversarial fixture (`B-EVIL.json`) with an injection
+  payload in that field, ran it against a live model (Groq). The model didn't comply this run;
+  the test asserts the structural guard (`prohibited_action_guard.py`) would catch compliance
+  regardless — the actual claim ADR-004 makes, now backed by a real attempt rather than only
+  the design argument.
+- **T-06 (evidence authority bypass).** Re-confirmed K-998/K-999 (real `untrusted` fixtures)
+  never leak through `evidence.retrieve`, server-side filter verified via
+  `tool_accounting.items_filtered_untrusted`.
+- **T-11 (denial of wallet) — found a real, unfixed gap.** `DenialOfWalletGuard` (Stage 15,
+  7/7 tests passing at the module level) was **never actually called** from
+  `services/api/graph.py` — `intake` never called `check_and_admit`, `finalize` never called
+  `record_run`. `hooks.md`'s "stable — implemented and tested" claim was true of the standalone
+  module, not the graph integration, and nothing had exercised the real graph with an LLM
+  before this session to catch the gap. **Fixed**: both calls wired in; confirmed against the
+  full 107+ test regression suite.
+
+**Residual risks recorded honestly**, not hidden behind the "3 real attacks, all handled"
+headline: paraphrase evasion of the guard's literal-string match (**Medium**) — a model
+complying without using any literal banned term wouldn't be caught; the denial-of-wallet
+ceiling is in-process only, doesn't survive restart/scale-out (**Medium**); **zero dependency
+supply-chain control exists in this repo at all** — no lockfile, no pinned versions, no SBOM
+(**Open**); two threats (T-08 stale-policy replay, T-09 PII redaction) are genuinely untestable
+today, not neglected — T-08 needs a second policy version, T-09 needs PV Intake's PHI fields,
+neither of which exist yet.
+
+**Own-suite bug found and fixed too:** `test_assumption_3` (Stage 20a's interim tests) asserted
+HITL was always reached before timeout — but a live model can legitimately exhaust the G1
+retry cap first (Groq did, under a full-suite run). The actual safety invariant (never silently
+`"completed"`) held either way; the test was over-asserting *which path* got there, not the
+property. Also moved `test_interim_assumptions.py` under the `live` pytest marker — it had been
+making real API calls even during `-m "not live"` filtered runs.
+
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
 | Concern | Choice |
@@ -492,9 +534,11 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 | NAB-2 | `plans/active/` empty while method doc says specs go there. Recommended fix: **correct the method doc** (prompts already are the spec; duplicating violates "nothing written twice") | Doc accuracy only |
 | NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? — **half-resolved**: `knowledge/` copied and SHA-256 verified (Stage 13), now also live-ingested into Neo4j (Stage 20a). `data/`/`evaluation/` fixtures still cross-repo | Stage 20b |
 | **NAB-4 (partial)** | `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (`eval-ai-cache/*OpenTelemetry Brownfield Implementation Runbook.docx`) was **never actually cited or consumed** by Stage 17's `packages/observability/` docs, despite the stage's own prompt saying it should draw on it. Stages 14/15 did consume their respective parts of `eval-ai-cache/`; Stage 17 did not | Should be revisited before Stage 20b's real dashboards/alerting are built |
-| **P-07/P-08/P-09 eval gap** | HITL timeout/escalation/veto (Stage 16 `policy_register.md`) are `stable` in design but have no executable Stage 14 eval — need a running interrupt/clock, which the fixture harness can't simulate | Stage 18 (red-team the running slice) is the natural place to close this |
+| **P-07 partially closed / P-08+P-09 still open** | HITL timeout (P-07) now has real evidence — `test_assumption_3` exercises `hitl_interrupt`'s timeout path against a live graph (Stage 18). Escalation (P-08, E1–E5 conditions) and PV veto (P-09) are still untested — escalation was never actually triggered, and PV doesn't exist to test the veto against | Stage 20b (escalation needs a longer-running scenario; veto needs PV Intake to exist) |
 | **20a results provisional** | Interim-assumption results (`interim_state_results.md`) were run under Groq (dev-only), not Claude. Token-economics number (assumption 6) is real but not the Route A number | Must re-run under `LLM_PROVIDER=anthropic` before Gate M can evaluate real evidence |
 | Stale checkpointer warning | LangGraph's `MemorySaver` deserializes our custom pydantic types (`EvidenceItem`, `BatchPayload`, etc.) via an unregistered-type fallback that "will be blocked in a future version" | Register `allowed_msgpack_modules` or add custom serializers before upgrading LangGraph |
+| **No dependency supply-chain control** | Zero lockfile/version pinning/SBOM for any package this session installed (`anthropic`, `openai`, `neo4j`, `langgraph`, `pydantic`, `jsonschema`, `python-dotenv`) — found during Stage 18's T-10 analysis | Should close before Stage 20b adds more dependencies (Redis client, PV/Supply packages) |
+| **Guard evadable by paraphrase** | `prohibited_action_guard.py` matches literal banned terms/phrases — a model complying with an injection without using any listed term wouldn't be caught (Stage 18, T-01 residual risk) | Needs a design decision (semantic check vs. expanded phrase list) before it's closed, not a quick patch |
 
 **Closed:** EAB-2 (air-gap → cloud-connected confirmed), EAB-3 (approvers named), NAB-1,
 **ADR-009's LLM route** (confirmed Route A), **S09-D1** (ADR-009 now listed in both
