@@ -2,9 +2,10 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 20a (interim slice build). Stages 16, 17, and 20a (interim)
-> were completed in the same session that also fixed a stale-doc gap here — this file had not
-> been updated since Stage 15 despite three more stages landing on top of it.
+> **Last updated:** end of Stage 20b (full build — all 3 workflows + Redis). Stages 16–19 and
+> Stage 20 (both interim and full) were completed in the same session that also fixed a
+> stale-doc gap here — this file had not been updated since Stage 15 despite three more
+> stages landing on top of it before this session started.
 
 ---
 
@@ -59,7 +60,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 19 of 21 stages complete, plus the Stage 20a interim slice built and running
+## 3. Status: 19 of 21 stages complete, plus Stage 20 (full implementation, all 3 workflows) built and running
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -83,7 +84,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 18 | **AI Security** | `stage-18-ai-security` | stable — full DMAIC pass, 12 threats catalogued, **3 actually attempted against the live 20a system** (T-01 indirect injection, T-06 evidence-authority bypass, T-11 denial-of-wallet). Found and fixed a real gap: the denial-of-wallet guard was never wired into `services/api/graph.py` despite `hooks.md` calling it "implemented and tested" |
 | 19 | **Compliance** | `stage-19-compliance` | stable — EU AI Act classification (reasoned, not legal), ISO 42001 mapping (16 clauses), 10 gaps (G-1…G-10) each with a named owner. **Found and fixed a second real audit-write gap** (same pattern as Stage 18): `HumanOverrideRecorded` had a schema + unit tests but was never written by the running graph — fixed, verified against a real run |
 | **20a** | **Implementation — interim slice** (`batch_review` only) | `stage-20-repo-implementation` | **built and running** — real code for the first time since Stage 14. 6/7 interim assumptions pass (1 correctly `NOT_OBSERVABLE`); results are **provisional** (run on Groq, dev-only substitute; Route A/Claude re-run still owed per ADR-009). 3 real routing bugs found and fixed. See `docs/product/state/interim/interim_state_results.md` |
-| 20b | Implementation — full build (+PV, +Supply, +Redis) | | not started |
+| **20b** | **Implementation — full build** (+PV Intake, +Supply Planning, +Redis cache, +dashboard data) | `stage-20-repo-implementation` | **built and running.** PV veto (forces rejected, never overridden) and Supply's real dual-approval (both legs required, one leg ≠ approval) both implemented and tested against the live graph. Redis response cache wired end-to-end — the exact ADR-003 target scenario (a cache hit on since-superseded evidence must be caught, not served) is a real passing test against live Redis + live Neo4j. **2 more real bugs found and fixed**, both on paths no prior test had ever completed: a guard-block double-write crashed with `IntegrityError` the first time any guard block ever finished end-to-end (any workflow, whole programme); a live model returning `reject` with no reason code crashed the router with `IndexError`. Interim assumptions re-checked independently per RR-2/T-10 for both new workflows — all PASS |
 | 21 | Documentation | `stage-21-documentation` | not started |
 
 **Note:** stages were resequenced early on — DDD/C4/ADR moved *before* current/interim/final
