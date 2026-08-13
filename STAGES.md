@@ -17,7 +17,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 10 | Agentic architecture (LangGraph) | stage-10-agentic-architecture | **stable** for `batch_review`; `provisional` for PV/Supply graphs (RR-2) |
 | 11 | MCP servers/tools | stage-11-mcp | **stable** for batch tools (evidence.retrieve, batch.reconcile); `provisional` for PV/Supply tools |
 | 12 | Skills & Hooks | stage-12-skills-hooks | **stable** for `batch_review` bindings; `provisional` for PV/Supply |
-| 13 | Ontology / Knowledge Graph | stage-13-ontology-kg | not started |
+| 13 | Ontology / Knowledge Graph | stage-13-ontology-kg | **stable** for Batch Review/Evidence classes; `provisional` for PV/Supply — NAB-3 half-resolved (`knowledge/` copied, hash-verified) |
 | 14 | Eval-AI-Cache | stage-14-eval-ai-cache | not started |
 | 15 | Performance tuning (Redis/token economics) | stage-15-performance-tuning | not started |
 | 16 | Governance & Control | stage-16-governance-control | not started |

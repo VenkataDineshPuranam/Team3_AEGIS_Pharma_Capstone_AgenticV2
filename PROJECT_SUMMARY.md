@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 12 (Skills & Hooks).
+> **Last updated:** end of Stage 13 (Ontology/Knowledge Graph).
 
 ---
 
@@ -57,7 +57,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 12 of 21 stages complete
+## 3. Status: 13 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -73,7 +73,8 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 10 | **Agentic arch (LangGraph)** | `stage-10-agentic-architecture` | stable for `batch_review`; provisional for PV/Supply |
 | 11 | **MCP tool contracts** | `stage-11-mcp` | stable for batch tools; provisional for PV/Supply tools |
 | 12 | **Skills & Hooks** | `stage-12-skills-hooks` | stable for `batch_review` bindings; provisional for PV/Supply |
-| 13 | **Ontology-KG** | `stage-13-ontology-kg` | **← NEXT** |
+| 13 | **Ontology-KG** | `stage-13-ontology-kg` | stable for Batch/Evidence classes; provisional for PV/Supply |
+| 14 | Eval-AI-Cache | `stage-14-eval-ai-cache` | **← NEXT** |
 | 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
 | 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
@@ -244,6 +245,53 @@ Same operational-safety call as Stage 11's `mcp.json`: **`.claude/hooks.json` st
 `hooks: {}`.** These bindings govern the *deployed* V3 runtime (Stage 20), not this coding
 session — populating real PreToolUse/PostToolUse commands now, before the scripts exist, would
 make this repo's own Claude Code session try to run nonexistent hooks on every tool call.
+
+**Correction applied same session:** cross-verifying `failure_and_loop_guards.md` against
+`langgraph_design.md`'s actual edge table found a real contradiction — a first-occurrence
+`PROHIBITION_ADJACENT` Critic verdict was routable back to `synthesize` for a retry, when the
+rule required it go straight to `blocked`, never retried. Dangerous specifically because that
+code only fires when the cheaper `guard1` pattern-match has already missed a draft — retrying
+would ask the model to rephrase a near-miss on the system's highest-severity control. Fixed:
+`critic_verify` now has an unconditional `PROHIBITION_ADJACENT ⇒ blocked` edge, checked first.
+
+## 6d. Ontology / Knowledge Graph (Stage 13, `docs/architecture/ontology/`)
+
+**NAB-3 half-resolved.** V2's `knowledge/` (32 policy docs) + `knowledge_catalog.csv` (the
+provenance/status/trust/supersession index) copied into this repo's own `knowledge/` and
+SHA-256-verified against the catalog's own hashes. V2's `data/`/`evaluation/` fixture half
+stays cross-repo, left for Stage 14 on the Overproduction argument (copying unused fixtures now
+would be waste). Reasoning: a gitignored, 983MB sibling directory isn't reproducible for anyone
+cloning only this repo, and this stage is the first that needs a stable source to build a KG
+schema against. Not a reopening of ADR-002 ("no code reuse") — this is domain reference data,
+not application code.
+
+**17 classes, 14 edge types, grounded against V2's actual CSV schemas** (`batches.csv`,
+`icsr_cases.csv`, `knowledge_catalog.csv`, etc.), not derived from DDD prose alone. Two findings
+surfaced only by checking real data:
+
+1. **`SensitiveSegment`** (`pregnancy`/`minor` case segments with restricted `access_group`s) —
+   a governance boundary DDD's original entity table never named. Flows *backward* as a gap in
+   Stage 02, recorded honestly rather than silently patched. Consequence: the PV-Intake Agent's
+   evidence scope needs an access-group check in addition to bounded-context scope — currently
+   unmodeled in `langgraph_design.md` or the MCP contracts; assigned to Stage 16/20.
+2. **`Deviation` has no `batch_id` foreign key anywhere in V2's own relationship model.** The
+   deviation-to-batch link that `batch.reconcile` needs isn't a guaranteed structured join —
+   Stage 20 will need a defined matching heuristic (site/date/product overlap), not a lookup.
+
+**Semantic layer fills BC-4** (Stage 10 designed agents against an ontology contract that
+didn't exist yet) and specifies exactly what Stage 11's `evidence.retrieve` query terms resolve
+against: KG concept/relationship/text match, single-hop bounded by context, `PortfolioProduct`
+as a hop-terminator (it's the one cross-workflow hub node, so a naive second hop would leak
+across workflows — blocked by both the hop rule and by each context having its own server
+process, `tool_inventory.md` §1).
+
+**Conflict/authority rules — every one traced to an existing decision, none invented:** the
+ADR-003 citability rule re-confirmed independently against real catalog data (not just Stage
+04's grader-code reading); `local_approved` documents are fully citable within their
+jurisdiction, never subordinate to a `Global` document by jurisdiction alone — only an explicit
+`supersedes` edge establishes precedence; `supersedes` is populated only from the catalog's own
+column (which stores a filename, not a key — normalized once at ingestion), never re-derived
+from a document's prose claiming to supersede something.
 
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
