@@ -1,8 +1,8 @@
 # hooks.md — Hook Index
 
 **Executes:** `prompts/16_skills_hooks.md` §2
-**Builds on:** `docs/architecture/agentic/langgraph_design.md`,
-`docs/architecture/agentic/failure_and_loop_guards.md`, `docs/governance/hitl_control_model.md`
+**Builds on:** `../../../docs/architecture/agentic/langgraph_design.md`,
+`../../../docs/architecture/agentic/failure_and_loop_guards.md`, `../../../docs/governance/hitl_control_model.md`
 **Artifact status:** `stable` for the `batch_review` bindings; `provisional` for PV/Supply
 (same split as `agent_roster.md`)
 
@@ -20,7 +20,7 @@ implicit in the graph diagram.
 
 **Every row below is a LangGraph node that already exists in `langgraph_design.md`.** This file
 adds no new control — it is the index the exit criteria ask for, plus the traceability link to
-`docs/governance/`.
+`../../../docs/governance/`.
 
 ## 1. Hook index
 

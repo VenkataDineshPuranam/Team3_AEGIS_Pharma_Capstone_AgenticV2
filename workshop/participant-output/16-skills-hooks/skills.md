@@ -1,7 +1,7 @@
 # skills.md — Skill Index
 
 **Executes:** `prompts/16_skills_hooks.md` §1
-**Builds on:** `docs/architecture/agentic/agent_roster.md`, `packages/contracts/tool_contracts/`
+**Builds on:** `../../../docs/architecture/agentic/agent_roster.md`, `../../../packages/contracts/tool_contracts/`
 **Artifact status:** `stable` for Batch Review skills; `provisional` for PV/Supply skills
 (same split as `agent_roster.md` — RR-2)
 
@@ -17,7 +17,7 @@ both belong in this index because the pattern is identical even though the invok
 
 | Category | Who invokes it | When it exists |
 |---|---|---|
-| **Runtime domain-agent skills** (§1) | The LangGraph `synthesize`/`critic_verify` LLM nodes designed in `docs/architecture/agentic/langgraph_design.md` | Implemented at Stage 20; **designed, not built, here** |
+| **Runtime domain-agent skills** (§1) | The LangGraph `synthesize`/`critic_verify` LLM nodes designed in `../../../docs/architecture/agentic/langgraph_design.md` | Implemented at Stage 20; **designed, not built, here** |
 | **Build-process skills** (§2) | Claude Code sessions carrying out later SDD stages (this one included) | Some are usable **today** — Claude Code already exists; nothing here waits on Stage 20 |
 
 **No skill in either category performs a governance-critical check.** Every governance-critical
@@ -46,7 +46,7 @@ needs workflow-specific vocabulary, so one skill genuinely covers all three grap
 domain-agent skill would recreate the generalist-agent problem DDD §10 explicitly rejected.
 
 **None of these four skills references a tool contract shaped like a write.** All inputs are
-the read-only outputs catalogued in `packages/contracts/tool_contracts/` — a skill drawing on a
+the read-only outputs catalogued in `../../../packages/contracts/tool_contracts/` — a skill drawing on a
 tool contract inherits that contract's `what_this_schema_cannot_express` guarantee for free; it
 cannot ask a model to reason about a field that isn't there.
 
@@ -61,7 +61,7 @@ Stage 20, because Claude Code is the tool executing them, not the deployed syste
 |---|---|---|---|---|
 | `grade-evidence-provenance` | Verify a claim in a stage artifact is backed by a real citation with the correct authority status — the same check `authority_grader.py` performs on V2 outputs, applied here to *this programme's own documents* rather than to the deployed system's outputs | Before marking any artifact `stable` that asserts a fact about V2 behaviour | 02, 04, 09–19 (any stage citing V2 material) | **Yes** — this is the exact discipline behind the ADR-003 correction (`docs/adr/dmaic_lens.md`) and the standing ADR-002 rule; formalizing it as a named, invokable skill makes it repeatable instead of ad hoc |
 | `run-release-gate-check` | Execute the eval categories and gates defined in `quality/gates/` against a build artifact or, once it exists, a real run | Stage 14 eval harness invocation; Stage 12 (assurance) rollup | 14, 12, 21 | No — `quality/gates/` has no gate definitions until Stage 14 |
-| `reconcile-dmaic-lens` | The exact procedure used to write `docs/quality/dmaic-lean/lens_rollup.md` — read every prior stage's lens, merge findings, flag contradictions rather than silently picking one | Any future re-consolidation of DMAIC lenses (e.g. if Stage 20 forces revisiting Stage 09) | 09, and any stage that reopens it | **Yes** — the procedure exists in the Stage 09 artifact; this entry names it so it isn't re-derived from scratch next time |
+| `reconcile-dmaic-lens` | The exact procedure used to write `../../../docs/quality/dmaic-lean/lens_rollup.md` — read every prior stage's lens, merge findings, flag contradictions rather than silently picking one | Any future re-consolidation of DMAIC lenses (e.g. if Stage 20 forces revisiting Stage 09) | 09, and any stage that reopens it | **Yes** — the procedure exists in the Stage 09 artifact; this entry names it so it isn't re-derived from scratch next time |
 | `verify-against-source-not-filename` | Before asserting V2 (or any external system's) behaviour, read the actual code/data cited, not the filename or a prior summary of it | Any claim of the form "V2 does X" | All stages that reference V2 material | **Yes** — this is the ADR-002 standing rule, named as a skill so it is invoked rather than remembered |
 
 **`grade-evidence-provenance`, `reconcile-dmaic-lens`, and `verify-against-source-not-filename`
@@ -89,7 +89,7 @@ stated separately so neither is mistaken for the other:
 
 ## 4. Cross-references
 
-- Tool contracts a skill may read: `packages/contracts/tool_contracts/`.
-- Governance gate a workflow-touching skill runs under: `docs/governance/hitl_control_model.md`
-  (named approvers); `docs/governance/` more broadly once Stage 16 populates it further.
+- Tool contracts a skill may read: `../../../packages/contracts/tool_contracts/`.
+- Governance gate a workflow-touching skill runs under: `../../../docs/governance/hitl_control_model.md`
+  (named approvers); `../../../docs/governance/` more broadly once Stage 16 populates it further.
 - The boundary rule separating this file from `hooks.md`: `../skill_vs_hook_boundary.md`.

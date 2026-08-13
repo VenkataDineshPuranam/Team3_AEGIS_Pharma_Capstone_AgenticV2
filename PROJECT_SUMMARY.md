@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 11 (MCP tool contracts).
+> **Last updated:** end of Stage 12 (Skills & Hooks).
 
 ---
 
@@ -57,7 +57,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 11 of 21 stages complete
+## 3. Status: 12 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -72,8 +72,8 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 09 | **DMAIC/Lean workbook** | `stage-09-dmaic-lean` | stable — 9 lenses reconciled; gate `cleared` |
 | 10 | **Agentic arch (LangGraph)** | `stage-10-agentic-architecture` | stable for `batch_review`; provisional for PV/Supply |
 | 11 | **MCP tool contracts** | `stage-11-mcp` | stable for batch tools; provisional for PV/Supply tools |
-| 12 | **Skills & Hooks** | `stage-12-skills-hooks` | **← NEXT** |
-| 13 | Ontology-KG | | not started |
+| 12 | **Skills & Hooks** | `stage-12-skills-hooks` | stable for `batch_review` bindings; provisional for PV/Supply |
+| 13 | **Ontology-KG** | `stage-13-ontology-kg` | **← NEXT** |
 | 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
 | 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
@@ -227,6 +227,23 @@ do-not-cache-by-default pending an invalidation design.
 unimplemented servers would make this repo's own Claude Code session try to launch nonexistent
 processes. Per standing instruction: **register only real, needed MCP servers**, not
 speculative ones; Stage 20 populates it for real when server code exists.
+
+**Stage 12 — Skills & Hooks** (`.claude/skills/skills.md`, `.claude/hooks/hooks.md`,
+`.claude/skill_vs_hook_boundary.md`). Catalogued Stage 10's 9 deterministic nodes as hook
+bindings (session-start, pre-tool-call, post-tool-call, pre-output, on-interrupt, post-run) and
+named 4 runtime domain-agent skills + 4 build-process skills for the 2 LLM nodes. **The rule
+this stage adds, not just relabels:** no skill's output is ever the last check on itself —
+every skill (e.g. the Critic's judgement) has a downstream hook checking its output's *shape*,
+never trusting the skill's own reasoning. Worked counterexample in
+`skill_vs_hook_boundary.md` §4 shows why folding the prohibited-action check into the Critic's
+prompt (skip the separate guard hook) would fail: it makes the highest-severity control in the
+system depend on a model correctly resisting a jailbreak exactly once, with no independent
+check — precisely the H5 risk from Stage 01.
+
+Same operational-safety call as Stage 11's `mcp.json`: **`.claude/hooks.json` stays
+`hooks: {}`.** These bindings govern the *deployed* V3 runtime (Stage 20), not this coding
+session — populating real PreToolUse/PostToolUse commands now, before the scripts exist, would
+make this repo's own Claude Code session try to run nonexistent hooks on every tool call.
 
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 

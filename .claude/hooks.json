@@ -1,4 +1,4 @@
 {
-  "_comment": "Lifecycle hook bindings. See .claude/hooks/hooks.md for the human-readable index. Populated in Stage 12.",
+  "_comment": "Lifecycle hook bindings. See .claude/hooks/hooks.md for the human-readable index -- Stage 12 fully designed 9 hook bindings there (prohibited-action guard, evidence gate, HITL escalation ladder, redaction, etc.), mapped to the LangGraph nodes in docs/architecture/agentic/langgraph_design.md. hooks stays {} here deliberately: these bindings govern the deployed V3 agentic runtime (built at Stage 20), not this coding session. Populating this file with PreToolUse/PostToolUse commands now -- before the referenced scripts exist -- would make THIS repo's own Claude Code session attempt to run nonexistent hook commands on every tool call, the same operational-safety reasoning applied to mcp.json at Stage 11. Stage 20 wires these for real once the runtime code exists.",
   "hooks": {}
 }
