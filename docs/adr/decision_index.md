@@ -10,12 +10,15 @@
 | [006](ADR-006-audit-store-separate-from-langsmith.md) | Audit store separate from LangSmith | `accepted` | Governance & Oversight (audit) | Audit/Evidence Log Store | Derivation | No |
 | [007](ADR-007-degraded-mode-safe-not-offline-capable.md) | Degraded-mode-safe, not offline-capable | `accepted` | Cross-cutting | All hosted dependencies | Fact (incl. sponsor decision on EAB-2) | No — closed |
 | [008](ADR-008-one-graph-per-workflow-single-deployment.md) | One deployment, one graph per workflow | `accepted` | All three core contexts | Orchestrator API | Derivation | No |
+| [009](ADR-009-azure-platform.md) | Azure is the target cloud platform | `accepted`, **one open sub-decision** (LLM-hosting route: Claude via Foundry vs. Azure OpenAI) | Cross-cutting | All hosted containers (Container Apps, Redis, Blob Storage, Key Vault, Entra ID) | Fact (sponsor directive) | No — sub-decision tracked via trigger T-6, not a backlog blocker |
 
 ## Status summary
 
-- **All 8 `accepted`.** ADRs 005/006/008 were upgraded when **EAB-3 closed** (DDD reached
+- **9 of 9 `accepted`**, one (ADR-009) with an open internal sub-decision rather than an
+  unaccepted status. ADRs 005/006/008 were upgraded when **EAB-3 closed** (DDD reached
   `stable`); ADR-007 was upgraded when **EAB-2 closed** (sponsor confirmed cloud-connected
-  operation). No ADR now rests on an unconfirmed assumption.
+  operation). No ADR rests on an unconfirmed assumption — ADR-009's open sub-decision is a
+  named, triggered revisit item (**T-6**, `dmaic_plan.md`), not an unconfirmed premise.
 
 ## Blocked on evidence acquisition backlog
 

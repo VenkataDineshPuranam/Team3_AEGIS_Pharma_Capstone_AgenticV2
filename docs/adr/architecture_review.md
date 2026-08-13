@@ -8,15 +8,16 @@ were `proposed`, pending two open backlog items. **Both are now closed:**
   (see [`../governance/hitl_control_model.md`](../governance/hitl_control_model.md)). DDD → `stable`.
 - **EAB-2** — sponsor confirmed cloud-connected operation. ADR-007 ratified, C4 → `stable`.
 
-All 8 ADRs are `accepted`; no artifact rests on an unconfirmed assumption. `pass` is now the
-evidence-supported outcome.
+All 9 ADRs are `accepted` (ADR-009, added at Stage 16, has one open internal sub-decision —
+LLM-hosting route — tracked as trigger T-6, not an unaccepted status); no artifact rests on an
+unconfirmed assumption. `pass` is now the evidence-supported outcome.
 
 ## Defensibility checks
 
 | Check | Result | Notes |
 |---|---|---|
 | C4 map matches DDD bounded contexts | **Pass** | Every container in `c4_containers.md` maps to a named context; the three core contexts remain peers with no direct coupling, and ADR-008 enforces that at the deployment level |
-| Material trade-offs have ADRs | **Pass** | 8 ADRs cover runtime stack, build strategy, evidence authority, prohibited actions, governance placement, audit storage, degraded mode, and deployment topology. Two candidates deliberately deferred (MCP auth, cache topology) with stated reasons |
+| Material trade-offs have ADRs | **Pass** | 9 ADRs cover runtime stack, build strategy, evidence authority, prohibited actions, governance placement, audit storage, degraded mode, deployment topology, and cloud platform. Two candidates deliberately deferred (MCP auth, cache topology) with stated reasons |
 | Trust, authority, privacy, degraded-mode, prohibited writes visible on the map | **Pass** | `boundary_and_degraded_mode.md` covers all five explicitly; zero write integrations to brownfield systems |
 | Gen AI / HITL / rules boundaries placed on the map | **Pass** | `gen_ai_boundaries.md` (DDD) + `c4_components.md` (HITL interrupt handler, Prohibited-Action Guard, per-tool write constraints) |
 | Out-of-scope not smuggled into containers | **Pass, with one flag** | The 9-container design exceeds DDD's strict "minimum governed workflow," but each addition (Redis, LangSmith, separate audit store) is justified against a specific named risk rather than added speculatively — this tension is disclosed honestly in `c4/dmaic_lens.md` Analyze rather than hidden |
@@ -57,7 +58,9 @@ actual verified behavior — is real, and that verification catches it.**
 ## Go-forward decision
 
 **Proceed to the technical-design layer (`prompts/08_technical_design.md`) and Stages 09+
-without conditions on artifact status.** All 8 ADRs are ratified and DDD/C4 are `stable`.
+without conditions on artifact status.** All 9 ADRs are ratified and DDD/C4 are `stable`
+(ADR-009 added at Stage 16; its LLM-route sub-decision is tracked as trigger T-6, not a
+ratification blocker).
 
 Two standing rules carry forward (obligations, not blockers):
 

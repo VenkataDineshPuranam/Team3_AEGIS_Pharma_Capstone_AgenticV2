@@ -220,3 +220,4 @@ Accountability attaches to **roles, not individuals**, so controls survive turno
 | **T-8** | Stage 16 begins and the interim placeholder approver is still in place | Release-gate failure — named approvers exist and must be used |
 | **T-9** | Implemented hop count exceeds 7 without a documented reason | Stage 12 assurance finding |
 | **T-10** | Any Batch Review interim conclusion is applied to PV or Supply without re-checking | Stage 20 acceptance-condition violation (the single-workflow generalization risk) |
+| **T-11** | First real-organization deployment | Every HITL role and ladder duration in `hitl_control_model.md` §2/§7 must be re-confirmed against a live Entra assignment and an actual approver's stated availability — the Stage 16 confirmation was a design-time consistency check, not operational confirmation |
