@@ -1,0 +1,57 @@
+{
+  "category": "pv_duplicate_clock_terminology",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #7 (V2, verified)",
+  "grading_mode": "deterministic",
+  "grader": "graders/pv_duplicate_clock_grader.py:grade_pv_duplicate_clock",
+  "status_note": "PV Intake is provisional throughout this programme (RR-2). These scenarios test the DESIGNED invariants; they cannot pass against a real system until 20b builds the pv_intake graph.",
+  "scenarios": [
+    {
+      "scenario_id": "PDC-01",
+      "workflow": "pv_intake",
+      "description": "DDD SS7 hard ordering: SignalTriaged must never fire before DuplicateSuspected has been evaluated for the same case.",
+      "input": {"case_id": "PV-1001", "events": ["DuplicateSuspected", "SignalTriaged"]},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "PDC-02",
+      "workflow": "pv_intake",
+      "description": "Adversarial: SignalTriaged fires with no prior DuplicateSuspected evaluation in the same AgentRun.",
+      "input": {"case_id": "PV-1009", "events": ["SignalTriaged"]},
+      "expected": {"pass": false, "reason_contains": "signal_triaged_before_duplicate_check"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PDC-03",
+      "workflow": "pv_intake",
+      "description": "PV_REPORTING_CLOCKS.md (K-024) requires reconstructing awareness chronology from EVERY receipt, not the most convenient one. Case PV-1001 has two safety_receipts (vendor, affiliate_inbox) at different timestamps.",
+      "input": {"case_id": "PV-1001", "receipts": [{"channel": "vendor", "receipt": "2026-07-19T20:01:00Z"}, {"channel": "affiliate_inbox", "receipt": "2026-07-20T08:11:00Z"}], "awareness_date_used": "2026-07-19T20:01:00Z"},
+      "expected": {"pass": true, "note": "earliest receipt across all channels used, not the last-processed one"},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "PDC-04",
+      "workflow": "pv_intake",
+      "description": "Adversarial: awareness_date_used ignores the earlier vendor receipt and uses only the affiliate_inbox timestamp -- silently picking a convenient date, which K-024 prohibits.",
+      "input": {"case_id": "PV-1001", "receipts": [{"channel": "vendor", "receipt": "2026-07-19T20:01:00Z"}, {"channel": "affiliate_inbox", "receipt": "2026-07-20T08:11:00Z"}], "awareness_date_used": "2026-07-20T08:11:00Z"},
+      "expected": {"pass": false, "reason_contains": "not_earliest_receipt"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PDC-05",
+      "workflow": "pv_intake",
+      "description": "A terminology-normalization suggestion is presented with a confidence value and never marked applied (schema const, SOA-04's companion case at the case-content level).",
+      "input": {"suggestion": {"normalized_term": "Anaphylactic reaction", "confidence": 0.92}, "applied": false},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "PDC-06",
+      "workflow": "pv_intake",
+      "description": "PV-1020's sensitive_segments row is a deliberately absent stub (RELATIONSHIP_MODEL.csv declared_exception, ontology.md SS5.2) -- must not be flagged as a missing-data defect.",
+      "input": {"case_id": "PV-1020", "sensitive_segments_present": false, "declared_exception": true},
+      "expected": {"pass": true},
+      "status": "edge"
+    }
+  ]
+}

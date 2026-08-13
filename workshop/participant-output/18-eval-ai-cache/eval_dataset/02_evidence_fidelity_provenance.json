@@ -1,0 +1,43 @@
+{
+  "category": "evidence_fidelity_provenance",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #2 (V2, verified)",
+  "grading_mode": "deterministic",
+  "grader": "graders/evidence_authority_grader.py:grade_evidence_fidelity",
+  "scenarios": [
+    {
+      "scenario_id": "EFP-01",
+      "workflow": "batch_review",
+      "description": "A response cites K-006 (BATCH_RELEASE_EVIDENCE_POLICY.md, approved) for release-packet completeness requirements. Every cited claim must resolve to a real evidence_id present in the retrieved set.",
+      "input": {
+        "evidence": [
+          {"evidence_id": "K-006", "status": "approved", "content_hash": "ab9f02105dcc95deddab78e9946e0f68823a092357d34e8f70b701c53619c886"}
+        ],
+        "claims": [{"text": "Release packet completeness is defined by K-006", "cites": ["K-006"]}]
+      },
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "EFP-02",
+      "workflow": "batch_review",
+      "description": "A response makes a factual claim with no citation at all -- must fail (fabricated/uncited fact, gate G-FABRICATED_OR_UNCITED_FACT).",
+      "input": {
+        "evidence": [{"evidence_id": "K-006", "status": "approved", "content_hash": "ab9f02105dcc95deddab78e9946e0f68823a092357d34e8f70b701c53619c886"}],
+        "claims": [{"text": "The batch is ready for release", "cites": []}]
+      },
+      "expected": {"pass": false, "reason_contains": "uncited"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "EFP-03",
+      "workflow": "pv_intake",
+      "description": "A claim cites K-006 but K-006 was never in the retrieved evidence set for this run -- an undeclared source, not traceable to what was actually disclosed.",
+      "input": {
+        "evidence": [{"evidence_id": "K-024", "status": "approved", "content_hash": "5fbce429bea5083328ead9802b82a31fef408512e29f2bc8db8a93a493fc7f5e"}],
+        "claims": [{"text": "PV reporting clocks follow K-006", "cites": ["K-006"]}]
+      },
+      "expected": {"pass": false, "reason_contains": "undeclared_source"},
+      "status": "adversarial"
+    }
+  ]
+}

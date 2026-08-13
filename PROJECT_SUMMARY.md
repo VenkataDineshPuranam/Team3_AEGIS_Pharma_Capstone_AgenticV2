@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 13 (Ontology/Knowledge Graph).
+> **Last updated:** end of Stage 14 (Eval-AI-Cache).
 
 ---
 
@@ -57,7 +57,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 13 of 21 stages complete
+## 3. Status: 14 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -74,7 +74,8 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 11 | **MCP tool contracts** | `stage-11-mcp` | stable for batch tools; provisional for PV/Supply tools |
 | 12 | **Skills & Hooks** | `stage-12-skills-hooks` | stable for `batch_review` bindings; provisional for PV/Supply |
 | 13 | **Ontology-KG** | `stage-13-ontology-kg` | stable for Batch/Evidence classes; provisional for PV/Supply |
-| 14 | Eval-AI-Cache | `stage-14-eval-ai-cache` | **← NEXT** |
+| 14 | **Eval-AI-Cache** | `stage-14-eval-ai-cache` | stable — 63 scenarios, 0 FAIL/ERROR |
+| 15 | Performance tuning | `stage-15-performance-tuning` | **← NEXT** |
 | 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
 | 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
@@ -292,6 +293,48 @@ jurisdiction, never subordinate to a `Global` document by jurisdiction alone —
 `supersedes` edge establishes precedence; `supersedes` is populated only from the catalog's own
 column (which stores a filename, not a key — normalized once at ingestion), never re-derived
 from a document's prose claiming to supersede something.
+
+## 6e. Eval-AI-Cache (Stage 14, `eval-ai-cache/`, `quality/gates/`, `tests/unit/graders/`)
+
+**Full DMAIC stage** (sets Measure/Control for the whole agentic system). Consumes
+`eval-ai-cache/AI_FDE_Brownfield_Evals_Cursor_Runbook/` rather than re-deriving it (NAB-4/T-7)
+— gate-state vocabulary (`PASS`/`FAIL`/`REVIEW`/`NOT_APPLICABLE`/`NOT_OBSERVABLE`/
+`THRESHOLD_NOT_DEFINED`/`BLOCKED_BY_ENVIRONMENT`) and hard/threshold/operational gate taxonomy
+both taken from it directly. Grader **patterns** (not code — ADR-002) verified against V2's
+actual `submission/evaluation/graders/*.py` and `tool_gateway.py` first.
+
+**63 real scenarios, 15 categories (12 required + 3 agent-specific), executed this session —
+0 FAIL, 0 ERROR.** Honestly scoped: this is a design-pass run against synthetic fixtures shaped
+like our own contracts, since no `apps/`/`services/` code exists yet (Stage 20 last) — not a
+live-system run. 2 `NOT_APPLICABLE` (business outcome, human-rubric, matches V2's own
+un-automated category), 1 `THRESHOLD_NOT_DEFINED` (cost-per-task cap — U1 still Unknown,
+refused to guess), 1 `BLOCKED_BY_ENVIRONMENT` (model-substitution check pending ADR-009's route
+decision). Verify with `python3 eval-ai-cache/graders/run_eval_dataset.py` or
+`pytest tests/unit/graders/ -q`.
+
+**The harness found 7 real defects in itself before it was trusted** (`scorecard.md` §2) —
+a schema-path doubling, a replay-counter that incorrectly incremented on plain replays
+(contradicting V2's own verified `tool_gateway.py` behavior), an adversarial fixture whose
+"bad" branch the grader had no way to actually produce, and 3 more. All fixed; recorded rather
+than hidden behind the final green run, since a scorecard showing only the clean pass
+overstates first-try correctness.
+
+**Agent-specific category 13 (`agent_wrong_handoff`) is the regression suite for the real
+`PROHIBITION_ADJACENT` routing bug** found and fixed at Stage 10 — `AWH-01` asserts the fix
+holds: a first-occurrence `PROHIBITION_ADJACENT` verdict must route straight to `blocked`,
+never to a retry.
+
+**Cache design (`cache_design.md`) — not built,** per `interim_state.md`'s deliberate exclusion.
+Cache key = `hash(query, evidence_snapshot_version)`, never a plain wall-clock TTL (a TTL can't
+distinguish "still correct" from "coincidentally not yet expired"); do-not-cache list
+(`pv.duplicate_check`, `supply.generate_options`, both from Stage 11) enforced via an executable
+grader, not just documentation. **Cache-correctness evals: 8 checks, all executed and correct**
+(`cache_correctness_evals.md`) — including the exact scenario the prompt names: a cache hit on
+`K-007` (the real `BATCH_RELEASE_POLICY_OLD.md` supersession pair) after it transitions to
+`superseded` is caught, not served.
+
+**Release gates independently re-derived from our own ADRs**, not copied from V2's 10 gates
+(ADR-002) — traceability table maps every gate to its owning ADR/DDD invariant and grader.
 
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 

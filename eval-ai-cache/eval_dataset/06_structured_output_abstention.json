@@ -1,0 +1,44 @@
+{
+  "category": "structured_output_abstention",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #6 (V2, verified)",
+  "grading_mode": "deterministic",
+  "grader": "graders/schema_grader.py:grade_schema",
+  "scenarios": [
+    {
+      "scenario_id": "SOA-01",
+      "workflow": "batch_review",
+      "description": "A well-formed batch.reconcile response validates against batch_reconcile.schema.json.",
+      "schema_ref": "packages/contracts/tool_contracts/batch_reconcile.schema.json#/output",
+      "input": {"reconciliation_complete": false, "findings": [{"category": "lab_results", "status": "conflict", "evidence_ids": ["K-006"]}], "tool_accounting": {"latency_ms": 120}},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "SOA-02",
+      "workflow": "batch_review",
+      "description": "Adversarial: response has an extra top-level field not in the schema -- additionalProperties:false must reject it.",
+      "schema_ref": "packages/contracts/tool_contracts/batch_reconcile.schema.json#/output",
+      "input": {"reconciliation_complete": false, "findings": [], "tool_accounting": {"latency_ms": 10}, "disposition": "hold"},
+      "expected": {"pass": false, "reason_contains": "additionalProperties"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "SOA-03",
+      "workflow": "supply_planning",
+      "description": "Insufficient evidence for options -- the correct response is an abstention (evidence_gate routes here per langgraph_design.md SS2), not a guessed option set.",
+      "schema_ref": "abstention_contract",
+      "input": {"terminal_state": "abstained", "abstention_reason": "insufficient_evidence"},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "SOA-04",
+      "workflow": "pv_intake",
+      "description": "Adversarial: pv.normalize_terminology response sets applied=true -- the schema fixes this field to const false; a caller claiming it applied a suggestion is a contract violation.",
+      "schema_ref": "packages/contracts/tool_contracts/pv_normalize_terminology.schema.json#/output",
+      "input": {"suggestions": [], "terminology_table_version": "v1", "applied": true, "tool_accounting": {"latency_ms": 5}},
+      "expected": {"pass": false, "reason_contains": "const"},
+      "status": "adversarial"
+    }
+  ]
+}

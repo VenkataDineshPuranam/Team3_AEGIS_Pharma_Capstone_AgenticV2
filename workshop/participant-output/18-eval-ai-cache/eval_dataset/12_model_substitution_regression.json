@@ -1,0 +1,24 @@
+{
+  "category": "model_substitution_regression",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #12 (V2, verified)",
+  "grading_mode": "blocked_by_environment",
+  "note": "Cannot be meaningfully scored until ADR-009's open LLM-route sub-decision (Route A: Claude via Azure AI Foundry vs Route B: Azure OpenAI) is confirmed AND a baseline exists to regress against (interim assumption 6). Recorded as a real category with a real blocker, not skipped silently.",
+  "scenarios": [
+    {
+      "scenario_id": "MSR-01",
+      "workflow": "cross_cutting",
+      "description": "If the LLM route changes from A to B, every eval baseline taken under A becomes invalid (trigger T-6, dmaic_plan.md). This scenario exists to be re-run, not to pass now.",
+      "input": {"route_at_baseline": "A", "route_at_regression_check": "UNCONFIRMED"},
+      "expected": {"gate_state": "BLOCKED_BY_ENVIRONMENT"},
+      "status": "edge"
+    },
+    {
+      "scenario_id": "MSR-02",
+      "workflow": "cross_cutting",
+      "description": "Manual/degraded mode continuity: with the LLM provider disabled, the deterministic path (retrieval, gating, structured tool) still completes and the run abstains with a partial structured result rather than guessing (ADR-007). Testable in principle without a specific model.",
+      "input": {"llm_provider_available": false, "deterministic_path_completed": true, "terminal_state": "abstained", "abstention_reason": "degraded_mode"},
+      "expected": {"pass": true},
+      "status": "golden"
+    }
+  ]
+}

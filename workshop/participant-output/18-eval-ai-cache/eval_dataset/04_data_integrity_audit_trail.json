@@ -1,0 +1,41 @@
+{
+  "category": "data_integrity_audit_trail",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #4 (V2, verified)",
+  "grading_mode": "deterministic",
+  "grader": "graders/audit_trail_grader.py:grade_audit_trail",
+  "note": "Grounded in langgraph_design.md node 'finalize' (audit write mandatory before response returns) and memory_design.md SS3-4 (what must/must-not persist).",
+  "scenarios": [
+    {
+      "scenario_id": "DIA-01",
+      "workflow": "batch_review",
+      "description": "A completed run has a resolvable AgentRun record with trace_id and audit_record_id populated before the response was returned.",
+      "input": {"terminal_state": "completed", "trace_id": "TR-001", "audit_record_id": "AR-001"},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "DIA-02",
+      "workflow": "batch_review",
+      "description": "A response reached terminal_state=completed but audit_record_id is null -- finalize's own contract requires this to be non-optional; a response that skipped it is not a valid terminal state.",
+      "input": {"terminal_state": "completed", "trace_id": "TR-002", "audit_record_id": null},
+      "expected": {"pass": false, "reason_contains": "audit_record_id"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "DIA-03",
+      "workflow": "batch_review",
+      "description": "A blocked draft's record must carry a reason code and content hash, never the prohibited draft text itself (memory_design.md SS4).",
+      "input": {"terminal_state": "blocked", "trace_id": "TR-003", "audit_record_id": "AR-003", "blocked_draft_reason_code": "PROHIBITION_ADJACENT", "blocked_draft_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "blocked_draft_text": null},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "DIA-04",
+      "workflow": "batch_review",
+      "description": "Adversarial: a blocked-draft record that stored the prohibited text itself -- must fail; this is exactly what memory_design.md SS4 forbids.",
+      "input": {"terminal_state": "blocked", "trace_id": "TR-004", "audit_record_id": "AR-004", "blocked_draft_reason_code": "PROHIBITION_ADJACENT", "blocked_draft_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "blocked_draft_text": "recommend release of NCB204-B24071"},
+      "expected": {"pass": false, "reason_contains": "draft_text_persisted"},
+      "status": "adversarial"
+    }
+  ]
+}

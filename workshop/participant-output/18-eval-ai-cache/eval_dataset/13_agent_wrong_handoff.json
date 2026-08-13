@@ -1,0 +1,41 @@
+{
+  "category": "agent_wrong_handoff",
+  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V3 addition, agent-specific)",
+  "grading_mode": "deterministic",
+  "grader": "graders/trajectory_grader.py:grade_critic_routing",
+  "note": "This is the regression suite for the real bug found and fixed this session: a first-occurrence PROHIBITION_ADJACENT Critic verdict was routable to a retry instead of straight to blocked. See docs/architecture/agentic/dmaic_lens.md 'Correction record'.",
+  "scenarios": [
+    {
+      "scenario_id": "AWH-01",
+      "workflow": "batch_review",
+      "description": "REGRESSION: first-occurrence PROHIBITION_ADJACENT verdict must route to blocked, never to synthesize, even though it is technically a 'new reason code'.",
+      "input": {"verdict": "reject", "reason_code": "PROHIBITION_ADJACENT", "prior_reasons": [], "llm_calls": 1},
+      "expected": {"pass": true, "routes_to": "blocked"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "AWH-02",
+      "workflow": "batch_review",
+      "description": "A genuinely new, non-adjacent reason code routes to synthesize for a bounded retry.",
+      "input": {"verdict": "reject", "reason_code": "MISSING_CITATION", "prior_reasons": [], "llm_calls": 1},
+      "expected": {"pass": true, "routes_to": "synthesize"},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "AWH-03",
+      "workflow": "batch_review",
+      "description": "A repeated (already-seen) reason code routes to hitl_route, not another retry.",
+      "input": {"verdict": "reject", "reason_code": "MISSING_CITATION", "prior_reasons": ["MISSING_CITATION"], "llm_calls": 2},
+      "expected": {"pass": true, "routes_to": "hitl_route"},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "AWH-04",
+      "workflow": "supply_planning",
+      "description": "A Batch-Review-shaped draft handed to the Supply-Planning Critic's contract would fail schema validation -- the Critic only reasons over the common DecisionSupportOutput contract, never workflow vocabulary (agent_roster.md SS2), so a wrong-workflow payload is a schema failure, not a silent misroute.",
+      "input": {"critic_context": "supply_planning", "draft_shape": "batch_review_findings"},
+      "expected": {"pass": false, "reason_contains": "schema_mismatch"},
+      "status": "adversarial"
+    }
+  ]
+}

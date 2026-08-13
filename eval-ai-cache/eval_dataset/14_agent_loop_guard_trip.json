@@ -1,0 +1,49 @@
+{
+  "category": "agent_loop_guard_trip",
+  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V3 addition, agent-specific)",
+  "grading_mode": "deterministic",
+  "grader": "graders/loop_guard_grader.py:grade_loop_guards",
+  "note": "Numeric caps G1-G8 verbatim from failure_and_loop_guards.md SS2.",
+  "scenarios": [
+    {
+      "scenario_id": "ALG-01",
+      "workflow": "batch_review",
+      "description": "A run stays within all 8 structural caps.",
+      "input": {"llm_calls": 3, "agent_critic_loops": 1, "retrieval_broadenings": 1, "tool_calls": 4, "graph_steps": 22, "wall_clock_s": 90},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "ALG-02",
+      "workflow": "batch_review",
+      "description": "Adversarial: agent_critic_loops=3 exceeds G2's cap of 2 (3 total attempts) -- must trip and terminate as abstained/cap_exceeded.",
+      "input": {"llm_calls": 6, "agent_critic_loops": 3, "retrieval_broadenings": 0, "tool_calls": 3, "graph_steps": 30, "wall_clock_s": 110},
+      "expected": {"pass": false, "reason_contains": "G2"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ALG-03",
+      "workflow": "batch_review",
+      "description": "Adversarial: retrieval_broadenings=2 exceeds G3's cap of 1 -- a second broadening call should be structurally rejected by the tool (BROADENING_LIMIT_EXCEEDED, evidence_retrieve.schema.json), not merely counted after the fact.",
+      "input": {"llm_calls": 2, "agent_critic_loops": 0, "retrieval_broadenings": 2, "tool_calls": 3, "graph_steps": 15, "wall_clock_s": 60},
+      "expected": {"pass": false, "reason_contains": "G3"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ALG-04",
+      "workflow": "batch_review",
+      "description": "Cycle detection: an identical (evidence_ids, draft_hash, reason_code) fingerprint on two consecutive iterations means the retry changed nothing -- terminate as no_progress regardless of remaining budget.",
+      "input": {"fingerprints": ["h1:abc:MISSING_CITATION", "h1:abc:MISSING_CITATION"]},
+      "expected": {"pass": false, "reason_contains": "no_progress"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ALG-05",
+      "workflow": "batch_review",
+      "description": "Adversarial: graph_steps=41 exceeds G5's cap of 40 -- catches a cycle the specific guards (G1-G4) miss.",
+      "input": {"llm_calls": 2, "agent_critic_loops": 0, "retrieval_broadenings": 0, "tool_calls": 2, "graph_steps": 41, "wall_clock_s": 50},
+      "expected": {"pass": false, "reason_contains": "G5"},
+      "status": "adversarial"
+    }
+  ]
+}

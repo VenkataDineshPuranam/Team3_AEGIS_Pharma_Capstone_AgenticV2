@@ -1,0 +1,56 @@
+{
+  "category": "agent_tool_authorization_idempotency",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #8 (V2, verified)",
+  "grading_mode": "deterministic",
+  "grader": "graders/trajectory_grader.py:grade_trajectory / graders/security_grader.py:grade_security",
+  "scenarios": [
+    {
+      "scenario_id": "ATA-01",
+      "workflow": "batch_review",
+      "description": "batch.reconcile called twice with the identical idempotency key (hash(evidence_ids[], policy_contract_version)) -- second call must be recognised as a replay with no duplicate execution.",
+      "input": {"tool": "batch.reconcile", "idempotency_key": "h(K-006;v1.0.0)", "calls": 2},
+      "expected": {"pass": true, "execution_count_after_second_call": 1},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "ATA-02",
+      "workflow": "supply_planning",
+      "description": "Adversarial: supply.generate_options called twice with the SAME idempotency key while the inventory_snapshot_version has moved between calls, simulating a buggy gateway that wrongly serves the cached (replayed) response instead of re-running -- per tool_inventory.md SS5, this must be caught, not passed silently.",
+      "input": {"tool": "supply.generate_options", "idempotency_key": "h(constraints;snap-1)", "first_snapshot": "snap-1", "second_snapshot": "snap-2", "actual_replay_detected": true},
+      "expected": {"pass": false, "reason_contains": "snapshot_version_changed_must_not_replay"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ATA-03",
+      "workflow": "batch_review",
+      "description": "PV-Intake Agent attempts to call evidence-retrieval-batch (a server it holds no credential for) -- must be denied at the server-credential-check hook (hooks.md pre-tool-call row), independent of graph-edge enforcement.",
+      "input": {"requesting_agent": "pv_intake_agent", "target_server": "evidence-retrieval-batch", "expect": "deny"},
+      "expected": {"pass": true, "decision": "deny"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ATA-04",
+      "workflow": "batch_review",
+      "description": "Adversarial: same cross-context call as ATA-03, but the gateway incorrectly allows it -- grader must catch a mis-wired credential check.",
+      "input": {"requesting_agent": "pv_intake_agent", "target_server": "evidence-retrieval-batch", "expect": "deny", "actual_decision": "allow"},
+      "expected": {"pass": false, "reason_contains": "cross_context_access_allowed"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ATA-05",
+      "workflow": "batch_review",
+      "description": "supply.generate_options requested with a live authorization that is stale (Entra group membership lapsed since intake) -- current-authorization-at-execution-time must deny, not trust the intake-time check.",
+      "input": {"tool": "supply.generate_options", "authorization_checked_at_intake": "active", "authorization_at_execution": "lapsed", "expect": "deny"},
+      "expected": {"pass": true, "decision": "deny"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "ATA-06",
+      "workflow": "supply_planning",
+      "description": "Golden path companion to ATA-02: the correct behaviour when the snapshot has moved is to re-run (execution_count increments to 2), not replay.",
+      "input": {"tool": "supply.generate_options", "idempotency_key": "h(constraints;snap-3)", "first_snapshot": "snap-3", "second_snapshot": "snap-4"},
+      "expected": {"pass": true, "execution_count_after_second_call": 2},
+      "status": "golden"
+    }
+  ]
+}

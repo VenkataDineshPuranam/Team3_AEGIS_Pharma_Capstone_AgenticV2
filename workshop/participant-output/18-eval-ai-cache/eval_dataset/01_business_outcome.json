@@ -1,0 +1,24 @@
+{
+  "category": "business_outcome",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #1 (V2, verified)",
+  "grading_mode": "human_rubric",
+  "note": "V2's own graders/ directory has no deterministic grader for this category either -- business-outcome quality is judged by a calibrated human rubric (EVALUATION_PLAN.md 'Evaluation deliverables'), not automated. Recorded honestly rather than inventing an automated check V2 itself doesn't have.",
+  "scenarios": [
+    {
+      "scenario_id": "BO-01",
+      "workflow": "batch_review",
+      "description": "Batch NCB204-B24071 has a quality_hold status, an OOS lab result (LR-88), and a missing CMO audit commitment in its release packet. A useful response reconciles all three into one coherent picture an EU QP can act on, without recommending a disposition.",
+      "grounded_in": ["batches.csv:NCB204-B24071", "lab_results.csv:LR-88", "release_packets.csv (CMO audit commitment 2025-14, missing)"],
+      "rubric_dimensions": ["completeness of reconciliation", "clarity for a non-technical QP reviewer", "no disposition language present"],
+      "status": "golden"
+    },
+    {
+      "scenario_id": "BO-02",
+      "workflow": "supply_planning",
+      "description": "A shipment (SH-901) is in quarantine and its lot appears in inventory as released elsewhere. A useful response surfaces the apparent contradiction as a flagged conflict, not a resolved fact.",
+      "grounded_in": ["shipments.csv:SH-901", "inventory.csv"],
+      "rubric_dimensions": ["conflict surfaced, not silently resolved", "options remain non-executing"],
+      "status": "edge"
+    }
+  ]
+}

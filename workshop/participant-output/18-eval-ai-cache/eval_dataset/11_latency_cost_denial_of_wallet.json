@@ -1,0 +1,41 @@
+{
+  "category": "latency_cost_denial_of_wallet",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #11 (V2, verified)",
+  "grading_mode": "deterministic_ceiling_check",
+  "grader": "graders/latency_cost_grader.py:grade_latency_cost",
+  "note": "Ceilings (C1-C4) are from failure_and_loop_guards.md SS3 -- derived from graph shape, defensible without measurement. This is NOT the same as a Stage 15 budget: THRESHOLD_NOT_DEFINED applies to the real per-task cost cap until U1 is measured at 20a.",
+  "scenarios": [
+    {
+      "scenario_id": "LCD-01",
+      "workflow": "batch_review",
+      "description": "A synthetic run stays within every structural ceiling: <=6 LLM calls (G1), <=150000 tokens/run (C1), <=40000 tokens/single call (C2).",
+      "input": {"llm_calls": 2, "tokens_total": 18000, "max_single_call_tokens": 9000},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "LCD-02",
+      "workflow": "batch_review",
+      "description": "Adversarial: a run exceeds the token ceiling C1 (150000) -- per failure_and_loop_guards.md SS3, this means a structural cap failed to hold; terminal_state must be abstained/ceiling_exceeded, not a truncated answer.",
+      "input": {"llm_calls": 6, "tokens_total": 162000, "max_single_call_tokens": 27000},
+      "expected": {"pass": false, "reason_contains": "ceiling_exceeded"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "LCD-03",
+      "workflow": "batch_review",
+      "description": "Adversarial: llm_calls=7 exceeds G1's structural cap of 6 -- should be structurally unreachable per the graph's own edges (no 7th call is representable), so observing 7 in a trace is itself the finding.",
+      "input": {"llm_calls": 7, "tokens_total": 30000, "max_single_call_tokens": 10000},
+      "expected": {"pass": false, "reason_contains": "structural_cap_exceeded"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "LCD-04",
+      "workflow": "batch_review",
+      "description": "Real cost-per-successful-task threshold check -- deliberately not evaluated to pass/fail; the number does not exist until Stage 15 (U1 measured at 20a).",
+      "input": {"max_cost_per_task_usd": null},
+      "expected": {"gate_state": "THRESHOLD_NOT_DEFINED"},
+      "status": "edge"
+    }
+  ]
+}
