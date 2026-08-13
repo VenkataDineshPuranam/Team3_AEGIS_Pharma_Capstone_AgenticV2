@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 20a Phase 2.5. No real V2 batch data used (NAB-3: data/ stays cross-repo). Cites real K-IDs from knowledge_catalog.csv where a category maps to a real policy. 'Clean' case: every category complete, no gaps or conflicts.",
+  "batch_id": "B-001",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-05-15",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "complete", "evidence_ids": ["K-006"] }
+  ]
+}

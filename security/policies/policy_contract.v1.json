@@ -1,0 +1,21 @@
+{
+  "_note": "Stage 20a's versioned policy contract -- loaded by services/integration/policy_engine.py's policy_load (ADR-005, BC-3: fail closed if this file is missing/unreadable). Prohibition contracts here are ADR-004 layer 3 (runtime guard), the third of three independent layers -- layers 1 (schema) and 2 (tool capability) are enforced by packages/domain/payloads.py and the tool_contracts JSON schemas already having no disposition fields at all.",
+  "version": "v1",
+  "prohibition_contracts": {
+    "batch_review": {
+      "workflow": "batch_review",
+      "banned_terms": [
+        "release the batch", "batch is released", "recommend release",
+        "reject the batch", "batch is rejected", "recommend rejection",
+        "reprocess the batch", "recommend reprocessing",
+        "relabel the batch", "recommend relabeling",
+        "recall the batch", "recommend recall",
+        "batch is approved for release", "cleared for release", "fit for release"
+      ],
+      "banned_field_names": [
+        "release_recommended", "reject_recommended", "reprocess_recommended",
+        "relabel_recommended", "recall_recommended", "disposition"
+      ]
+    }
+  }
+}

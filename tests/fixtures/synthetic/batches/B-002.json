@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 20a Phase 2.5. Genealogy gap case: exercises evidence_gate/critic MISSING_CITATION and evidence_sufficient=false paths, and kg_schema.md's 'missing_branch produces no edge, absence is the finding' rule.",
+  "batch_id": "B-002",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-06-01",
+  "findings": [
+    { "category": "genealogy", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Material lot ML-9931 consumed_by this batch has no traceable genealogy record -- missing_branch, per kg_schema.md's MaterialGenealogyRecord absence rule." },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while genealogy is unresolved." }
+  ]
+}
