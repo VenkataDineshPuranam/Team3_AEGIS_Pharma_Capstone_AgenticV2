@@ -157,7 +157,23 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         # fallback -- that fallback is exactly what silently mislabeled a timeout as
         # "completed" before this fix (interim assumption 3's own failure mode).
         if decision == "timed_out":
+            audit_store.write_hitl_expired(
+                audit_conn, state["run_id"], state["workflow"],
+                eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
+            )
             return {"hitl_status": decision, "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
+        # Stage 19 finding, fixed: this write was previously never made -- HumanOverrideRecorded
+        # existed as a schema and unit tests (escalation_override_log_design.md), but the
+        # running graph only ever set hitl_status in state, never wrote the audit record.
+        # KNOWN SIMPLIFICATION (20a scope): the interrupt's resume payload here is a bare
+        # decision string (test/interim harness), not a structured {decision, justification}
+        # object a real approver UI would supply -- justification is a placeholder pending
+        # that real input surface (Stage 20b / apps/web).
+        audit_store.write_human_override(
+            audit_conn, state["run_id"], role=state["approver_roles"][0], tier_at_action=state.get("hitl_tier") or "T0",
+            action=decision, justification="[20a placeholder -- no structured justification input surface yet]",
+            recorded_at=datetime.now(UTC).isoformat(),
+        )
         return {"hitl_status": decision, "terminal_state": "completed"}
 
     def mark_blocked_prohibition_adjacent(state: GovernedState) -> dict:
