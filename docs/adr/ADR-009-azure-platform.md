@@ -73,12 +73,15 @@ locally, so development and the entire interim state do **not** need Azure:
 | Audit/evidence store | Local Postgres or SQLite; swap for Blob WORM at deploy |
 | Observability | OpenTelemetry → local collector (e.g. Jaeger); LangSmith optional |
 | Entra ID / Key Vault | Stubbed behind the same interface; real bindings at deploy |
-| LLM inference | **Outbound API call required** — the one hard dependency |
+| LLM inference | **Outbound API call required** — the one hard dependency. **Development/20a: call the Anthropic API directly with a Claude API key.** Azure AI Foundry is Route A's *deployment* binding (§Model hosting route above), not a development-time requirement — swapping the direct API key for the Foundry-hosted endpoint is a config/client change behind one interface, never a model or prompt-behavior change, so none of Stage 14's baselines are invalidated by which binding is active |
 
-**Therefore: develop locally (Docker Compose + one API key), deploy to Azure.** The interim
-state's seven assumption tests (`docs/product/state/interim/interim_state.md` §3) can all be
-run on a laptop — which is faster to iterate and incurs no Azure spend until deployment.
-Stage 20 must not treat Azure as a prerequisite to writing or testing code.
+**Therefore: develop locally (Docker Compose + one Anthropic API key), deploy to Azure (Claude
+via Azure AI Foundry).** The interim state's seven assumption tests
+(`docs/product/state/interim/interim_state.md` §3) can all be run on a laptop against the
+direct Anthropic API — which is faster to iterate and incurs no Azure spend until deployment.
+Stage 20 must not treat Azure, or Foundry specifically, as a prerequisite to writing or testing
+code. The LLM client sits behind one interface in `packages/config` (per the Guardrails
+section) precisely so this swap is a binding change, not a rewrite.
 
 This also keeps ADR-007's degraded-mode design honest: if the local path works with stubs for
 every hosted dependency, the fallbacks are real rather than theoretical.
