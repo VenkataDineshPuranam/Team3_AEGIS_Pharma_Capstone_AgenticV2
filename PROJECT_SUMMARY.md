@@ -59,7 +59,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 18 of 21 stages complete, plus the Stage 20a interim slice built and running
+## 3. Status: 19 of 21 stages complete, plus the Stage 20a interim slice built and running
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -81,7 +81,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 16 | **Governance & Control** | `stage-16-governance-control` | stable — 13 policies (P-01…P-13) registered, all traced to an existing ADR/BC/hook; 3 (HITL timeout/escalation/veto) flagged with no executable eval yet |
 | 17 | **Observability** | `stage-17-observability` | stable — 11-node tracing design, RBAC model (new — no prior RBAC coverage existed), severity taxonomy (SEV-1…4), redaction ruleset. **Gap:** never actually cites `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (NAB-4 not fully closed for this stage) |
 | 18 | **AI Security** | `stage-18-ai-security` | stable — full DMAIC pass, 12 threats catalogued, **3 actually attempted against the live 20a system** (T-01 indirect injection, T-06 evidence-authority bypass, T-11 denial-of-wallet). Found and fixed a real gap: the denial-of-wallet guard was never wired into `services/api/graph.py` despite `hooks.md` calling it "implemented and tested" |
-| 19 | Compliance | `stage-19-compliance` | not started — needs evidence from real runs |
+| 19 | **Compliance** | `stage-19-compliance` | stable — EU AI Act classification (reasoned, not legal), ISO 42001 mapping (16 clauses), 10 gaps (G-1…G-10) each with a named owner. **Found and fixed a second real audit-write gap** (same pattern as Stage 18): `HumanOverrideRecorded` had a schema + unit tests but was never written by the running graph — fixed, verified against a real run |
 | **20a** | **Implementation — interim slice** (`batch_review` only) | `stage-20-repo-implementation` | **built and running** — real code for the first time since Stage 14. 6/7 interim assumptions pass (1 correctly `NOT_OBSERVABLE`); results are **provisional** (run on Groq, dev-only substitute; Route A/Claude re-run still owed per ADR-009). 3 real routing bugs found and fixed. See `docs/product/state/interim/interim_state_results.md` |
 | 20b | Implementation — full build (+PV, +Supply, +Redis) | | not started |
 | 21 | Documentation | `stage-21-documentation` | not started |
