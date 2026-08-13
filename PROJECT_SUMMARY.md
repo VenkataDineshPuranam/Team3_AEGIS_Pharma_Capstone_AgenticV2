@@ -2,7 +2,9 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 15 (Performance Tuning).
+> **Last updated:** end of Stage 20a (interim slice build). Stages 16, 17, and 20a (interim)
+> were completed in the same session that also fixed a stale-doc gap here — this file had not
+> been updated since Stage 15 despite three more stages landing on top of it.
 
 ---
 
@@ -57,7 +59,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 15 of 21 stages complete
+## 3. Status: 17 of 21 stages complete, plus the Stage 20a interim slice built and running
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -76,9 +78,13 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 13 | **Ontology-KG** | `stage-13-ontology-kg` | stable for Batch/Evidence classes; provisional for PV/Supply |
 | 14 | **Eval-AI-Cache** | `stage-14-eval-ai-cache` | stable — 63 scenarios, 0 FAIL/ERROR |
 | 15 | **Performance tuning** | `stage-15-performance-tuning` | stable — cost/latency models awaiting U1/U2; denial-of-wallet ceiling enforced (7/7 tests) |
-| 16 | Governance & Control | `stage-16-governance-control` | **← NEXT** |
-| 17–19 | Observability · AI Security · Compliance | | not started |
-| 20–21 | Implementation (app, LAST) · Documentation | | not started |
+| 16 | **Governance & Control** | `stage-16-governance-control` | stable — 13 policies (P-01…P-13) registered, all traced to an existing ADR/BC/hook; 3 (HITL timeout/escalation/veto) flagged with no executable eval yet |
+| 17 | **Observability** | `stage-17-observability` | stable — 11-node tracing design, RBAC model (new — no prior RBAC coverage existed), severity taxonomy (SEV-1…4), redaction ruleset. **Gap:** never actually cites `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (NAB-4 not fully closed for this stage) |
+| 18 | AI Security | `stage-18-ai-security` | not started — needs a running system to red-team; unblocked now that 20a exists |
+| 19 | Compliance | `stage-19-compliance` | not started — needs evidence from real runs |
+| **20a** | **Implementation — interim slice** (`batch_review` only) | `stage-20-repo-implementation` | **built and running** — real code for the first time since Stage 14. 6/7 interim assumptions pass (1 correctly `NOT_OBSERVABLE`); results are **provisional** (run on Groq, dev-only substitute; Route A/Claude re-run still owed per ADR-009). 3 real routing bugs found and fixed. See `docs/product/state/interim/interim_state_results.md` |
+| 20b | Implementation — full build (+PV, +Supply, +Redis) | | not started |
+| 21 | Documentation | `stage-21-documentation` | not started |
 
 **Note:** stages were resequenced early on — DDD/C4/ADR moved *before* current/interim/final
 state, per the user's explicit ordering (discovery → SCQA → DDD → C4 → ADR → … → app last).
@@ -367,12 +373,100 @@ per-workflow isolation, daily reset, and that the ceiling actually trips. Wired 
 `.claude/hooks/hooks.md` as a tenth hook row (pre-tool-call, at `intake`) — the only row in that
 table backed by a real executable + test rather than only a design reference.
 
+## 6g. Governance & Control (Stage 16, `docs/governance/`, `security/policies/`)
+
+**13 governed boundaries (P-01…P-13) consolidated, none invented** — every entry traces to an
+existing ADR (004/005/006/008), a Build Constraint (BC-1/3/5/8/12/17), or a `hooks.md` binding
+that already existed. The exercise itself surfaced a real gap the individual documents hadn't
+made visible: P-07/P-08/P-09 (HITL timeout, escalation, PV advisory veto) are `stable` in
+design but have **no executable eval** yet — they need a running interrupt/clock, which
+Stage 14's fixture-based harness can't simulate. Recorded honestly, not hidden behind the
+9-of-13-covered figure.
+
+`hitl_control_model.md` was **extended, not overwritten** (per its own instruction) with a new
+§7 confirming the Stage 10 timeout-ladder durations against the named roles — "confirmed" here
+means checked for internal consistency, not signed off by an actual person (no operating org
+exists yet). New revisit trigger **T-11**: re-confirm every role/duration against a live Entra
+assignment at first real deployment.
+
+`escalation_override_log_design.md` designs three distinct audit record shapes
+(`HitlEscalation`, `HumanOverrideRecorded`, `HitlExpired`) — deliberately kept separate so "the
+system widened who may approve" is never conflated with "a human actually decided," which BC-12
+depends on staying distinguishable.
+
+## 6h. Observability (Stage 17, `packages/observability/`, `ops/`)
+
+**Tracing design binds one span per node/hook that already existed** in `langgraph_design.md`/
+`hooks.md` — no new control invented, only made explainable. Actor identity
+(`actor_plane`/`actor_role`/`actor_id`) added to every span, closing a gap that existed between
+the RBAC model and the trace schema.
+
+**Two additions beyond the stage's original prompt scope**, added at explicit user request
+after a gap review mid-session:
+- **`rbac_model.md`** — zero RBAC coverage existed anywhere in the repo before this. Names both
+  a human plane (extends `hitl_control_model.md` with system-access roles it never covered —
+  Compliance Reviewer, Platform Operator) and a service plane (one managed identity per
+  container, mapped 1:1 onto ADR-008's "zero cross-graph calls" as Azure RBAC role scoping),
+  both on Entra ID (ADR-009).
+- **Severity taxonomy** (`alerting.md` §1) — SEV-1 (stop the line) through SEV-4 (dashboard-only),
+  replacing severity language that was previously asserted ad hoc and inconsistently across
+  `failure_and_loop_guards.md`.
+
+**Known gap, not silently closed:** this stage's own prompt says it should draw on
+`eval-ai-cache/`'s OpenTelemetry Brownfield Runbook — none of `packages/observability/`'s docs
+actually cite it. Flagged in §8 below.
+
+## 6i. Implementation — Interim Slice (Stage 20a, `packages/`, `services/`, `tests/`)
+
+**First stage to produce and run real application code**, not design documents, since
+Stage 14's eval harness. Scope exactly matches `EXECUTION_PLAN.md` Wave 3: `batch_review` only,
+no Redis, no PV/Supply.
+
+- **`packages/domain/`** — `GovernedState`, `EvidenceItem`, `BatchPayload`,
+  `DecisionSupportOutput`. ADR-004 layer 1 enforced with pydantic `extra="forbid"`: a
+  disposition field (`release_recommended`, etc.) cannot be constructed, not just disallowed by
+  convention — proven by a red-team-style test that tries and fails at construction time.
+- **`packages/domain/kg/`** — the Stage 13 semantic layer, actually built on **Neo4j** (a
+  technology no prior ADR had selected — added at user request this session), ingesting the
+  real 32-doc `knowledge/` corpus with SHA-256 provenance. K-006 supersedes K-007 (a real pair
+  in the catalog) verified live: querying for K-007 after ingestion never returns it.
+- **`services/integration/`** — `evidence_retrieve.py`/`batch_reconcile.py` contract-validated
+  against the real Stage 11 JSON schemas; `policy_engine.py` (fails closed, ADR-005),
+  `prohibited_action_guard.py` (ADR-004 layer 3), `evidence_gate.py` (ADR-003 second check),
+  `hitl_route.py` (four-tier ladder), `audit_store.py` (append-only SQLite, veto cannot be
+  superseded — enforced at the write layer, not by convention).
+- **`services/api/graph.py`** — the full 11-node `batch_review` LangGraph. LLM provider is
+  swappable via one interface (`packages/config/llm_client.py`) — Anthropic (Route A, the only
+  provider whose results count) or Groq (dev-only, provisional, used this session per user
+  instruction while the Anthropic key was being corrupted in transit twice).
+
+**Results: 6 of 7 interim assumptions (`interim_state.md` §3) PASS**, one correctly
+`NOT_OBSERVABLE` (hop count needs Stage 20's real deployed topology, not this in-process
+build). Full writeup: `docs/product/state/interim/interim_state_results.md`.
+
+**Three real routing bugs found and fixed**, all only because a live model (even an unreliable
+one) exercised paths the deterministic stub test never did:
+1. Cap-exceeded and `PROHIBITION_ADJACENT`-blocked routes reached `finalize` without setting
+   `terminal_state`, silently mislabeling both as `"completed"`.
+2. Approval detection used an empty `critic_reason_codes` list as its signal, but that list
+   accumulates across the whole run — a genuine approval after a prior rejection was misrouted
+   using a stale reason code.
+3. **The HITL timeout path never set `terminal_state`** — the highest-stakes of the three,
+   since it directly affects BC-12 ("timeout ⇒ no action, never auto-proceed"). A timeout was
+   silently finalizing as `"completed"`. Fixed directly in the `hitl_interrupt` node.
+
+**Finding beyond pass/fail:** Groq's small model (`llama-3.1-8b-instant`) repeatedly
+false-rejected a correctly-cited draft, hitting the G1 retry cap (6 LLM calls) rather than
+approving quickly. Not a code defect — the loop guards worked exactly as designed — but direct
+evidence for ADR-009's own rationale (keep the model variable fixed while the platform moves):
+a weaker model changes the *shape* of a run, not just its prose quality.
+
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
 | Concern | Choice |
 |---|---|
 | Orchestration | **LangGraph** on **Azure Container Apps** (AKS if scale demands) |
-| LLM inference | **⚠️ OPEN:** Route A = **Claude via Azure AI Foundry (recommended)**; Route B = Azure OpenAI. Route A keeps the model variable fixed while the platform changes. **Confirm before Stage 20.** Verify region availability at implementation time |
+| LLM inference | **CONFIRMED — Route A: Claude via Azure AI Foundry.** Dev/20a calls the Anthropic API directly (one client interface, `packages/config/llm_client.py`); Foundry is the deployment-time binding behind the same interface. **20a's actual runs used Groq (dev-only, provisional) at user's direction while the Anthropic key was being sorted** — Route A itself is unchanged and still the only provider whose results count toward the real exit criteria. Verify region availability at implementation time |
 | Cache | **Azure Cache for Redis** |
 | Observability | **LangSmith** + **Azure Monitor/App Insights**; **OpenTelemetry** as the instrumentation layer so the backend stays swappable |
 | Audit/evidence store | **Azure Blob Storage with immutability (WORM)** + optional Azure SQL for queryable metadata |
@@ -395,14 +489,16 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 
 | ID | Item | Blocks |
 |---|---|---|
-| **ADR-009 §Open** | **LLM route: Azure AI Foundry (Claude) vs Azure OpenAI** | Stage 14 eval baselines, Stage 20 |
 | NAB-2 | `plans/active/` empty while method doc says specs go there. Recommended fix: **correct the method doc** (prompts already are the spec; duplicating violates "nothing written twice") | Doc accuracy only |
-| NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? | Stages 13, 14 |
-| NAB-4 | **`eval-ai-cache/` (29 files) is entirely unconsumed** — 24-part brownfield-evals runbook + Redis + OpenTelemetry runbooks. Stages 14/15/17 must draw on it, not re-derive | Stages 14, 15, 17 |
-| EAB-6 | Token/cost budgets still Unknown — first measured in the interim state | Stage 15 |
-| **S09-D1** | **ADR-009 absent from `decision_index.md` and `architecture_review.md`** (both still state "8 ADRs"). Traceability defect, not a design defect — review verdict `pass` stands | Stage 21 defense pack |
+| NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? — **half-resolved**: `knowledge/` copied and SHA-256 verified (Stage 13), now also live-ingested into Neo4j (Stage 20a). `data/`/`evaluation/` fixtures still cross-repo | Stage 20b |
+| **NAB-4 (partial)** | `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (`eval-ai-cache/*OpenTelemetry Brownfield Implementation Runbook.docx`) was **never actually cited or consumed** by Stage 17's `packages/observability/` docs, despite the stage's own prompt saying it should draw on it. Stages 14/15 did consume their respective parts of `eval-ai-cache/`; Stage 17 did not | Should be revisited before Stage 20b's real dashboards/alerting are built |
+| **P-07/P-08/P-09 eval gap** | HITL timeout/escalation/veto (Stage 16 `policy_register.md`) are `stable` in design but have no executable Stage 14 eval — need a running interrupt/clock, which the fixture harness can't simulate | Stage 18 (red-team the running slice) is the natural place to close this |
+| **20a results provisional** | Interim-assumption results (`interim_state_results.md`) were run under Groq (dev-only), not Claude. Token-economics number (assumption 6) is real but not the Route A number | Must re-run under `LLM_PROVIDER=anthropic` before Gate M can evaluate real evidence |
+| Stale checkpointer warning | LangGraph's `MemorySaver` deserializes our custom pydantic types (`EvidenceItem`, `BatchPayload`, etc.) via an unregistered-type fallback that "will be blocked in a future version" | Register `allowed_msgpack_modules` or add custom serializers before upgrading LangGraph |
 
-**Closed:** EAB-2 (air-gap → cloud-connected confirmed), EAB-3 (approvers named), NAB-1.
+**Closed:** EAB-2 (air-gap → cloud-connected confirmed), EAB-3 (approvers named), NAB-1,
+**ADR-009's LLM route** (confirmed Route A), **S09-D1** (ADR-009 now listed in both
+`decision_index.md` and `architecture_review.md`, "9 ADRs" not "8").
 
 ---
 
@@ -416,6 +512,14 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
    pack flags "bundled vendor, weak cost controls" as a known org failure pattern.
 4. **Cache staleness under supersession** — a cache hit must never serve an answer built on
    since-superseded evidence (ADR-003 guardrail; Stage 14 cache-correctness evals).
+5. **Neo4j added without an ADR.** Stage 20a's semantic-layer implementation uses Neo4j
+   (AuraDB) at user request — no prior ADR selected a graph database technology; Stage 13's
+   `kg_schema.md` specifies the ontology, not a storage engine. Widens the vendor-concentration
+   risk in item 3 by one more provider. Should get a real ADR before Stage 20b if the choice is
+   meant to persist past this interim slice.
+6. **Provisional-provider results in the repo.** `interim_state_results.md`'s numbers were
+   measured under Groq, not Claude — a reader skimming only the pass/fail table without the
+   provisional caveat could mistake them for Route A evidence.
 
 ---
 
