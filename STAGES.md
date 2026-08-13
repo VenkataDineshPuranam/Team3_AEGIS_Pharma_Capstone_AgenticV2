@@ -19,7 +19,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 12 | Skills & Hooks | stage-12-skills-hooks | **stable** for `batch_review` bindings; `provisional` for PV/Supply |
 | 13 | Ontology / Knowledge Graph | stage-13-ontology-kg | **stable** for Batch Review/Evidence classes; `provisional` for PV/Supply — NAB-3 half-resolved (`knowledge/` copied, hash-verified) |
 | 14 | Eval-AI-Cache | stage-14-eval-ai-cache | **stable** — 63 scenarios, 0 FAIL/ERROR (design-pass run against synthetic fixtures; measured pass after 20a) |
-| 15 | Performance tuning (Redis/token economics) | stage-15-performance-tuning | not started |
+| 15 | Performance tuning (Redis/token economics) | stage-15-performance-tuning | **stable** — cost/latency are models awaiting U1/U2 from 20a; denial-of-wallet ceiling is enforced and tested (7/7) |
 | 16 | Governance & Control | stage-16-governance-control | not started |
 | 17 | Observability (LangSmith) | stage-17-observability | not started |
 | 18 | AI Security threat modeling | stage-18-ai-security | not started |

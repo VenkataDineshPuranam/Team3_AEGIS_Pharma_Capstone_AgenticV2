@@ -2,7 +2,7 @@
 
 > **Purpose:** paste/reference this file at the start of a new chat to restore full context
 > without re-reading the repo. Kept current as stages complete.
-> **Last updated:** end of Stage 14 (Eval-AI-Cache).
+> **Last updated:** end of Stage 15 (Performance Tuning).
 
 ---
 
@@ -57,7 +57,7 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 
 ---
 
-## 3. Status: 14 of 21 stages complete
+## 3. Status: 15 of 21 stages complete
 
 | # | Stage | Branch | Status |
 |---|---|---|---|
@@ -75,9 +75,9 @@ workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-
 | 12 | **Skills & Hooks** | `stage-12-skills-hooks` | stable for `batch_review` bindings; provisional for PV/Supply |
 | 13 | **Ontology-KG** | `stage-13-ontology-kg` | stable for Batch/Evidence classes; provisional for PV/Supply |
 | 14 | **Eval-AI-Cache** | `stage-14-eval-ai-cache` | stable — 63 scenarios, 0 FAIL/ERROR |
-| 15 | Performance tuning | `stage-15-performance-tuning` | **← NEXT** |
-| 14–15 | Eval-AI-Cache · Performance (Redis, token economics) | | not started |
-| 16–19 | Governance/Control · Observability · AI Security · Compliance | | not started |
+| 15 | **Performance tuning** | `stage-15-performance-tuning` | stable — cost/latency models awaiting U1/U2; denial-of-wallet ceiling enforced (7/7 tests) |
+| 16 | Governance & Control | `stage-16-governance-control` | **← NEXT** |
+| 17–19 | Observability · AI Security · Compliance | | not started |
 | 20–21 | Implementation (app, LAST) · Documentation | | not started |
 
 **Note:** stages were resequenced early on — DDD/C4/ADR moved *before* current/interim/final
@@ -335,6 +335,37 @@ grader, not just documentation. **Cache-correctness evals: 8 checks, all execute
 
 **Release gates independently re-derived from our own ADRs**, not copied from V2's 10 gates
 (ADR-002) — traceability table maps every gate to its owning ADR/DDD invariant and grader.
+
+## 6f. Performance Tuning (Stage 15, `docs/quality/performance/`, `infra/policies/`)
+
+Same honesty split as every measurement-dependent stage: cost/latency **targets** need U1/U2
+(Unknown since Stage 01, first measurable at 20a); what's real is stated as real, what isn't is
+left explicitly open rather than guessed.
+
+**Token economics — real, verified pricing, no invented usage numbers.** Loaded the `claude-api`
+skill (standing trigger for any Claude/Anthropic pricing discussion) rather than recalling
+stale figures: Opus 5 $5/$25 per MTok, Sonnet 5 $3/$15, and confirmed Azure AI Foundry
+(ADR-009 Route A) bills at the same first-party rates — closing one small piece of ADR-009's
+open question. Recommended (not decided) starting model for 20a: Sonnet 5. Cost model is exact
+(2 LLM nodes only, per `langgraph_design.md`); actual token volume per run is still Unknown.
+
+**Redis tuning — consumed the pre-seeded runbook in full** (NAB-4/T-7, previously unread).
+Key finding: the runbook's own engineering-plane/data-plane split means the deployed app must
+use a **native Redis client, never MCP**, at runtime — a new rule, distinct from Stage 11's
+unrelated domain-agent MCP tool servers. Also found and fixed a real gap in Stage 14's cache
+design: it never specified *where in the pipeline* caching happens relative to the
+Prohibited-Action Guard/Critic — now fixed (never cache a draft, only a guard-and-Critic-cleared
+response). Cluster-failure *alerting* (as opposed to correctness-on-failure, already specified)
+was also missing and is now specified. No cache is built — unchanged from Stage 14.
+
+**Denial-of-wallet guardrail — the one Stage 15 deliverable that's actually built and tested,
+not just designed.** A worst-case ceiling needs no measurement, only already-ratified inputs:
+`DAILY_RUN_CEILING=20` (reuses C4) × `MAX_TOKENS_PER_RUN=150,000` (=C1) × verified Sonnet 5
+output price = **$45.00/user/workflow/day**. Fail-safe direction matches ADR-005. **7/7 tests
+passing** (`tests/unit/policies/test_denial_of_wallet_guardrail.py`), proving per-user/
+per-workflow isolation, daily reset, and that the ceiling actually trips. Wired into
+`.claude/hooks/hooks.md` as a tenth hook row (pre-tool-call, at `intake`) — the only row in that
+table backed by a real executable + test rather than only a design reference.
 
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
