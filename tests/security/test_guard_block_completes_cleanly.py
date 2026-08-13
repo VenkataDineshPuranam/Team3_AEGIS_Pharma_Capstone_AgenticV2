@@ -47,7 +47,7 @@ def test_guard_block_reaches_a_clean_terminal_state_not_a_crash():
 
     probe = probe_retrieve(run_id=f"R-probe-{uuid.uuid4().hex[:8]}", terms=["BATCH_RELEASE", "policy"], policy_contract_version="v1")
     real_evidence_ids = [item["evidence_id"] for item in probe["items"]]
-    get_client().delete(cache_key("batch_review", real_evidence_ids))
+    get_client().delete(cache_key("batch_review", "B-001", real_evidence_ids))
 
     run_id = f"R-guardblock-{uuid.uuid4().hex[:8]}"
     graph = build_graph(llm=GuaranteedBlockLLM(), batch_id="B-001")

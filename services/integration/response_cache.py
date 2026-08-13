@@ -6,6 +6,14 @@
     enter the cache").
   - Cache key includes the evidence_ids used, NEVER policy_contract_version (content
     doesn't depend on policy, only admission does -- Stage 14's own refinement to Stage 11).
+  - **Also includes subject_id (batch_id/case_id/product_id) -- fixed after a real bug**:
+    evidence.retrieve's query terms are workflow-scoped, not subject-scoped, so every
+    batch/case/product in a given workflow retrieves the SAME evidence_ids. Without
+    subject_id in the key, the cache served one batch's reconciliation findings for a
+    completely different batch's request -- found live, via the FastAPI backend, the
+    first time two different subjects were actually exercised against a warm shared
+    cache in one process. Worse than the ADR-003 staleness scenario this module was
+    already built to catch: this was factually wrong content, not merely stale content.
   - Cluster-failure degraded mode: Redis unreachable -> bypass, never a hard failure
     (ADR-007). `get`/`set` below swallow connection errors and return/no-op rather than
     raising into the graph.
@@ -28,11 +36,13 @@ from packages.domain.state import DecisionSupportOutput
 _TTL_SECONDS = 3600  # volatile-lru eviction handles memory pressure; TTL is the fallback (redis_tuning.md SS4)
 
 
-def cache_key(workflow: str, evidence_ids: list[str]) -> str:
+def cache_key(workflow: str, subject_id: str, evidence_ids: list[str]) -> str:
     """Never includes policy_contract_version -- content doesn't depend on policy
-    (cache_design.md's refinement to Stage 11's evidence.retrieve key)."""
-    digest = hashlib.sha256(",".join(sorted(evidence_ids)).encode()).hexdigest()[:16]
-    return f"response_cache:{workflow}:{digest}"
+    (cache_design.md's refinement to Stage 11's evidence.retrieve key). MUST include
+    subject_id (batch_id/case_id/product_id) -- see module docstring for the real bug
+    this closes: evidence_ids alone is not a unique key within a workflow."""
+    digest = hashlib.sha256((subject_id + ":" + ",".join(sorted(evidence_ids))).encode()).hexdigest()[:16]
+    return f"response_cache:{workflow}:{subject_id}:{digest}"
 
 
 def _evidence_ids_still_citable(evidence_ids: list[str]) -> bool:
@@ -60,10 +70,10 @@ _HITS_KEY = "response_cache:_stats:hits"
 _MISSES_KEY = "response_cache:_stats:misses"
 
 
-def get(workflow: str, evidence_ids: list[str]) -> DecisionSupportOutput | None:
+def get(workflow: str, subject_id: str, evidence_ids: list[str]) -> DecisionSupportOutput | None:
     try:
         client = get_client()
-        raw = client.get(cache_key(workflow, evidence_ids))
+        raw = client.get(cache_key(workflow, subject_id, evidence_ids))
     except Exception:  # noqa: BLE001 -- ADR-007: bypass, never fail the run (covers RedisNotConfigured too)
         return None
 
@@ -98,10 +108,10 @@ def hit_rate_stats() -> dict:
     return {"hits": hits, "misses": misses, "hit_rate": (hits / total) if total else None}
 
 
-def set_cleared(workflow: str, evidence_ids: list[str], draft: DecisionSupportOutput) -> None:
+def set_cleared(workflow: str, subject_id: str, evidence_ids: list[str], draft: DecisionSupportOutput) -> None:
     """Only ever called AFTER guard2 clears -- never on a raw or blocked draft."""
     try:
         client = get_client()
-        client.set(cache_key(workflow, evidence_ids), json.dumps(draft.model_dump()), ex=_TTL_SECONDS)
+        client.set(cache_key(workflow, subject_id, evidence_ids), json.dumps(draft.model_dump()), ex=_TTL_SECONDS)
     except Exception:  # noqa: BLE001 -- ADR-007: bypass, never fail the run (covers RedisNotConfigured too)
         return

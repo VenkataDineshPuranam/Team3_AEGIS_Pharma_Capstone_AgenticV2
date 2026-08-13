@@ -105,7 +105,7 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         # from guard2's "clear" path below). Stale-evidence check happens inside
         # response_cache.get itself (the ADR-003 correctness scenario), not here.
         evidence_ids = [e.evidence_id for e in state["evidence"]]
-        cached = response_cache.get(state["workflow"], evidence_ids)
+        cached = response_cache.get(state["workflow"], batch_id, evidence_ids)
         if cached is not None:
             return {"draft_output": cached}  # zero llm_calls/tokens -- the whole point of a hit
         try:
@@ -146,7 +146,7 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         result = guard(state)
         if result.get("guard_verdict") == "clear":
             evidence_ids = [e.evidence_id for e in state["evidence"]]
-            response_cache.set_cleared(state["workflow"], evidence_ids, state["draft_output"])
+            response_cache.set_cleared(state["workflow"], batch_id, evidence_ids, state["draft_output"])
         return result
 
     def critic_verify(state: GovernedState) -> dict:
