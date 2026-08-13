@@ -1,0 +1,6 @@
+{
+  "_note": "Synthetic fixture, Stage 20b Phase 3. Empty-result case: exercises CONSTRAINT_SET_EMPTY_RESULT -> abstain (agent_roster.md SS2 escalation condition).",
+  "product_id": "P-200",
+  "inventory_snapshot_version": "snap-2026-08-13",
+  "options": []
+}

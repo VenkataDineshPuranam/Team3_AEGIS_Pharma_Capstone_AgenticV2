@@ -1,0 +1,13 @@
+{
+  "_note": "Synthetic fixture, Stage 20b Phase 1. No real V2 PV case data used (NAB-3). Clean case: no duplicate suspected, one terminology normalization suggestion.",
+  "case_id": "PV-001",
+  "comparison_window_version": "cw-2026-08-13",
+  "duplicate_suspected": false,
+  "candidates": [],
+  "source_text": "pacient reported severe nawsea after dose",
+  "normalization_suggestions": [
+    { "normalized_term": "nausea", "confidence": 0.94, "terminology_source": "MedDRA v27.0" },
+    { "normalized_term": "patient", "confidence": 0.91, "terminology_source": "MedDRA v27.0" }
+  ],
+  "terminology_table_version": "meddra-27.0"
+}

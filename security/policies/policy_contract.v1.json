@@ -16,6 +16,30 @@
         "release_recommended", "reject_recommended", "reprocess_recommended",
         "relabel_recommended", "recall_recommended", "disposition"
       ]
+    },
+    "pv_intake": {
+      "workflow": "pv_intake",
+      "banned_terms": [
+        "causality is", "causally related", "confirmed causality",
+        "seriousness is", "this case is serious", "not serious",
+        "expected per label", "unexpected per label", "expectedness is",
+        "reportable to", "must be reported", "not reportable", "reportability is",
+        "signal confirmed", "confirmed signal", "this is a validated signal"
+      ],
+      "banned_field_names": [
+        "causality", "seriousness", "expectedness", "reportability", "signal_confirmed"
+      ]
+    },
+    "supply_planning": {
+      "workflow": "supply_planning",
+      "banned_terms": [
+        "allocate", "allocated to", "reserve for", "reserved for",
+        "ship to", "shipment authorized", "release authorization",
+        "recall scope", "execute this option", "proceed with allocation"
+      ],
+      "banned_field_names": [
+        "allocated_quantity", "reserved_for", "ship_to", "release_authorization", "recall_scope"
+      ]
     }
   }
 }

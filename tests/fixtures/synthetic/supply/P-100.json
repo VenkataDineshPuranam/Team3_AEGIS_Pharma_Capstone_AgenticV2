@@ -1,0 +1,21 @@
+{
+  "_note": "Synthetic fixture, Stage 20b Phase 3. No real V2 supply data used (NAB-3). Has options within the constraint set.",
+  "product_id": "P-100",
+  "inventory_snapshot_version": "snap-2026-08-13",
+  "options": [
+    {
+      "option_id": "OPT-1",
+      "description": "Redirect CMO-B capacity within existing market authorization for region EU-West.",
+      "constraints_satisfied": ["market_authorization_scope", "cmo_capacity_window"],
+      "cold_chain_evidence_ids": ["K-009"],
+      "transport_notes": "Standard cold-chain lane, no exception required."
+    },
+    {
+      "option_id": "OPT-2",
+      "description": "Draw down existing EU-West inventory buffer ahead of scheduled replenishment.",
+      "constraints_satisfied": ["market_authorization_scope"],
+      "cold_chain_evidence_ids": ["K-009"],
+      "transport_notes": "No transport change required; buffer is already in-market."
+    }
+  ]
+}

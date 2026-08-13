@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS agent_run (
     abstention_reason TEXT,
     trace_id TEXT,
     policy_contract_version TEXT,
-    recorded_at TEXT NOT NULL
+    recorded_at TEXT NOT NULL,
+    llm_calls INTEGER,
+    tokens_in INTEGER,
+    tokens_out INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS human_override_recorded (
@@ -75,7 +78,19 @@ def get_connection(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.executescript(_SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Stage 20b Phase 6: agent_run predates llm_calls/tokens_in/tokens_out (added to
+    make the Stage 17 dashboards panels computable from real data). CREATE TABLE IF NOT
+    EXISTS doesn't add columns to an already-existing table -- this does, idempotently."""
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(agent_run)")}
+    for column in ("llm_calls", "tokens_in", "tokens_out"):
+        if column not in existing:
+            conn.execute(f"ALTER TABLE agent_run ADD COLUMN {column} INTEGER")
+    conn.commit()
 
 
 def write_agent_run(
@@ -87,13 +102,17 @@ def write_agent_run(
     abstention_reason: str | None = None,
     trace_id: str | None = None,
     policy_contract_version: str | None = None,
+    llm_calls: int | None = None,
+    tokens_in: int | None = None,
+    tokens_out: int | None = None,
 ) -> None:
     """finalize's mandatory write -- a response reaching the caller with no audit write
-    is not a valid terminal state (hooks.md)."""
+    is not a valid terminal state (hooks.md). llm_calls/tokens_in/tokens_out (Stage 20b)
+    are what makes dashboards.md's Cost panel computable from real data."""
     conn.execute(
-        "INSERT INTO agent_run (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at),
+        "INSERT INTO agent_run (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out),
     )
     conn.commit()
 

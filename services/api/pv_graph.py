@@ -1,10 +1,20 @@
-"""batch_review LangGraph -- Stage 20a Phase 4. Direct transcription of
-docs/architecture/agentic/langgraph_design.md SS1-2's mermaid diagram and edge table.
-11 nodes, 2 of them LLM (pluggable via `llm`, defaults to StubLLM -- see nodes/llm_interface.py).
+"""pv_intake LangGraph -- Stage 20b. Same spine as services/api/graph.py's batch_review
+graph (langgraph_design.md SS7: "same spine, different middle") -- intake, policy_load,
+retrieve, evidence_gate, synthesize, guard(x2), critic_verify, hitl_route, hitl_interrupt,
+finalize are structurally identical in shape. The deltas, per SS7's own table:
 
-Read the graph for what it refuses to do: there is no edge from `synthesize` to `finalize`.
-Generated text cannot reach a caller without passing the guard, the Critic, the guard again,
-and a human (langgraph_design.md SS1).
+  - Tool nodes: duplicate_check -> normalize_terminology (hard ordering, DDD SS7 --
+    duplicate_check must complete before triage/synthesize) instead of batch's reconcile.
+  - Approver role: Global Head of Pharmacovigilance (hitl_control_model.md SS2), not EU QP.
+  - New: the Patient Safety Representative's advisory veto -- registrable at any point,
+    forces hitl_status="rejected" immediately, never overridden by a later approval
+    (failure_and_loop_guards.md SS5.4). Enforced by audit_store.write_human_override's own
+    write-time check (has_veto), not re-implemented here.
+
+Deliberately NOT sharing code with graph.py via a generic workflow-parametrized builder --
+RR-2/T-10 (nothing from Batch Review is assumed to transfer) argues for each workflow's
+graph being independently readable and independently correct, not a shared abstraction that
+could silently apply a Batch Review assumption to PV. Some duplication is the accepted cost.
 """
 from __future__ import annotations
 
@@ -12,32 +22,32 @@ from datetime import UTC, datetime
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
-from langgraph.types import Command, interrupt
+from langgraph.types import interrupt
 
-from packages.domain.payloads import BatchPayload, ReconciliationFinding
+from packages.domain.payloads import DuplicateCandidate, NormalizationSuggestion, PVPayload
 from packages.domain.evidence import EvidenceItem
 from packages.domain.state import GovernedState, ReasonCode, RETRYABLE_REASON_CODES
 from infra.policies.denial_of_wallet_guardrail import DenialOfWalletGuard
-from services.integration import audit_store, evidence_gate, hitl_route, prohibited_action_guard, response_cache
-from services.integration.batch_reconcile import ToolError as ReconcileError, reconcile as tool_reconcile
+from services.integration import audit_store, evidence_gate, prohibited_action_guard
 from services.integration.evidence_retrieve import ToolError as RetrieveError, retrieve as tool_retrieve
+from services.integration.pv_duplicate_check import ToolError as DupCheckError, duplicate_check as tool_dup_check
+from services.integration.pv_normalize_terminology import normalize_terminology as tool_normalize
 from services.integration.policy_engine import PolicyEngineUnavailable, get_prohibition_contract
 from services.api.nodes.llm_interface import LLMNodes, StubLLM
 
 POLICY_VERSION = "v1"
-MAX_LLM_CALLS = 6  # G1, failure_and_loop_guards.md SS2
+MAX_LLM_CALLS = 6  # G1, unchanged -- structural cap is graph-shape-derived, not workflow-specific
+
+PV_PRIMARY_APPROVER = "Global Head of Pharmacovigilance"  # hitl_control_model.md SS2
+PV_VETO_ROLE = "Patient Safety Representative"
 
 
-def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpointer=None):
+def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpointer=None):
     llm = llm or StubLLM()
     audit_conn = audit_store.get_connection()
     dow_guard = DenialOfWalletGuard()
 
     def intake(state: GovernedState) -> dict:
-        # Stage 18 finding: this hook was documented in hooks.md as wired but was never
-        # actually called from graph code. Fixed here. Uses requester_role as the ceiling
-        # key (GovernedState has no separate caller-identity field in 20a's scope) --
-        # a real deployment keys on the actual caller identity, not the approver role.
         admission = dow_guard.check_and_admit(
             user_id=state["requester_role"], workflow=state["workflow"], as_of=datetime.now(UTC).date()
         )
@@ -48,10 +58,7 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
                 "terminal_state": "refused",
                 "abstention_reason": admission["reason"],
             }
-        return {
-            "authorization_checked_at": datetime.now(UTC),
-            "trace_id": f"TR-{state['run_id']}",
-        }
+        return {"authorization_checked_at": datetime.now(UTC), "trace_id": f"TR-{state['run_id']}"}
 
     def policy_load(state: GovernedState) -> dict:
         try:
@@ -63,18 +70,14 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     def retrieve(state: GovernedState) -> dict:
         try:
             result = tool_retrieve(
-                run_id=state["run_id"],
-                terms=["BATCH_RELEASE", "policy"],
+                run_id=state["run_id"], terms=["PHARMACOVIGILANCE", "policy"],
                 policy_contract_version=state["policy_contract_version"],
                 broadening=state["broadenings_used"] > 0,
             )
         except RetrieveError:
             return {"terminal_state": "abstained", "abstention_reason": "dependency_unavailable"}
         items = [EvidenceItem(**item) for item in result["items"]]
-        return {
-            "evidence": state["evidence"] + items,
-            "tool_calls": state["tool_calls"] + 1,
-        }
+        return {"evidence": state["evidence"] + items, "tool_calls": state["tool_calls"] + 1}
 
     def evidence_gate_node(state: GovernedState) -> dict:
         result = evidence_gate.check(state["evidence"], state["broadenings_used"])
@@ -86,135 +89,111 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
             return {"terminal_state": "refused", "abstention_reason": "gate_defect"}
         return {"evidence_sufficient": True}
 
-    def reconcile(state: GovernedState) -> dict:
+    def duplicate_check_node(state: GovernedState) -> dict:
+        """DDD SS7 hard ordering invariant: must complete before synthesize -- enforced
+        below as the only edge out of this node, never a conditional skip."""
         evidence_ids = [e.evidence_id for e in state["evidence"]]
         try:
-            result = tool_reconcile(
-                run_id=state["run_id"], batch_id=batch_id,
-                evidence_ids=evidence_ids, policy_contract_version=state["policy_contract_version"],
-            )
-        except ReconcileError:
+            result = tool_dup_check(run_id=state["run_id"], case_id=case_id, case_summary_evidence_ids=evidence_ids)
+        except DupCheckError:
             return {"terminal_state": "abstained", "abstention_reason": "dependency_unavailable"}
-        findings = tuple(ReconciliationFinding(**f) for f in result["findings"])
-        payload = BatchPayload(batch_id=batch_id, reconciliation_complete=result["reconciliation_complete"], findings=findings)
-        return {"domain_payload": payload, "tool_calls": state["tool_calls"] + 1}
+        candidates = tuple(DuplicateCandidate(**c) for c in result["candidates"])
+        return {
+            "domain_payload": PVPayload(
+                case_id=case_id, duplicate_suspected=result["duplicate_suspected"],
+                comparison_window_version=result["comparison_window_version"], candidates=candidates,
+                normalization_suggestions=(), terminology_table_version="",
+            ),
+            "tool_calls": state["tool_calls"] + 1,
+        }
+
+    def normalize_terminology_node(state: GovernedState) -> dict:
+        result = tool_normalize(run_id=state["run_id"], source_text=_case_source_text(case_id))
+        suggestions = tuple(NormalizationSuggestion(**s) for s in result["suggestions"])
+        payload = state["domain_payload"]
+        updated_payload = PVPayload(
+            case_id=payload.case_id, duplicate_suspected=payload.duplicate_suspected,
+            comparison_window_version=payload.comparison_window_version, candidates=payload.candidates,
+            normalization_suggestions=suggestions, terminology_table_version=result["terminology_table_version"],
+        )
+        return {"domain_payload": updated_payload, "tool_calls": state["tool_calls"] + 1}
 
     def synthesize(state: GovernedState) -> dict:
-        # Cache lookup, per redis_tuning.md SS2's pipeline placement: only a prior
-        # guard-and-Critic-cleared response can be a hit (set_cleared is only ever called
-        # from guard2's "clear" path below). Stale-evidence check happens inside
-        # response_cache.get itself (the ADR-003 correctness scenario), not here.
-        evidence_ids = [e.evidence_id for e in state["evidence"]]
-        cached = response_cache.get(state["workflow"], evidence_ids)
-        if cached is not None:
-            return {"draft_output": cached}  # zero llm_calls/tokens -- the whole point of a hit
         try:
             draft, tin, tout = llm.synthesize(state)
-        except Exception:  # noqa: BLE001 -- ADR-007: LLM provider unreachable -> abstain,
-            # never guess. The deterministic partial result (domain_payload, already
-            # computed by `reconcile`) is attached via `domain_payload` staying in state --
-            # failure_and_loop_guards.md SS6 "the rules-only path still produces auditable
-            # findings" is satisfied by that field surviving into the AgentRun record.
+        except Exception:  # noqa: BLE001 -- ADR-007, same as batch_review
             return {"terminal_state": "abstained", "abstention_reason": "degraded_mode"}
         return {
-            "draft_output": draft,
-            "llm_calls": state["llm_calls"] + 1,
-            "tokens_in": state["tokens_in"] + tin,
-            "tokens_out": state["tokens_out"] + tout,
+            "draft_output": draft, "llm_calls": state["llm_calls"] + 1,
+            "tokens_in": state["tokens_in"] + tin, "tokens_out": state["tokens_out"] + tout,
         }
 
     def guard(state: GovernedState) -> dict:
         result = prohibited_action_guard.check(state["draft_output"], state["prohibition_contract"])
         if result.verdict == "blocked":
-            # ProhibitedActionBlocked recorded via agent_run's terminal_state="blocked" --
-            # written ONCE, by finalize (below), not here too. A second write_agent_run
-            # call here previously crashed with IntegrityError (agent_run.run_id is a
-            # PRIMARY KEY) the first time this path was ever actually exercised by a real
-            # guard block, this session (Stage 20b) -- every guard-block test before now
-            # had used a model that happened not to trigger it, or a cache hit that
-            # bypassed synthesize entirely.
+            # See services/api/graph.py's guard() for why this doesn't write_agent_run
+            # here too -- finalize is the single write, avoiding the run_id PRIMARY KEY
+            # collision that crashed this exact path in graph.py before this stage.
             return {"guard_verdict": "blocked", "terminal_state": "blocked", "abstention_reason": "prohibited_action"}
         return {"guard_verdict": "clear"}
-
-    def guard2_with_cache_write(state: GovernedState) -> dict:
-        """guard2 is the ONLY point that writes to the cache -- redis_tuning.md SS2's
-        pipeline: '...Security/guardrail check -> Successful response -> CACHE'. guard1
-        runs on a freshly-generated draft (never cached); guard2 runs on whatever the
-        Critic approved, whether it came from a real LLM call or a cache hit -- writing
-        here, not in guard1, means a cache hit is re-validated by the guard exactly once
-        more before being written back, same as any other draft."""
-        result = guard(state)
-        if result.get("guard_verdict") == "clear":
-            evidence_ids = [e.evidence_id for e in state["evidence"]]
-            response_cache.set_cleared(state["workflow"], evidence_ids, state["draft_output"])
-        return result
 
     def critic_verify(state: GovernedState) -> dict:
         try:
             verdict, reason_code, tin, tout = llm.critic(state)
-        except Exception:  # noqa: BLE001 -- same ADR-007 rule as synthesize
+        except Exception:  # noqa: BLE001
             return {"terminal_state": "abstained", "abstention_reason": "degraded_mode"}
         updates: dict = {
-            "critic_verdict": verdict,
-            "llm_calls": state["llm_calls"] + 1,
-            "tokens_in": state["tokens_in"] + tin,
-            "tokens_out": state["tokens_out"] + tout,
+            "critic_verdict": verdict, "llm_calls": state["llm_calls"] + 1,
+            "tokens_in": state["tokens_in"] + tin, "tokens_out": state["tokens_out"] + tout,
         }
         if reason_code is not None:
             updates["critic_reason_codes"] = state["critic_reason_codes"] + [reason_code]
         return updates
 
     def hitl_route_node(state: GovernedState) -> dict:
+        # 100% escalation by construction (agent_roster.md SS2) -- every PV output routes
+        # to a human; there is no lower-risk-tier skip path, unlike Batch Review's future P-13.
         return {
-            "hitl_required": True,
-            "approver_roles": [hitl_route.PRIMARY_APPROVER],
-            "hitl_status": "pending",
-            "hitl_tier": "T0",
+            "hitl_required": True, "approver_roles": [PV_PRIMARY_APPROVER],
+            "hitl_status": "pending", "hitl_tier": "T0",
         }
 
     def hitl_interrupt(state: GovernedState) -> dict:
         decision = interrupt(
-            {"approver_roles": state["approver_roles"], "run_id": state["run_id"], "batch_id": batch_id}
+            {"approver_roles": state["approver_roles"], "run_id": state["run_id"], "case_id": case_id}
         )
-        # BC-12: timeout => no action, EVER. Set explicitly here, not left to finalize's
-        # fallback -- that fallback is exactly what silently mislabeled a timeout as
-        # "completed" before this fix (interim assumption 3's own failure mode).
         if decision == "timed_out":
             audit_store.write_hitl_expired(
                 audit_conn, state["run_id"], state["workflow"],
                 eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
             )
             return {"hitl_status": decision, "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
-        # Stage 19 finding, fixed: this write was previously never made -- HumanOverrideRecorded
-        # existed as a schema and unit tests (escalation_override_log_design.md), but the
-        # running graph only ever set hitl_status in state, never wrote the audit record.
-        # KNOWN SIMPLIFICATION (20a scope): the interrupt's resume payload here is a bare
-        # decision string (test/interim harness), not a structured {decision, justification}
-        # object a real approver UI would supply -- justification is a placeholder pending
-        # that real input surface (Stage 20b / apps/web).
+        if decision == "veto":
+            # failure_and_loop_guards.md SS5.4: registrable at any tier, forces rejected
+            # immediately, never overridden. audit_store enforces the "never overridden"
+            # half at write time (has_veto check) -- not re-implemented here.
+            audit_store.write_human_override(
+                audit_conn, state["run_id"], role=PV_VETO_ROLE, tier_at_action=state.get("hitl_tier") or "T0",
+                action="veto_registered", justification="[20a/20b placeholder -- no structured approver-input UI yet]",
+                recorded_at=datetime.now(UTC).isoformat(),
+            )
+            return {"hitl_status": "rejected", "veto_recorded": True, "terminal_state": "completed"}
         audit_store.write_human_override(
             audit_conn, state["run_id"], role=state["approver_roles"][0], tier_at_action=state.get("hitl_tier") or "T0",
-            action=decision, justification="[20a placeholder -- no structured justification input surface yet]",
+            action=decision, justification="[20a/20b placeholder -- no structured approver-input UI yet]",
             recorded_at=datetime.now(UTC).isoformat(),
         )
         return {"hitl_status": decision, "terminal_state": "completed"}
 
     def mark_blocked_prohibition_adjacent(state: GovernedState) -> dict:
-        """critic_verify's PROHIBITION_ADJACENT route bypasses guard2 entirely (never
-        retried, failure_and_loop_guards.md SS4) -- this node is what actually sets
-        terminal_state on that path, since route_after_critic is a pure router and
-        cannot mutate state itself."""
         return {"guard_verdict": "blocked", "terminal_state": "blocked", "abstention_reason": "prohibition_adjacent"}
 
     def mark_abstained_cap_exceeded(state: GovernedState) -> dict:
-        """G1 (max 6 LLM calls) hit -- failure_and_loop_guards.md SS6:
-        abstained/cap_exceeded, alerted as an engineering defect (SEV-3, alerting.md)."""
         return {"terminal_state": "abstained", "abstention_reason": "cap_exceeded"}
 
     def finalize(state: GovernedState) -> dict:
         terminal = state.get("terminal_state") or "completed"
-        # Real token usage feeds the ceiling forward -- also never wired before this stage.
-        if terminal != "refused":  # a refused-at-intake run consumed no tokens
+        if terminal != "refused":
             dow_guard.record_run(
                 user_id=state["requester_role"], workflow=state["workflow"],
                 as_of=datetime.now(UTC).date(), actual_tokens=state["tokens_in"] + state["tokens_out"],
@@ -233,10 +212,11 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     graph.add_node("policy_load", policy_load)
     graph.add_node("retrieve", retrieve)
     graph.add_node("evidence_gate", evidence_gate_node)
-    graph.add_node("reconcile", reconcile)
+    graph.add_node("duplicate_check", duplicate_check_node)
+    graph.add_node("normalize_terminology", normalize_terminology_node)
     graph.add_node("synthesize", synthesize)
     graph.add_node("guard1", guard)
-    graph.add_node("guard2", guard2_with_cache_write)
+    graph.add_node("guard2", guard)
     graph.add_node("critic_verify", critic_verify)
     graph.add_node("hitl_route", hitl_route_node)
     graph.add_node("hitl_interrupt", hitl_interrupt)
@@ -246,19 +226,15 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
 
     graph.set_entry_point("intake")
     graph.add_conditional_edges(
-        "intake",
-        lambda s: "refuse" if s.get("terminal_state") == "refused" else "policy_load",
+        "intake", lambda s: "refuse" if s.get("terminal_state") == "refused" else "policy_load",
         {"refuse": "finalize", "policy_load": "policy_load"},
     )
-
     graph.add_conditional_edges(
-        "policy_load",
-        lambda s: "refuse" if s.get("terminal_state") == "refused" else "retrieve",
+        "policy_load", lambda s: "refuse" if s.get("terminal_state") == "refused" else "retrieve",
         {"refuse": "finalize", "retrieve": "retrieve"},
     )
     graph.add_conditional_edges(
-        "retrieve",
-        lambda s: "abstain" if s.get("terminal_state") == "abstained" else "gate",
+        "retrieve", lambda s: "abstain" if s.get("terminal_state") == "abstained" else "gate",
         {"abstain": "finalize", "gate": "evidence_gate"},
     )
 
@@ -266,18 +242,22 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         if s.get("terminal_state") in ("abstained", "refused"):
             return "terminal"
         if s.get("evidence_sufficient"):
-            return "reconcile"
-        return "retrieve"  # broadening
+            return "duplicate_check"
+        return "retrieve"
 
-    graph.add_conditional_edges("evidence_gate", route_after_gate, {"terminal": "finalize", "reconcile": "reconcile", "retrieve": "retrieve"})
     graph.add_conditional_edges(
-        "reconcile",
-        lambda s: "abstain" if s.get("terminal_state") == "abstained" else "synthesize",
-        {"abstain": "finalize", "synthesize": "synthesize"},
+        "evidence_gate", route_after_gate,
+        {"terminal": "finalize", "duplicate_check": "duplicate_check", "retrieve": "retrieve"},
     )
     graph.add_conditional_edges(
-        "synthesize",
-        lambda s: "degraded" if s.get("terminal_state") == "abstained" else "guard1",
+        "duplicate_check", lambda s: "abstain" if s.get("terminal_state") == "abstained" else "normalize",
+        {"abstain": "finalize", "normalize": "normalize_terminology"},
+    )
+    # Hard ordering invariant (DDD SS7): no edge from normalize_terminology skips synthesize.
+    graph.add_edge("normalize_terminology", "synthesize")
+
+    graph.add_conditional_edges(
+        "synthesize", lambda s: "degraded" if s.get("terminal_state") == "abstained" else "guard1",
         {"degraded": "finalize", "guard1": "guard1"},
     )
     graph.add_conditional_edges(
@@ -286,7 +266,7 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     )
 
     def route_after_critic(s: GovernedState) -> str:
-        if s.get("terminal_state") == "abstained":  # degraded_mode -- llm.critic() raised
+        if s.get("terminal_state") == "abstained":
             return "degraded"
         if s["critic_verdict"] == "approve_for_human":
             return "guard2"
@@ -298,14 +278,12 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
             # than trust an assumption a second time (found live under Groq, this session).
             return "hitl_escalate"
         latest = codes[-1]
-        # PROHIBITION_ADJACENT checked first, unconditionally -- never retried (the
-        # earlier-session bug fix this graph must not reintroduce).
         if latest == ReasonCode.PROHIBITION_ADJACENT:
             return "blocked"
         if s["llm_calls"] >= MAX_LLM_CALLS:
             return "abstain"
         if codes.count(latest) > 1:
-            return "hitl_escalate"  # repeated code -- escalate, don't retry
+            return "hitl_escalate"
         if latest in RETRYABLE_REASON_CODES:
             return "synthesize"
         return "hitl_escalate"
@@ -324,14 +302,20 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         {"blocked": "finalize", "hitl": "hitl_route"},
     )
     graph.add_edge("hitl_route", "hitl_interrupt")
-
-    def route_after_hitl(s: GovernedState) -> str:
-        status = s.get("hitl_status")
-        if status == "timed_out":
-            return "no_action"
-        return "finalize"
-
-    graph.add_conditional_edges("hitl_interrupt", route_after_hitl, {"no_action": "finalize", "finalize": "finalize"})
+    graph.add_conditional_edges(
+        "hitl_interrupt", lambda s: "no_action" if s.get("hitl_status") == "timed_out" else "finalize",
+        {"no_action": "finalize", "finalize": "finalize"},
+    )
     graph.add_edge("finalize", END)
 
     return graph.compile(checkpointer=checkpointer or MemorySaver())
+
+
+def _case_source_text(case_id: str) -> str:
+    """Looks up the fixture's own source_text so normalize_terminology_node's tool call
+    matches what the fixture actually declares -- avoids duplicating fixture content here."""
+    import json
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "synthetic" / "pv_cases" / f"{case_id}.json"
+    return json.loads(path.read_text())["source_text"]

@@ -42,7 +42,11 @@ def test_clean_batch_reaches_hitl_interrupt_and_approves_to_completed():
     final = graph.invoke(Command(resume="approved"), config=config)
     assert final["terminal_state"] == "completed"
     assert final["audit_record_id"] is not None
-    assert final["llm_calls"] == 2  # happy path: one synthesis, one critic -- dmaic_lens.md SS7
+    # happy path: one synthesis, one critic -- dmaic_lens.md SS7. Stage 20b wired the
+    # response cache (services/integration/response_cache.py) into this exact path, so a
+    # warm cache legitimately drops this to 1 (synthesize skipped, critic still
+    # re-verifies) -- <=2 reflects real behavior, a hard ==2 does not once caching exists.
+    assert final["llm_calls"] <= 2
 
 
 def test_gap_batch_still_reaches_hitl_since_stub_always_cites():

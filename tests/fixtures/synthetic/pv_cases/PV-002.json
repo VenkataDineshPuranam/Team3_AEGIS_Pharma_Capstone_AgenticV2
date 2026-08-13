@@ -1,0 +1,14 @@
+{
+  "_note": "Synthetic fixture, Stage 20b Phase 1. Suspected-duplicate case: exercises the hard ordering invariant (duplicate_check must complete before triage, DDD SS7) and the PV-Intake Agent's 100%-escalation path.",
+  "case_id": "PV-002",
+  "comparison_window_version": "cw-2026-08-13",
+  "duplicate_suspected": true,
+  "candidates": [
+    { "candidate_case_id": "PV-001", "similarity_score": 0.87, "matched_fields": ["patient_identifiers", "product", "event_date"] }
+  ],
+  "source_text": "same patient, dose reaction, nausea reported twice this week",
+  "normalization_suggestions": [
+    { "normalized_term": "nausea", "confidence": 0.96, "terminology_source": "MedDRA v27.0" }
+  ],
+  "terminology_table_version": "meddra-27.0"
+}

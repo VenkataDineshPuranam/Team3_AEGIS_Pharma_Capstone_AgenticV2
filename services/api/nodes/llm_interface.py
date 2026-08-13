@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from packages.domain.evidence import Claim
+from packages.domain.payloads import BatchPayload, PVPayload, SupplyPayload
 from packages.domain.state import DecisionSupportOutput, GovernedState, ReasonCode
 
 
@@ -36,17 +37,39 @@ class StubLLM:
 
     def synthesize(self, state: GovernedState) -> tuple[DecisionSupportOutput, int, int]:
         payload = state["domain_payload"]
-        gaps = [f for f in payload.findings if f.status != "complete"]
         evidence_ids = tuple(e.evidence_id for e in state["evidence"])
-        if gaps:
-            summary = f"Batch {payload.batch_id}: {len(gaps)} category/categories not complete."
-            claims = tuple(
-                Claim(text=f"{g.category}: {g.status} -- {g.gap_description or 'no description'}", cites=evidence_ids)
-                for g in gaps
-            )
+
+        if isinstance(payload, BatchPayload):
+            gaps = [f for f in payload.findings if f.status != "complete"]
+            if gaps:
+                summary = f"Batch {payload.batch_id}: {len(gaps)} category/categories not complete."
+                claims = tuple(
+                    Claim(text=f"{g.category}: {g.status} -- {g.gap_description or 'no description'}", cites=evidence_ids)
+                    for g in gaps
+                )
+            else:
+                summary = f"Batch {payload.batch_id}: all reconciliation categories complete."
+                claims = (Claim(text="All categories complete per retrieved evidence.", cites=evidence_ids),)
+        elif isinstance(payload, PVPayload):
+            if payload.duplicate_suspected:
+                candidate_ids = ", ".join(c.candidate_case_id for c in payload.candidates)
+                summary = f"Case {payload.case_id}: duplicate suspected against {candidate_ids}."
+                claims = (Claim(text=f"Case {payload.case_id} structurally matches prior case(s) {candidate_ids}.", cites=evidence_ids),)
+            else:
+                summary = f"Case {payload.case_id}: no duplicate suspected."
+                claims = (Claim(text="No structural match found against the comparison window.", cites=evidence_ids),)
+        elif isinstance(payload, SupplyPayload):
+            if payload.options:
+                summary = f"Product {payload.product_id}: {len(payload.options)} candidate option(s) within constraints."
+                claims = tuple(
+                    Claim(text=f"Option {o.option_id}: {o.description}", cites=evidence_ids) for o in payload.options
+                )
+            else:
+                summary = f"Product {payload.product_id}: no candidate options satisfy the constraint set."
+                claims = (Claim(text="Constraint-filtered candidate set is empty.", cites=evidence_ids),)
         else:
-            summary = f"Batch {payload.batch_id}: all reconciliation categories complete."
-            claims = (Claim(text="All categories complete per retrieved evidence.", cites=evidence_ids),)
+            raise TypeError(f"StubLLM.synthesize: unrecognized payload type {type(payload)!r}")
+
         draft = DecisionSupportOutput(summary=summary, claims=claims)
         return draft, 100, 50
 
