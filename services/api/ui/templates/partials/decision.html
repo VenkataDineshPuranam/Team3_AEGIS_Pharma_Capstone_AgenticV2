@@ -1,0 +1,48 @@
+<div class="card decision">
+  <h3>Decision</h3>
+  {% if run.status != 'pending_approval' %}
+    {% if run.status == 'timed_out' or run.abstention_reason == 'hitl_timeout' %}
+    <p>No decision was made; resubmit.</p>
+    {% else %}
+    <p style="margin:0;color:var(--mute)">This pack is closed ({{ run.status_label }}).</p>
+    {% endif %}
+  {% elif role.requester_only %}
+    <p style="margin:0">Manufacturing VP is never a Batch approver. This identity may request work, not sign the pack.</p>
+  {% else %}
+  <form method="post" action="/cases/{{ run.run_id }}/decide" hx-post="/cases/{{ run.run_id }}/decide" hx-target="body" hx-swap="outerHTML">
+    <input type="hidden" name="workflow" value="{{ run.workflow }}">
+    <textarea id="justification" name="justification" required minlength="8" placeholder="Justification is required (G-10). Record why the pack is accepted or returned — not a terminal GxP action."></textarea>
+    <div class="hint" id="just-hint">8 more characters required (G-10)</div>
+    {% if run.workflow == 'supply_planning' %}
+    <div class="legs">
+      <div class="leg {{ 'done' if 'planning' in (run.approved_legs or []) else '' }}">Planning {{ 'signed' if 'planning' in (run.approved_legs or []) else 'open' }}</div>
+      <div class="leg {{ 'done' if 'quality' in (run.approved_legs or []) else '' }}">Quality {{ 'signed' if 'quality' in (run.approved_legs or []) else 'open' }}</div>
+    </div>
+    {% if role.supply_leg == 'planning' %}
+    <input type="hidden" name="leg" value="planning">
+    <div class="actions">
+      <button class="btn accept" name="action" value="approved" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Sign planning leg</button>
+      <button class="btn reject" name="action" value="rejected" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Reject pack</button>
+    </div>
+    {% elif role.supply_leg == 'quality' %}
+    <input type="hidden" name="leg" value="quality">
+    <div class="actions">
+      <button class="btn accept" name="action" value="approved" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Sign quality leg</button>
+      <button class="btn reject" name="action" value="rejected" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Reject pack</button>
+    </div>
+    {% else %}
+    <p>This identity does not hold a supply leg.</p>
+    {% endif %}
+    {% else %}
+    <div class="actions">
+      <button class="btn accept" name="action" value="approved" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Accept evidence pack</button>
+      <button class="btn reject" name="action" value="rejected" data-need-just {% if not can_act %}data-locked="1" disabled{% endif %}>Reject pack</button>
+      {% if run.workflow == 'pv_intake' %}
+      <button class="btn veto" name="action" value="veto" data-need-just {% if not can_veto %}data-locked="1" disabled{% endif %} title="Advisory veto — forces rejected, never overridden">Veto</button>
+      {% endif %}
+    </div>
+    {% endif %}
+    <p class="hint">Accept means the evidence pack is sufficient for a human. It does not certify, allocate, or determine safety.</p>
+  </form>
+  {% endif %}
+</div>

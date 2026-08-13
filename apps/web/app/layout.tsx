@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { RoleProvider } from "@/components/RoleProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,17 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AEGIS Pharma AI -- Approver Dashboard",
-  description: "Human-in-the-loop approval interface for the batch_review, pv_intake, and supply_planning agentic workflows.",
+  title: "AEGIS Workbench — NovaCura",
+  description:
+    "Governed decision-support workbench for Batch Review, PV Intake, and Supply Planning. Human-in-the-loop; never a terminal disposition.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <RoleProvider>{children}</RoleProvider>
+      </body>
     </html>
   );
 }

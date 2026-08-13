@@ -182,3 +182,115 @@ def write_hitl_expired(
         (run_id, workflow, json.dumps(eligible_roles_at_expiry), recorded_at),
     )
     conn.commit()
+
+
+def write_prohibited_action_blocked(
+    conn: sqlite3.Connection,
+    run_id: str,
+    matched_terms: list[str] | tuple[str, ...],
+    draft_sha256: str,
+    recorded_at: str,
+) -> None:
+    """Record a blocked draft without storing the draft text (memory_design.md SS4)."""
+    conn.execute(
+        "INSERT INTO prohibited_action_blocked (run_id, matched_terms, draft_sha256, recorded_at) "
+        "VALUES (?, ?, ?, ?)",
+        (run_id, json.dumps(list(matched_terms)), draft_sha256, recorded_at),
+    )
+    conn.commit()
+
+
+def list_agent_runs(workflow: str | None = None, limit: int = 100) -> list[dict]:
+    conn = get_connection()
+    if workflow:
+        rows = conn.execute(
+            "SELECT run_id, workflow, terminal_state, abstention_reason, trace_id, "
+            "policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out "
+            "FROM agent_run WHERE workflow = ? ORDER BY recorded_at DESC LIMIT ?",
+            (workflow, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT run_id, workflow, terminal_state, abstention_reason, trace_id, "
+            "policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out "
+            "FROM agent_run ORDER BY recorded_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    cols = [
+        "run_id", "workflow", "terminal_state", "abstention_reason", "trace_id",
+        "policy_contract_version", "recorded_at", "llm_calls", "tokens_in", "tokens_out",
+    ]
+    return [dict(zip(cols, row)) for row in rows]
+
+
+def get_agent_run(run_id: str) -> dict | None:
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT run_id, workflow, terminal_state, abstention_reason, trace_id, "
+        "policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out "
+        "FROM agent_run WHERE run_id = ?",
+        (run_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    cols = [
+        "run_id", "workflow", "terminal_state", "abstention_reason", "trace_id",
+        "policy_contract_version", "recorded_at", "llm_calls", "tokens_in", "tokens_out",
+    ]
+    return dict(zip(cols, row))
+
+
+def list_overrides(run_id: str) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT role, role_assignment_id, tier_at_action, action, justification, recorded_at "
+        "FROM human_override_recorded WHERE run_id = ? ORDER BY id",
+        (run_id,),
+    ).fetchall()
+    cols = ["role", "role_assignment_id", "tier_at_action", "action", "justification", "recorded_at"]
+    return [dict(zip(cols, row)) for row in rows]
+
+
+def list_blocked(limit: int = 100) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT b.run_id, a.workflow, b.matched_terms, b.draft_sha256, b.recorded_at, a.abstention_reason "
+        "FROM prohibited_action_blocked b LEFT JOIN agent_run a ON a.run_id = b.run_id "
+        "ORDER BY b.id DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    out = []
+    for row in rows:
+        terms = row[2]
+        try:
+            terms_list = json.loads(terms) if terms else []
+        except json.JSONDecodeError:
+            terms_list = [terms]
+        out.append(
+            {
+                "run_id": row[0],
+                "workflow": row[1],
+                "matched_terms": terms_list,
+                "draft_sha256": row[3],
+                "recorded_at": row[4],
+                "abstention_reason": row[5],
+            }
+        )
+    if out:
+        return out
+    blocked_runs = conn.execute(
+        "SELECT run_id, workflow, recorded_at, abstention_reason FROM agent_run "
+        "WHERE terminal_state = 'blocked' ORDER BY recorded_at DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    return [
+        {
+            "run_id": r[0],
+            "workflow": r[1],
+            "matched_terms": [],
+            "draft_sha256": None,
+            "recorded_at": r[2],
+            "abstention_reason": r[3],
+        }
+        for r in blocked_runs
+    ]

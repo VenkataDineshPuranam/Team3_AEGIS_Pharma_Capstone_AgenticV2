@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · AEGIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand">
+        <div class="brand-kicker">NovaCura</div>
+        <h1>AEGIS</h1>
+        <p>Governed decision support. Never a terminal action.</p>
+      </div>
+      <nav class="nav">
+        {% for href, label, key in nav %}
+        <a href="{{ href }}" class="{{ 'is-on' if nav_active == key else '' }}">
+          <span>{{ label }}</span>
+          {% if key == 'inbox' and pending_count is not none %}
+          <span class="count">{{ pending_count }}</span>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="identity">
+        <form method="post" action="/session/role">
+          <label for="role">Acting identity</label>
+          <select id="role" name="role" onchange="this.form.submit()">
+            {% for r in roles %}
+            <option value="{{ r.id }}" {{ 'selected' if r.id == role.id else '' }}>{{ r.label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        <div class="desk">{{ role.desk }} · local session until Entra ID is bound.</div>
+      </div>
+    </aside>
+    <div class="stage">
+      <header class="topbar">
+        <div>
+          <h2>{{ title }}</h2>
+          {% if subtitle %}<div class="sub">{{ subtitle }}</div>{% endif %}
+        </div>
+        <div class="health" hx-get="/partials/health" hx-trigger="load, every 20s" hx-swap="innerHTML">
+          {% include "partials/health.html" %}
+        </div>
+      </header>
+      <main class="page">
+        {% block body %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

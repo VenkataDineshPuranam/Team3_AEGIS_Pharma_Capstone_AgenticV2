@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="filter">
+  <a href="/ops" class="{{ 'is-on' if tab == 'health' else '' }}">Health</a>
+  <a href="/ops/runs" class="{{ 'is-on' if tab == 'runs' else '' }}">Run inspector</a>
+  <a href="/ops/guardrails" class="{{ 'is-on' if tab == 'guardrails' else '' }}">Guardrails</a>
+  <a href="/ops/governance" class="{{ 'is-on' if tab == 'governance' else '' }}">Governance</a>
+</div>
+
+{% if tab == 'health' %}
+<div class="ops-grid">
+  <div class="card">
+    <h3>Dependencies</h3>
+    {% for key, dep in health.dependencies.items() %}
+    <p>
+      <span class="pill {{ 'ok' if dep.ok else 'warn' }}"><span class="dot"></span>{{ key }}</span>
+      <span style="font-size:13px;color:var(--mute)">{{ dep.detail }}{% if dep.mode %} · {{ dep.mode }}{% endif %}</span>
+    </p>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h3>Cost panel</h3>
+    <p>Runs with tokens: {{ dash.cost.run_count }}</p>
+    <p>Mean tokens / run: {{ dash.cost.mean_tokens_per_run or '—' }}</p>
+    <p>p95 tokens: {{ dash.cost.p95_tokens_per_run or '—' }}</p>
+    <p>Mean LLM calls: {{ dash.cost.mean_llm_calls_per_run or '—' }}</p>
+    <p style="color:var(--mute);font-size:12px">Per-node breakdown lives in LangSmith traces, not agent_run.</p>
+  </div>
+  <div class="card">
+    <h3>Guardrail trips</h3>
+    <p>Runs {{ dash.guardrail_trip.run_count }} · blocked {{ dash.guardrail_trip.blocked_count }}</p>
+    <p>Blocked rate {{ dash.guardrail_trip.blocked_rate or '—' }}</p>
+  </div>
+  <div class="card">
+    <h3>Terminal states</h3>
+    {% for k, v in dash.terminal_states.by_terminal_state.items() %}
+    <p>{{ k }} · {{ v }}</p>
+    {% else %}
+    <p style="color:var(--mute)">No agent_run rows yet.</p>
+    {% endfor %}
+    <h3 style="margin-top:16px">Abstention reasons</h3>
+    {% for k, v in dash.terminal_states.by_abstention_reason.items() %}
+    <p>{{ k }} · {{ v }}</p>
+    {% else %}
+    <p style="color:var(--mute)">None recorded.</p>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h3>Cache</h3>
+    <pre style="font-family:var(--mono);font-size:12px;white-space:pre-wrap">{{ dash.cache }}</pre>
+  </div>
+</div>
+{% endif %}
+
+{% if tab == 'runs' %}
+<table class="table">
+  <thead><tr><th>Run</th><th>Workflow</th><th>Status</th><th>Trace</th><th>Opened</th></tr></thead>
+  <tbody>
+    {% for r in runs %}
+    <tr>
+      <td class="mono"><a href="/cases/{{ r.run_id }}">{{ r.run_id }}</a></td>
+      <td>{{ r.workflow_short }}</td>
+      <td><span class="chip {{ r.status }}">{{ r.status_label }}</span></td>
+      <td class="mono">{{ r.trace_id or '—' }}</td>
+      <td>{{ r.created_fmt }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No snapshots.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if tab == 'guardrails' %}
+<table class="table">
+  <thead><tr><th>When</th><th>Run</th><th>Workflow</th><th>Terms</th><th>Draft hash</th></tr></thead>
+  <tbody>
+    {% for g in guardrails %}
+    <tr>
+      <td>{{ g.recorded_at or '—' }}</td>
+      <td class="mono"><a href="/cases/{{ g.run_id }}">{{ g.run_id }}</a></td>
+      <td>{{ g.workflow or '—' }}</td>
+      <td>{{ (g.matched_terms or [])|join(', ') }}</td>
+      <td class="mono">{{ g.draft_sha256 or '—' }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No blocked drafts hashed yet. Open the seeded B-003 blocked case (R-WB-BLOCK) in History.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p style="color:var(--mute);font-size:13px;margin-top:12px">Blocked draft text is never shown. Hash only.</p>
+{% endif %}
+
+{% if tab == 'governance' %}
+<div class="ops-grid">
+  <div class="card">
+    <h3>Policy engine</h3>
+    <p>{{ 'Loaded' if gov.policy_engine_ok else 'Fail closed' }} · {{ gov.policy_contract_version or '—' }}</p>
+    <p style="color:var(--mute)">{{ gov.detail }}</p>
+    <p>Prohibition workflows: {{ (gov.prohibition_workflows or [])|join(', ') }}</p>
+  </div>
+  <div class="card">
+    <h3>HITL ladder (read-only)</h3>
+    {% for wf, spec in gov.hitl_ladder.items() %}
+    <p><strong>{{ wf }}</strong> · {{ spec.clock }} · T1 {{ spec.t1 }}h · T2 {{ spec.t2 }}h · T3 {{ spec.t3 }}h</p>
+    {% endfor %}
+    <p style="color:var(--mute);font-size:12px">{{ gov.note }}</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

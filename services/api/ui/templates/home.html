@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="metrics">
+  <div class="metric">
+    <div class="k">My pending</div>
+    <div class="v">{{ pending_count }}</div>
+    <div class="h">Role-scoped inbox</div>
+  </div>
+  <div class="metric {{ 'warn' if at_risk else '' }}">
+    <div class="k">Clocks at risk</div>
+    <div class="v">{{ at_risk }}</div>
+    <div class="h">&lt; 4h to next ladder step</div>
+  </div>
+  <div class="metric">
+    <div class="k">History</div>
+    <div class="v">{{ history_count }}</div>
+    <div class="h">Including blocked and T3 timeout</div>
+  </div>
+  <div class="metric">
+    <div class="k">This desk</div>
+    <div class="v" style="font-size:18px;padding-top:10px;letter-spacing:-0.02em">{{ role.label }}</div>
+    <div class="h">{{ role.desk }}</div>
+  </div>
+</div>
+
+<div class="lanes">
+  {% for wf, label, cls, items in lanes %}
+  <section class="lane {{ cls }}">
+    <header>
+      <h3>{{ label }}</h3>
+      <a href="/{{ cls }}">Workspace →</a>
+    </header>
+    {% if items %}
+    <ul>
+      {% for r in items %}
+      <li>
+        <a href="/cases/{{ r.run_id }}">
+          <div class="id">{{ r.subject_id }} · {{ r.run_id }}</div>
+          <div class="meta">
+            {{ r.status_label }}
+            {% if r.sla %} · {{ r.sla.label }}{% endif %}
+            {% if r.finding_counts.gap %} · {{ r.finding_counts.gap }} gap{% endif %}
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty">No open cases on this desk.</div>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

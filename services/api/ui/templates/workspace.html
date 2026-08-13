@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="banner warn" style="max-width:720px">
+  {{ blurb }}
+</div>
+<div class="filter">
+  <a href="/inbox?workflow={{ workflow }}">Open inbox for this workflow →</a>
+  <a href="/submit">New run</a>
+</div>
+{% include "partials/inbox_table.html" %}
+{% endblock %}

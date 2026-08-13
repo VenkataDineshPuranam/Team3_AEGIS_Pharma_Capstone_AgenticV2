@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="filter">
+  <a href="/inbox" class="{{ 'is-on' if not workflow else '' }}">All</a>
+  <a href="/inbox?workflow=batch_review" class="{{ 'is-on' if workflow == 'batch_review' else '' }}">Batch</a>
+  <a href="/inbox?workflow=pv_intake" class="{{ 'is-on' if workflow == 'pv_intake' else '' }}">PV</a>
+  <a href="/inbox?workflow=supply_planning" class="{{ 'is-on' if workflow == 'supply_planning' else '' }}">Supply</a>
+</div>
+<div hx-get="/partials/inbox{{ ('?workflow=' + workflow) if workflow else '' }}" hx-trigger="load, every 12s" hx-swap="innerHTML">
+  {% include "partials/inbox_table.html" %}
+</div>
+{% endblock %}

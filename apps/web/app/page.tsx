@@ -2,112 +2,80 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { decideRun, getQueue, type QueueEntry, type Workflow } from "@/lib/api";
-import { PendingItemCard } from "@/components/PendingItemCard";
+import { AppShell } from "@/components/AppShell";
+import { StatCard } from "@/components/StatCard";
+import { getQueue, listRuns, type QueueEntry, type RunResult } from "@/lib/api";
+import { useRole } from "@/components/RoleProvider";
+import { WORKFLOW_HREF, WORKFLOW_LABEL } from "@/lib/labels";
+import type { Workflow } from "@/lib/api";
 
-const POLL_MS = 4000;
-
-export default function ApproverDashboard() {
-  const [entries, setEntries] = useState<QueueEntry[] | null>(null);
+export default function HomePage() {
+  const { role } = useRole();
+  const [queue, setQueue] = useState<QueueEntry[]>([]);
+  const [recent, setRecent] = useState<RunResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Workflow | "all">("all");
 
   const refresh = useCallback(async () => {
     try {
-      const data = await getQueue(filter === "all" ? undefined : filter);
-      setEntries(data);
+      const [q, r] = await Promise.all([getQueue(), listRuns()]);
+      setQueue(q);
+      setRecent(r.slice(0, 5));
       setError(null);
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? `${e.message} -- is the Orchestrator API running at NEXT_PUBLIC_API_URL?`
-          : "Unknown error",
-      );
+      setError(e instanceof Error ? e.message : "Unknown error");
     }
-  }, [filter]);
+  }, []);
 
   useEffect(() => {
-    // refresh() is async -- its setState calls happen after the awaited fetch resolves,
-    // not synchronously during this effect's execution, so this is the standard
-    // fetch-on-mount-then-poll pattern, not the synchronous-setState anti-pattern the
-    // rule is meant to catch (react-hooks/set-state-in-effect false-positives on this
-    // shape since it can't see through the async boundary).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
-    const id = setInterval(refresh, POLL_MS);
+    const id = setInterval(refresh, 8000);
     return () => clearInterval(id);
   }, [refresh]);
 
-  async function handleDecide(
-    runId: string,
-    decision:
-      | { action: "approved" | "rejected" | "veto" }
-      | { action: "approved" | "rejected"; leg: "planning" | "quality" },
-  ) {
-    const entry = entries?.find((e) => e.run_id === runId);
-    if (!entry) return;
-    await decideRun(runId, { workflow: entry.workflow, ...decision });
-    await refresh();
-  }
+  const atRisk = queue.filter((e) => e.hitl_deadline && new Date(e.hitl_deadline).getTime() - Date.now() < 4 * 3600000);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-            Approver Dashboard
-          </h1>
-          <p className="text-sm text-slate-500">
-            Pending human-in-the-loop decisions across all three governed workflows.
-          </p>
-        </div>
-        <nav className="flex gap-4 text-sm">
-          <Link className="text-blue-600 hover:underline" href="/submit">
-            Submit run
-          </Link>
-          <Link className="text-blue-600 hover:underline" href="/observability">
-            Observability
-          </Link>
-        </nav>
-      </header>
-
-      <div className="mb-4 flex gap-2 text-sm">
-        {(["all", "batch_review", "pv_intake", "supply_planning"] as const).map((w) => (
-          <button
-            key={w}
-            onClick={() => setFilter(w)}
-            className={`rounded-full px-3 py-1 border ${
-              filter === w
-                ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-50 dark:text-slate-900"
-                : "border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300"
-            }`}
-          >
-            {w === "all" ? "All" : w}
-          </button>
-        ))}
-      </div>
-
+    <AppShell title={`Home — ${role.label}`}>
       {error && (
-        <div className="mb-4 rounded-md border border-red-300 bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-          {error}
+        <div className="mb-4 rounded border border-crimson/40 bg-crimson/10 px-4 py-3 text-sm text-crimson">
+          {error} — is the Orchestrator API running?
         </div>
       )}
-
-      {entries === null && !error && (
-        <p className="text-sm text-slate-400">Loading queue…</p>
-      )}
-
-      {entries !== null && entries.length === 0 && (
-        <p className="text-sm text-slate-400">
-          Nothing pending. Submit a run to see it appear here.
-        </p>
-      )}
-
-      <div className="space-y-3">
-        {entries?.map((entry) => (
-          <PendingItemCard key={entry.run_id} entry={entry} onDecide={handleDecide} />
-        ))}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="My pending" value={queue.length} />
+        <StatCard label="Clocks at risk" value={atRisk.length} tone={atRisk.length ? "warn" : "good"} />
+        <StatCard label="Role" value={role.requesterOnly ? "Requester" : "Approver"} />
+        <StatCard label="Decision support" value="On" sub="Never a terminal action" />
       </div>
-    </main>
+      <div className="mb-8 flex flex-wrap gap-3 text-sm">
+        {(Object.keys(WORKFLOW_LABEL) as Workflow[]).map((w) => (
+          <Link
+            key={w}
+            href={WORKFLOW_HREF[w]}
+            className="rounded border border-line bg-white px-3 py-2 hover:border-navy/40"
+          >
+            {WORKFLOW_LABEL[w]} workspace
+          </Link>
+        ))}
+        <Link href="/inbox" className="rounded bg-navy px-3 py-2 text-white">
+          Open inbox
+        </Link>
+      </div>
+      <h2 className="mb-2 text-sm font-semibold text-navy">Recent runs</h2>
+      <ul className="space-y-1 text-sm">
+        {recent.map((r) => (
+          <li key={r.run_id}>
+            <Link className="font-mono text-batch hover:underline" href={`/runs/${r.run_id}`}>
+              {r.run_id}
+            </Link>{" "}
+            <span className="text-muted">
+              {WORKFLOW_LABEL[r.workflow]} · {r.status}
+              {r.abstention_reason === "hitl_timeout" ? " — No decision was made; resubmit." : ""}
+            </span>
+          </li>
+        ))}
+        {recent.length === 0 && <li className="text-muted">No history yet.</li>}
+      </ul>
+    </AppShell>
   );
 }

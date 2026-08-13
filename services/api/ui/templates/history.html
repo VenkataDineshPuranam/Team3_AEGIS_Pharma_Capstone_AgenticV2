@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="filter">
+  <a href="/history" class="{{ 'is-on' if not status else '' }}">All</a>
+  {% for s in ['completed','timed_out','blocked','abstained','pending_approval'] %}
+  <a href="/history?status={{ s }}" class="{{ 'is-on' if status == s else '' }}">{{ s.replace('_',' ') }}</a>
+  {% endfor %}
+</div>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Run</th>
+      <th>Workflow</th>
+      <th>Status</th>
+      <th>Opened</th>
+      <th>Tokens</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in runs %}
+    <tr>
+      <td>
+        <a href="/cases/{{ r.run_id }}">
+          <div class="mono">{{ r.subject_id or r.run_id }}</div>
+          <div class="mono" style="color:var(--mute)">{{ r.run_id }}</div>
+        </a>
+      </td>
+      <td><span class="wf {{ r.workflow }}">{{ r.workflow_short }}</span></td>
+      <td>
+        <span class="chip {{ r.status }}">{{ r.status_label }}</span>
+        {% if r.abstention_reason == 'hitl_timeout' %}<div style="font-size:12px;margin-top:4px">No decision was made; resubmit.</div>{% endif %}
+      </td>
+      <td>{{ r.created_fmt }}</td>
+      <td class="mono">{{ r.tokens_in or 0 }}/{{ r.tokens_out or 0 }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" style="padding:28px;color:var(--mute)">No history yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

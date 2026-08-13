@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block body %}
+<p style="max-width:640px;color:var(--mute);margin:0 0 20px">
+  Submitting a live run invokes the LangGraph for this workflow. If the LLM client is down, the API fails closed (503).
+  Seeded dockets in Inbox do not require a key.
+</p>
+{% if error %}
+<div class="banner bad">{{ error }}</div>
+{% endif %}
+<form class="form" method="post" action="/submit">
+  <div>
+    <label>Workflow</label>
+    <select name="workflow">
+      <option value="batch_review">GxP Batch Review</option>
+      <option value="pv_intake">PV Intake</option>
+      <option value="supply_planning">Supply Planning</option>
+    </select>
+  </div>
+  <div>
+    <label>Subject (batch / case / product)</label>
+    <input name="subject_id" value="B-002" required>
+    <div class="hint">Synthetic subjects: B-001 B-002 B-003 · PV-001 PV-002 · P-100 P-200</div>
+  </div>
+  <div>
+    <label>Requester role</label>
+    <select name="requester_role">
+      {% for r in roles %}
+      <option value="{{ r.id }}" {{ 'selected' if r.id == role.id else '' }}>{{ r.label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn gold" type="submit">Submit for decision support</button>
+</form>
+{% endblock %}

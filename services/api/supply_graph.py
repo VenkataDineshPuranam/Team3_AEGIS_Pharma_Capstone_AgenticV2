@@ -157,7 +157,10 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
                     "product_id": product_id, "required_legs": required_legs, "approved_legs": approved_legs,
                 }
             )
-            if decision == "timed_out":
+            from services.api.hitl_resume import parse_hitl_resume
+
+            action, justification, leg = parse_hitl_resume(decision)
+            if action == "timed_out":
                 audit_store.write_hitl_expired(
                     audit_conn, state["run_id"], state["workflow"],
                     eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
@@ -166,23 +169,22 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
                     "hitl_status": "timed_out", "hitl_approved_legs": approved_legs,
                     "terminal_state": "abstained", "abstention_reason": "hitl_timeout",
                 }
-            if isinstance(decision, dict) and decision.get("action") == "rejected":
-                role = SUPPLY_QUALITY_APPROVER if decision.get("leg") == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
-                audit_store.write_human_override(
-                    audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
-                    action="rejected", justification="[20b placeholder -- no structured approver-input UI yet]",
-                    recorded_at=datetime.now(UTC).isoformat(),
-                )
-                return {"hitl_status": "rejected", "hitl_approved_legs": approved_legs, "terminal_state": "completed"}
-            if isinstance(decision, dict) and decision.get("action") == "approved":
-                leg = decision["leg"]
+            if action == "rejected":
                 role = SUPPLY_QUALITY_APPROVER if leg == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
                 audit_store.write_human_override(
                     audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
-                    action="approved", justification="[20b placeholder -- no structured approver-input UI yet]",
+                    action="rejected", justification=justification,
                     recorded_at=datetime.now(UTC).isoformat(),
                 )
-                if leg not in approved_legs:
+                return {"hitl_status": "rejected", "hitl_approved_legs": approved_legs, "terminal_state": "completed"}
+            if action == "approved":
+                role = SUPPLY_QUALITY_APPROVER if leg == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
+                audit_store.write_human_override(
+                    audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
+                    action="approved", justification=justification,
+                    recorded_at=datetime.now(UTC).isoformat(),
+                )
+                if leg and leg not in approved_legs:
                     approved_legs = approved_legs + [leg]
 
         return {"hitl_status": "approved", "hitl_approved_legs": approved_legs, "terminal_state": "completed"}

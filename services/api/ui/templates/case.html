@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block body %}
+{% set p = run.domain_payload or {} %}
+{% set findings = p.findings or [] %}
+<div class="docket" id="case-root">
+  <article class="folio">
+    <div class="kicker">{{ run.workflow_label }} · policy {{ run.policy_contract_version or '—' }}</div>
+    <h1>{{ run.subject_id }}</h1>
+    <div class="meta-row">
+      <span class="chip {{ run.status }}">{{ run.status_label }}</span>
+      <span class="mono">{{ run.run_id }}</span>
+      <span>Opened {{ run.created_fmt }}</span>
+      <span>Trace {{ run.trace_id or '—' }}</span>
+      {% if run.hitl_tier %}<span>HITL {{ run.hitl_tier }}{% if run.hitl_status %} · {{ run.hitl_status }}{% endif %}</span>{% endif %}
+      {% if run.veto_recorded %}<span>Veto recorded</span>{% endif %}
+    </div>
+
+    {% if run.status == 'blocked' %}
+    <div class="banner bad">
+      Prohibited-action guard blocked this draft. The draft body is not stored — only a hash lives on the audit row.
+      Reason: {{ run.abstention_reason or 'prohibited_action' }}. Guard: {{ run.guard_verdict or 'blocked' }}.
+    </div>
+    {% elif run.status == 'timed_out' or run.abstention_reason == 'hitl_timeout' %}
+    <div class="banner warn">No decision was made; resubmit. T3 is abstention, not silent approval.</div>
+    {% endif %}
+
+    {% if run.workflow == 'batch_review' %}
+    <div class="section-label">Reconciliation{% if p.reconciliation_complete is not none %} · {{ 'structurally complete' if p.reconciliation_complete else 'incomplete' }}{% endif %}</div>
+    <p style="margin:0 0 12px;color:var(--mute);font-size:13px">
+      {{ run.finding_counts.complete }} complete · {{ run.finding_counts.gap }} gap · {{ run.finding_counts.conflict }} conflict.
+      Status is completeness, never a disposition.
+    </p>
+    <div class="matrix">
+      {% for f in findings %}
+      <button type="button" class="cell" data-eid="{{ (f.evidence_ids or [''])[0] }}" data-cite="{{ (f.evidence_ids or [''])[0] }}">
+        <div class="cat">{{ finding_labels.get(f.category, f.category) }}</div>
+        <div class="st {{ f.status }}">{{ f.status }}</div>
+        {% if f.gap_description %}<p class="gapd">{{ f.gap_description }}</p>{% endif %}
+        <div class="mono" style="margin-top:8px;font-size:11px">{{ (f.evidence_ids or [])|join(' ') }}</div>
+      </button>
+      {% else %}
+      <p class="empty">No findings on this pack.</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if run.workflow == 'pv_intake' %}
+    <div class="section-label">PV intake — triage, not a safety determination</div>
+    <p style="margin:0 0 12px;color:var(--mute);font-size:13px">
+      Wall-clock SLA. Duplicate candidates are not a merge. Terminology suggestions are never auto-applied.
+      Window {{ p.comparison_window_version or '—' }} · MedDRA {{ p.terminology_table_version or '—' }}.
+    </p>
+    <p><strong>Duplicate suspected:</strong> {{ 'yes' if p.duplicate_suspected else 'no' }}</p>
+    {% if p.source_text %}<p class="prose" style="font-size:17px">“{{ p.source_text }}”</p>{% endif %}
+    <table class="data-table">
+      <thead><tr><th>Candidate</th><th>Similarity</th><th>Matched fields</th></tr></thead>
+      <tbody>
+        {% for c in p.candidates or [] %}
+        <tr>
+          <td class="mono">{{ c.candidate_case_id }}</td>
+          <td>{{ '%.2f'|format(c.similarity_score) }}</td>
+          <td>{{ (c.matched_fields or [])|join(', ') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">No candidates in this window.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% for s in p.normalization_suggestions or [] %}
+    <div class="suggest">
+      <strong>{{ s.normalized_term }}</strong>
+      <span style="color:var(--mute)"> · {{ (s.confidence * 100)|int }}% · {{ s.terminology_source }} · suggestion only, not applied</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if run.workflow == 'supply_planning' %}
+    <div class="section-label">Options — non-executing</div>
+    <p style="margin:0 0 12px;color:var(--mute);font-size:13px">
+      No allocate / reserve / ship control exists on this screen. Snapshot {{ p.inventory_snapshot_version or '—' }}.
+    </p>
+    {% set cs = p.constraint_set or {} %}
+    <table class="data-table">
+      <tr><th>Market authorization</th><td>{{ (cs.market_authorization_scope or [])|join(', ') or '—' }}</td></tr>
+      <tr><th>Cold chain</th><td>{{ (cs.cold_chain_requirements or [])|join(', ') or '—' }}</td></tr>
+      <tr><th>Trial reservations</th><td>{{ (cs.trial_demand_reservations or [])|join(', ') or '—' }}</td></tr>
+      <tr><th>Compassionate use</th><td>{{ (cs.compassionate_use_constraints or [])|join(', ') or '—' }}</td></tr>
+      <tr><th>CMO window</th><td>{{ cs.cmo_capacity_window or '—' }}</td></tr>
+    </table>
+    {% for o in p.options or [] %}
+    <div class="option">
+      <div class="mono">{{ o.option_id }}</div>
+      <p style="margin:6px 0">{{ o.description }}</p>
+      <div style="font-size:12px;color:var(--mute)">
+        Constraints: {{ (o.constraints_satisfied or [])|join(', ') or '—' }}
+        · Cold-chain cites
+        {% for id in o.cold_chain_evidence_ids or [] %}
+        <button type="button" class="cite" data-cite="{{ id }}">[{{ id }}]</button>
+        {% endfor %}
+      </div>
+      <div style="font-size:12px;margin-top:4px">{{ o.transport_notes }}</div>
+    </div>
+    {% else %}
+    <div class="banner warn">Constraint set returned no options. Abstain — the agent cannot widen the set.</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if run.draft_summary %}
+    <div class="section-label">Summary — not a disposition</div>
+    <p class="prose">{{ run.draft_summary }}</p>
+    {% endif %}
+
+    {% if run.draft_claims %}
+    <div class="section-label">Claims</div>
+    {% for c in run.draft_claims %}
+    <div class="claim">
+      <span class="mono" style="color:var(--gold);font-size:12px;padding-top:3px">{{ '%02d'|format(loop.index) }}</span>
+      <div>
+        {{ c.text }}
+        {% for id in c.cites or [] %}
+        <button type="button" class="cite" data-cite="{{ id }}">[{{ id }}]</button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="section-label">Critic / verifier</div>
+    <p>
+      Verdict <strong>{{ run.critic_verdict or '—' }}</strong>
+      {% if run.critic_reason_codes %} · {{ run.critic_reason_codes|join(', ') }}{% endif %}
+      · Guard {{ run.guard_verdict or '—' }}
+    </p>
+
+    <div class="section-label">Run economics</div>
+    <p class="mono" style="color:var(--mute)">
+      LLM {{ run.llm_calls or 0 }} · tools {{ run.tool_calls or 0 }} · tokens in {{ run.tokens_in or 0 }} / out {{ run.tokens_out or 0 }}
+    </p>
+  </article>
+
+  <aside class="side">
+    {% if run.sla %}
+    <div class="card sla {{ run.sla.tone }}" data-deadline="{{ run.hitl_deadline }}" style="--pct: {{ run.sla.pct }}%">
+      <div class="ring"><span>{{ run.hitl_tier or 'T0' }}</span></div>
+      <div>
+        <div class="kicker" style="margin:0">HITL clock</div>
+        <div data-remain>{{ run.sla.label }}</div>
+        <div style="font-size:12px;color:var(--mute);margin-top:4px">Deadline {{ run.deadline_fmt }} · {{ sla_note }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h3>This screen cannot</h3>
+      <div class="prohibit">
+        {% for item in run.prohibitions %}
+        <span>{{ item }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Approvers</h3>
+      <p style="margin:0 0 8px">{{ (run.approver_roles or [])|join(' · ') or '—' }}</p>
+      <p style="margin:0;color:var(--mute);font-size:13px">Requested by {{ run.requester_role or '—' }}</p>
+      {% if run.required_legs %}
+      <div class="legs" style="margin-top:12px">
+        {% for leg in run.required_legs %}
+        <div class="leg {{ 'done' if leg in (run.approved_legs or []) else '' }}">
+          <strong>{{ leg }}</strong>
+          <div>{{ 'signed' if leg in (run.approved_legs or []) else 'open' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Evidence</h3>
+      {% for e in run.evidence or [] %}
+      <div class="ev" data-eid="{{ e.evidence_id }}">
+        <div class="mono">{{ e.evidence_id }} · {{ e.status }}</div>
+        <div class="src">{{ e.source }} · {{ e.effective_date or '—' }} · {{ e.jurisdiction or '—' }}{% if e.supersedes %} · supersedes {{ e.supersedes }}{% endif %}</div>
+        {% if e.content_excerpt %}<p class="excerpt">{{ e.content_excerpt }}</p>{% endif %}
+      </div>
+      {% else %}
+      <p style="color:var(--mute)">No evidence attached.</p>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h3>Audit spine</h3>
+      <ul class="audit">
+        {% for ev in run.audit_events or [] %}
+        <li>
+          <strong>{{ ev.kind }}</strong>
+          {% if ev.action %} · {{ ev.action }}{% endif %}
+          {% if ev.justification %}<div>{{ ev.justification }}</div>{% endif %}
+          {% if ev.message %}<div>{{ ev.message }}</div>{% endif %}
+          {% if ev.draft_sha256 %}<div class="mono">sha256 {{ ev.draft_sha256 }}</div>{% endif %}
+          <div>{{ ev.recorded_at or '' }}{% if ev.actor_role %} · {{ ev.actor_role }}{% endif %}</div>
+        </li>
+        {% else %}
+        <li>No audit events yet — pending packs write on human action or finalize.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% include "partials/decision.html" %}
+  </aside>
+</div>
+{% endblock %}

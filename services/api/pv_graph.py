@@ -162,28 +162,28 @@ def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpo
         decision = interrupt(
             {"approver_roles": state["approver_roles"], "run_id": state["run_id"], "case_id": case_id}
         )
-        if decision == "timed_out":
+        from services.api.hitl_resume import parse_hitl_resume
+
+        action, justification, _leg = parse_hitl_resume(decision)
+        if action == "timed_out":
             audit_store.write_hitl_expired(
                 audit_conn, state["run_id"], state["workflow"],
                 eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
             )
-            return {"hitl_status": decision, "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
-        if decision == "veto":
-            # failure_and_loop_guards.md SS5.4: registrable at any tier, forces rejected
-            # immediately, never overridden. audit_store enforces the "never overridden"
-            # half at write time (has_veto check) -- not re-implemented here.
+            return {"hitl_status": action, "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
+        if action == "veto":
             audit_store.write_human_override(
                 audit_conn, state["run_id"], role=PV_VETO_ROLE, tier_at_action=state.get("hitl_tier") or "T0",
-                action="veto_registered", justification="[20a/20b placeholder -- no structured approver-input UI yet]",
+                action="veto_registered", justification=justification,
                 recorded_at=datetime.now(UTC).isoformat(),
             )
             return {"hitl_status": "rejected", "veto_recorded": True, "terminal_state": "completed"}
         audit_store.write_human_override(
             audit_conn, state["run_id"], role=state["approver_roles"][0], tier_at_action=state.get("hitl_tier") or "T0",
-            action=decision, justification="[20a/20b placeholder -- no structured approver-input UI yet]",
+            action=action, justification=justification,
             recorded_at=datetime.now(UTC).isoformat(),
         )
-        return {"hitl_status": decision, "terminal_state": "completed"}
+        return {"hitl_status": action, "terminal_state": "completed"}
 
     def mark_blocked_prohibition_adjacent(state: GovernedState) -> dict:
         return {"guard_verdict": "blocked", "terminal_state": "blocked", "abstention_reason": "prohibition_adjacent"}

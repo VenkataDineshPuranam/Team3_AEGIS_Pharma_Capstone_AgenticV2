@@ -1,0 +1,5 @@
+{% for key, dep in health.dependencies.items() %}
+<span class="pill {{ 'ok' if dep.ok else 'warn' }}" title="{{ dep.detail }}">
+  <span class="dot"></span>{{ key }}{% if not dep.ok %} · {{ dep.mode or 'degraded' }}{% endif %}
+</span>
+{% endfor %}

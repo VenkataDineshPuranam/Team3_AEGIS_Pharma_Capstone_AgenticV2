@@ -1,0 +1,46 @@
+<table class="table" id="inbox-table">
+  <thead>
+    <tr>
+      <th>Case</th>
+      <th>Workflow</th>
+      <th>Status / SLA</th>
+      <th>Requester</th>
+      <th>Signal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in entries %}
+    <tr>
+      <td>
+        <a href="/cases/{{ r.run_id }}">
+          <div class="mono">{{ r.subject_id }}</div>
+          <div class="mono" style="color:var(--mute)">{{ r.run_id }}</div>
+        </a>
+      </td>
+      <td><span class="wf {{ r.workflow }}">{{ r.workflow_short }}</span></td>
+      <td>
+        <span class="chip {{ r.status }}">{{ r.status_label }}</span>
+        {% if r.sla %}
+        <div class="mono" style="margin-top:6px" data-deadline="{{ r.hitl_deadline }}">
+          {{ r.hitl_tier or 'T0' }} · <span data-remain>{{ r.sla.label }}</span>
+        </div>
+        {% endif %}
+      </td>
+      <td>{{ r.requester_role }}</td>
+      <td>
+        {% if r.workflow == 'batch_review' %}
+          {{ r.finding_counts.complete }}/{{ r.finding_counts.total }} complete
+          {% if r.finding_counts.gap %} · {{ r.finding_counts.gap }} gap{% endif %}
+        {% elif r.workflow == 'pv_intake' %}
+          {% if r.domain_payload and r.domain_payload.duplicate_suspected %}Duplicate suspected{% else %}No duplicate flag{% endif %}
+        {% elif r.workflow == 'supply_planning' %}
+          Legs {{ (r.approved_legs or [])|length }}/{{ (r.required_legs or ['planning','quality'])|length }}
+        {% endif %}
+        {% if r.critic_reason_codes %}<div>{{ r.critic_reason_codes|join(', ') }}</div>{% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" style="padding:28px;color:var(--mute)">Inbox is empty for this identity.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

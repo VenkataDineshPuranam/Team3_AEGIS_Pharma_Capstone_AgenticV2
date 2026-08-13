@@ -1,41 +1,30 @@
 # web
 
-Approver Dashboard for the AEGIS Pharma AI agentic system -- the human-in-the-loop
-interface for `batch_review`, `pv_intake`, and `supply_planning` (Stage 20a/20b,
-`services/api/graph.py` / `pv_graph.py` / `supply_graph.py`). Talks to the Orchestrator
-API (`services/api/main.py`, FastAPI) over HTTP; no direct access to the LangGraph engine,
-Neo4j, or Redis from this app.
+Operator / approver workbench for the AEGIS Pharma AI system — governed case files for
+`batch_review`, `pv_intake`, and `supply_planning`. Decision support only: approve means
+accept the evidence pack, never certify / allocate / determine safety.
 
-Next.js 16 (App Router, TypeScript), Tailwind CSS. No charting library -- observability
-panels render as stat cards/tables from real `packages/observability/dashboard_data.py`
-numbers, not synthetic data.
-
-## Pages
-
-- `/` -- Approver Dashboard. Polls the pending-decision queue every 4s, review a draft +
-  citations, approve/reject/veto (PV) or dual-leg approve/reject (Supply Planning).
-- `/submit` -- submit a new run against one of the synthetic fixtures
-  (`tests/fixtures/synthetic/`) to see it appear in the queue.
-- `/observability` -- real cost/guardrail-trip/cache/terminal-state numbers, per workflow.
-
-## Run
-
-Requires the Orchestrator API running first (`uvicorn services.api.main:app --port 8000`
-from the repo root -- see `services/api/main.py`), which itself requires the same
-`.env` as the rest of the repo (Neo4j, Redis, `LLM_PROVIDER`).
+Next.js 16 (App Router, TypeScript), Tailwind. Requires the Orchestrator API
+(`uvicorn services.api.main:app --port 8000` from the repo root).
 
 ```bash
-cp .env.local.example .env.local   # NEXT_PUBLIC_API_URL, no secrets
+cp .env.local.example .env.local
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). Ops console is a separate app at
+[http://localhost:3001](http://localhost:3001).
 
-## Known simplifications (stated, not hidden)
+## Pages
 
-- No auth/login -- requester role is a free-text field, not Entra ID (ADR-009's real
-  auth target). Fine for a demo, not for anything real.
-- The pending-approval queue (`services/api/pending_queue.py`) is in-memory, single
-  process -- doesn't survive an API restart. The audit trail
-  (`services/integration/audit_store.py`) is unaffected and remains the real record.
+- `/` — role home (pending, clocks at risk)
+- `/inbox` — HITL queue with SLA chrome
+- `/inbox/[runId]` — case file (findings, evidence drawer, justification, dual-leg / veto)
+- `/workflows/*` — per-workflow workspaces
+- `/runs` — history including timed-out (T3: "No decision was made; resubmit.")
+
+## Stated gaps
+
+- Role switcher is an Entra ID stub, not real SSO (ADR-009).
+- HITL ladder is shown in the UI; graph-side wall-clock enforcement is still P-08.
