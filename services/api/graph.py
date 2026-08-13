@@ -17,6 +17,7 @@ from langgraph.types import Command, interrupt
 from packages.domain.payloads import BatchPayload, ReconciliationFinding
 from packages.domain.evidence import EvidenceItem
 from packages.domain.state import GovernedState, ReasonCode, RETRYABLE_REASON_CODES
+from infra.policies.denial_of_wallet_guardrail import DenialOfWalletGuard
 from services.integration import audit_store, evidence_gate, hitl_route, prohibited_action_guard
 from services.integration.batch_reconcile import ToolError as ReconcileError, reconcile as tool_reconcile
 from services.integration.evidence_retrieve import ToolError as RetrieveError, retrieve as tool_retrieve
@@ -30,8 +31,23 @@ MAX_LLM_CALLS = 6  # G1, failure_and_loop_guards.md SS2
 def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpointer=None):
     llm = llm or StubLLM()
     audit_conn = audit_store.get_connection()
+    dow_guard = DenialOfWalletGuard()
 
     def intake(state: GovernedState) -> dict:
+        # Stage 18 finding: this hook was documented in hooks.md as wired but was never
+        # actually called from graph code. Fixed here. Uses requester_role as the ceiling
+        # key (GovernedState has no separate caller-identity field in 20a's scope) --
+        # a real deployment keys on the actual caller identity, not the approver role.
+        admission = dow_guard.check_and_admit(
+            user_id=state["requester_role"], workflow=state["workflow"], as_of=datetime.now(UTC).date()
+        )
+        if not admission["admit"]:
+            return {
+                "authorization_checked_at": datetime.now(UTC),
+                "trace_id": f"TR-{state['run_id']}",
+                "terminal_state": "refused",
+                "abstention_reason": admission["reason"],
+            }
         return {
             "authorization_checked_at": datetime.now(UTC),
             "trace_id": f"TR-{state['run_id']}",
@@ -158,6 +174,12 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
 
     def finalize(state: GovernedState) -> dict:
         terminal = state.get("terminal_state") or "completed"
+        # Real token usage feeds the ceiling forward -- also never wired before this stage.
+        if terminal != "refused":  # a refused-at-intake run consumed no tokens
+            dow_guard.record_run(
+                user_id=state["requester_role"], workflow=state["workflow"],
+                as_of=datetime.now(UTC).date(), actual_tokens=state["tokens_in"] + state["tokens_out"],
+            )
         audit_record_id = f"AR-{state['run_id']}"
         audit_store.write_agent_run(
             audit_conn, state["run_id"], state["workflow"], terminal,
@@ -183,7 +205,11 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     graph.add_node("finalize", finalize)
 
     graph.set_entry_point("intake")
-    graph.add_edge("intake", "policy_load")
+    graph.add_conditional_edges(
+        "intake",
+        lambda s: "refuse" if s.get("terminal_state") == "refused" else "policy_load",
+        {"refuse": "finalize", "policy_load": "policy_load"},
+    )
 
     graph.add_conditional_edges(
         "policy_load",
