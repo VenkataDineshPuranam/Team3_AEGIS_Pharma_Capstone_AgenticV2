@@ -70,6 +70,20 @@ in the base state schema — emitted from the first run, not retrofitted), **BC-
 shared state), **BC-11** (no cross-graph edge, condition, or field), **BC-12** (timeout ⇒ no
 action; `approver_roles` as a list so Supply's dual approval is representable).
 
+## Correction record
+
+**Found by cross-verification, not by initial design review.** The original edge table in
+`langgraph_design.md` §2 routed a first-occurrence `PROHIBITION_ADJACENT` Critic verdict to
+`synthesize` (the generic "new reason code ⇒ retry" rule), contradicting
+`failure_and_loop_guards.md` §4's explicit rule that this code must go straight to `blocked`,
+never retried. Since `PROHIBITION_ADJACENT` can only be assigned when `guard1`'s pattern match
+already missed the draft, the uncorrected routing would have let the graph ask the model to
+retry — i.e., rephrase — a near-miss on the highest-severity control in the system, on exactly
+the runs where the cheaper deterministic layer had already failed. **Fixed**: `critic_verify`
+now has an unconditional `PROHIBITION_ADJACENT ⇒ blocked` edge, checked before the retry and
+escalate branches. Recorded here per this programme's standing practice of flagging and fixing
+errors openly rather than quietly (the ADR-003 precedent, `docs/adr/dmaic_lens.md`).
+
 ## Control
 
 Loop guards and budgets as Control metrics, not hopes — `failure_and_loop_guards.md` §7 lists

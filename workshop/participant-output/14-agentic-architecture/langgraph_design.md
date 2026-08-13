@@ -26,7 +26,8 @@ flowchart TD
     synth[["synthesize (LLM)<br/>Batch-Review Agent"]] --> guard1
     guard1{prohibited_action_guard} -->|blocked| blocked[[ProhibitedActionBlocked<br/>quarantine draft, escalate]]
     guard1 -->|clear| critic
-    critic[["critic_verify (LLM)<br/>Critic/Verifier"]] -->|reject, new reason code| synth
+    critic[["critic_verify (LLM)<br/>Critic/Verifier"]] -->|reject, PROHIBITION_ADJACENT| blocked
+    critic -->|reject, new reason code, not adjacent| synth
     critic -->|reject, repeated reason| hroute
     critic -->|budget cap hit| abstain
     critic -->|approve-for-human| guard2
@@ -87,7 +88,8 @@ Routing is a pure function of state — never a model decision (`agent_roster.md
 | `evidence_gate` | `not sufficient and broadenings < 1` | `retrieve` (scope-preserving broadening only) |
 | `evidence_gate` | `not sufficient and broadenings >= 1` | `abstain` |
 | `guard` | `guard_verdict == blocked` | `blocked` |
-| `critic_verify` | `verdict == reject and reason_code not in prior_reasons and llm_calls < cap` | `synthesize` |
+| `critic_verify` | `verdict == reject and reason_code == PROHIBITION_ADJACENT` | `blocked` — **checked first, unconditionally, before the two conditions below.** A prohibition-adjacent verdict is never a candidate for retry, even on its first occurrence (`failure_and_loop_guards.md` §4) |
+| `critic_verify` | `verdict == reject and reason_code not in prior_reasons and reason_code != PROHIBITION_ADJACENT and llm_calls < cap` | `synthesize` |
 | `critic_verify` | `verdict == reject and reason_code in prior_reasons` | `hitl_route` (escalate with the reason; do not retry) |
 | `critic_verify` | `verdict == approve_for_human` | `guard` → `hitl_route` |
 | `hitl_interrupt` | `deadline exceeded` | `no_action` |
