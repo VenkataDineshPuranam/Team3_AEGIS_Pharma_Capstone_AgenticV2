@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-024: unit-conversion defect). A contract laboratory transmitted concentration in mg/L while the receiving interface's spec comparison assumed mg/mL -- a 1000x silent magnitude error. Represented as a lab_results conflict, the same category B-003 already exercises for OOS/OOT disagreement, since a unit mismatch IS a conflict between two readings of 'the same' measurement.",
+  "batch_id": "B-005",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-06-20",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "conflict", "evidence_ids": ["K-006"], "gap_description": "Assay result LR-5502 was transmitted by the contract laboratory as 4.8 mg/L; the receiving interface's spec comparison assumed mg/mL, producing an apparent 1000x discrepancy against the acceptance range. The two unit-labelled readings have not been reconciled to a single value." },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the unit-conversion discrepancy on LR-5502 is unresolved." }
+  ]
+}

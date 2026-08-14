@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-010: preclinical image manipulation concern -- duplicated microscopy panels).",
+  "research_id": "R-005",
+  "findings": [
+    {
+      "category": "assay_comparability",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "compound_identity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "cohort_representativeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "image_integrity",
+      "status": "conflict",
+      "evidence_ids": [
+        "K-006"
+      ],
+      "gap_description": "CRO report CRO-0091's microscopy panels for treatment groups B and D show pixel-level duplication in the metadata; image provenance for this report has not been confirmed."
+    },
+    {
+      "category": "model_qualification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "target_evidence_concordance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    }
+  ]
+}

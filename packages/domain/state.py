@@ -16,7 +16,12 @@ from pydantic import BaseModel, ConfigDict
 from packages.domain.evidence import Claim, EvidenceItem
 from packages.domain.payloads import BatchPayload
 
-Workflow = Literal["batch_review", "pv_intake", "supply_planning"]
+Workflow = Literal[
+    "batch_review", "pv_intake", "supply_planning",
+    # Stage 21 -- close D02/D03/D07's OUT_OF_SCOPE injects with real governed workflows
+    # following the exact same pattern (ADR-008: one graph per workflow).
+    "research_review", "clinical_integrity", "regulatory_completeness",
+]
 
 
 class ReasonCode(StrEnum):

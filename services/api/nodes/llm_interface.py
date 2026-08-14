@@ -15,8 +15,25 @@ from __future__ import annotations
 from typing import Protocol
 
 from packages.domain.evidence import Claim
-from packages.domain.payloads import BatchPayload, PVPayload, SupplyPayload
+from packages.domain.payloads import (
+    BatchPayload,
+    ClinicalPayload,
+    PVPayload,
+    RegulatoryPayload,
+    ResearchPayload,
+    SupplyPayload,
+)
 from packages.domain.state import DecisionSupportOutput, GovernedState, ReasonCode
+
+# Stage 21 -- research_review/clinical_integrity/regulatory_completeness all share
+# BatchPayload's exact shape (reconciliation_complete + findings[category/status/
+# gap_description]), so StubLLM's batch branch logic applies unchanged -- only the
+# subject-id field name differs per payload type.
+_FINDINGS_PAYLOAD_SUBJECT_FIELD = {
+    ResearchPayload: "research_id",
+    ClinicalPayload: "protocol_id",
+    RegulatoryPayload: "submission_id",
+}
 
 
 class LLMNodes(Protocol):
@@ -67,6 +84,18 @@ class StubLLM:
             else:
                 summary = f"Product {payload.product_id}: no candidate options satisfy the constraint set."
                 claims = (Claim(text="Constraint-filtered candidate set is empty.", cites=evidence_ids),)
+        elif type(payload) in _FINDINGS_PAYLOAD_SUBJECT_FIELD:
+            subject_id = getattr(payload, _FINDINGS_PAYLOAD_SUBJECT_FIELD[type(payload)])
+            gaps = [f for f in payload.findings if f.status != "complete"]
+            if gaps:
+                summary = f"{subject_id}: {len(gaps)} category/categories not complete."
+                claims = tuple(
+                    Claim(text=f"{g.category}: {g.status} -- {g.gap_description or 'no description'}", cites=evidence_ids)
+                    for g in gaps
+                )
+            else:
+                summary = f"{subject_id}: all reconciliation categories complete."
+                claims = (Claim(text="All categories complete per retrieved evidence.", cites=evidence_ids),)
         else:
             raise TypeError(f"StubLLM.synthesize: unrecognized payload type {type(payload)!r}")
 

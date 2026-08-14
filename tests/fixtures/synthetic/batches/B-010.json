@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-029: audit-trail disabled during master-data repair). A privileged account disabled audit capture for 47 minutes -- represented as a deviations gap, citing K-014 GXP_DATA_INTEGRITY_STANDARD.md's audit-trail-continuity requirement.",
+  "batch_id": "B-010",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-07-03",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "gap", "evidence_ids": ["K-006", "K-014"], "gap_description": "A privileged account (svc-masterdata-01) disabled audit-trail capture on the MES for 47 minutes during a scheduled master-data repair window. GXP_DATA_INTEGRITY_STANDARD.md requires continuous audit capture with no privileged-disable path left unreconciled; no reconciling deviation record covers the 47-minute gap." },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the audit-trail-disable window is unreconciled." }
+  ]
+}

@@ -75,3 +75,41 @@ If the deployment target changes to a GxP manufacturing network or any environme
 outbound internet, this ADR and ADR-001 both reopen. The V2 non-negotiable that motivated
 the original tension ("AI-disabled continuity path") remains satisfied either way by the
 deterministic rules layer.
+
+## Addendum — regional platform outage (Stage 21 gap-closure, INJ-079)
+
+"The primary AI region fails during batch review and expedited safety reporting" is not a
+new failure mode this ADR needs a new row for — it is the **LLM provider unreachable** row
+above, under a specific cause. The graph does not distinguish *why* the provider is
+unreachable (region failure, rate limiting, network partition, provider outage); every one
+of those causes hits the same `except Exception` boundary in `synthesize`/`critic_verify`
+(`services/api/graph.py`, `pv_graph.py`, `supply_graph.py`) and produces the same
+`degraded_mode` abstention, tested by `eval-ai-cache/eval_dataset/12_model_substitution_regression.json`'s
+MSR-02. There is no separate multi-region failover in this build — deliberately: building
+one would mean silently retrying into a second region on a caller's behalf, which is a
+retry-on-failure behavior this system's own no-guess principle (ADR-007's core rule) argues
+against for anything touching generation. A region failure during expedited safety
+reporting means that run **abstains**, not that it silently reroutes and reports as if
+nothing happened; a human is what handles the case in the meantime, the same as any other
+`degraded_mode` abstention.
+
+## Addendum — OT segmentation and ransomware isolation (Stage 21 gap-closure, INJ-069)
+
+AEGIS reads Manufacturing evidence (MES, historians, eBR) only through the
+`evidence.retrieve` tool, over a network boundary it does not control the availability
+of — it never holds a direct OT-network connection (`docs/architecture/c4/c4_context.md`
+already scopes Manufacturing as a read-only external evidence source, not a system AEGIS
+is inside of). This means the specific scenario INJ-069 describes — Manufacturing
+historians isolated for ransomware containment while MES/QMS run in degraded mode — is
+**already covered by this ADR's existing dependency-outage row**, not a new failure mode:
+an isolated OT network is indistinguishable, from AEGIS's side of the boundary, from any
+other `evidence.retrieve` outage. The graph's real behavior is unchanged and already
+tested: `STORE_UNAVAILABLE` from the retrieval tool → the run abstains with
+`dependency_unavailable`, never guesses at what an isolated system would have said.
+
+What this addendum closes is the *belief* that OT segmentation was an unaddressed gap; it
+was already handled by construction, because AEGIS was never designed to be inside the OT
+trust boundary in the first place. It does not, and cannot, say anything about OT network
+segmentation itself — that is Manufacturing's own infrastructure control, entirely outside
+this application's boundary, and no code in this repository could honestly claim to
+enforce it.

@@ -17,6 +17,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import interrupt
 
+from packages.domain import hitl_decision
 from packages.domain.payloads import ConstraintSet, ShortageOption, SupplyPayload
 from packages.domain.evidence import EvidenceItem
 from packages.domain.state import GovernedState, ReasonCode, RETRYABLE_REASON_CODES
@@ -96,6 +97,7 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
         payload = SupplyPayload(
             product_id=product_id, options=options, constraint_set=ConstraintSet(),
             inventory_snapshot_version=result["inventory_snapshot_version"],
+            allocation_ethics_flags=tuple(result.get("allocation_ethics_flags") or ()),  # Stage 21, INJ-056
         )
         return {"domain_payload": payload, "tool_calls": state["tool_calls"] + 1}
 
@@ -151,13 +153,13 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
         required_legs = state["hitl_required_legs"]
 
         while set(approved_legs) < set(required_legs):
-            decision = interrupt(
+            decision = hitl_decision.decode(interrupt(
                 {
                     "approver_roles": state["approver_roles"], "run_id": state["run_id"],
                     "product_id": product_id, "required_legs": required_legs, "approved_legs": approved_legs,
                 }
-            )
-            if decision == "timed_out":
+            ))
+            if decision.action == "timed_out":
                 audit_store.write_hitl_expired(
                     audit_conn, state["run_id"], state["workflow"],
                     eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
@@ -166,22 +168,37 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
                     "hitl_status": "timed_out", "hitl_approved_legs": approved_legs,
                     "terminal_state": "abstained", "abstention_reason": "hitl_timeout",
                 }
-            if isinstance(decision, dict) and decision.get("action") == "rejected":
-                role = SUPPLY_QUALITY_APPROVER if decision.get("leg") == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
+            # The role recorded is derived from the LEG, not from anything the submitter
+            # claimed about themselves -- a caller cannot file the Quality leg's approval
+            # under the Supply Chain VP's name, or vice versa.
+            if decision.action == "rejected":
+                role = SUPPLY_QUALITY_APPROVER if decision.leg == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
                 audit_store.write_human_override(
                     audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
-                    action="rejected", justification="[20b placeholder -- no structured approver-input UI yet]",
+                    action="rejected", justification=decision.justification,
                     recorded_at=datetime.now(UTC).isoformat(),
                 )
                 return {"hitl_status": "rejected", "hitl_approved_legs": approved_legs, "terminal_state": "completed"}
-            if isinstance(decision, dict) and decision.get("action") == "approved":
-                leg = decision["leg"]
+            if decision.action == "approved":
+                leg = decision.leg
                 role = SUPPLY_QUALITY_APPROVER if leg == QUALITY_LEG else SUPPLY_PLANNING_APPROVER
-                audit_store.write_human_override(
-                    audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
-                    action="approved", justification="[20b placeholder -- no structured approver-input UI yet]",
-                    recorded_at=datetime.now(UTC).isoformat(),
-                )
+                # Stage 21 gap-closure (INJ-080: checkpoint corruption / duplicate writes
+                # on resume). LangGraph re-executes this node's Python code from the top
+                # on every resume, replaying each already-consumed interrupt()'s return
+                # value -- so on a later resume, this branch runs AGAIN for a leg that was
+                # already approved during an earlier invoke() call, with `approved_legs`
+                # freshly rebuilt as [] from the still-stale checkpointed state (that
+                # state is only persisted once this whole node function returns). An
+                # in-memory `if leg not in approved_legs` guard is reset by the same
+                # replay it's supposed to guard against. The audit store itself -- not
+                # memory -- is the only thing that actually remembers a prior write, so
+                # it is the only thing that can make this check replay-safe.
+                if not audit_store.has_recorded_action(audit_conn, state["run_id"], role, "approved"):
+                    audit_store.write_human_override(
+                        audit_conn, state["run_id"], role=role, tier_at_action=state.get("hitl_tier") or "T0",
+                        action="approved", justification=decision.justification,
+                        recorded_at=datetime.now(UTC).isoformat(),
+                    )
                 if leg not in approved_legs:
                     approved_legs = approved_legs + [leg]
 
@@ -206,6 +223,9 @@ def build_supply_graph(llm: LLMNodes | None = None, product_id: str = "P-100", c
             datetime.now(UTC).isoformat(), abstention_reason=state.get("abstention_reason"),
             trace_id=state["trace_id"], policy_contract_version=state.get("policy_contract_version"),
             llm_calls=state["llm_calls"], tokens_in=state["tokens_in"], tokens_out=state["tokens_out"],
+            subject_id=product_id, requester_role=state["requester_role"],
+            approver_roles=state.get("approver_roles") or [], hitl_status=state.get("hitl_status"),
+            evidence_ids=[e.evidence_id for e in state["evidence"]],
         )
         return {"terminal_state": terminal, "audit_record_id": audit_record_id}
 

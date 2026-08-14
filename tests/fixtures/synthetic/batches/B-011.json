@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-030: shared laboratory instrument account). Three analysts used a shared instrument account during night shift -- represented as a deviations gap, since attribution loss is a data-integrity deviation from single-user-account policy.",
+  "batch_id": "B-011",
+  "product_id": "P-200",
+  "site": "Site-EU-02",
+  "manufacture_date": "2026-07-05",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "gap", "evidence_ids": ["K-006", "K-014"], "gap_description": "HPLC-07's instrument account was used by three different analysts during the 2026-07-04 night shift without individual login/logout between users, breaking per-result operator attribution required by GXP_DATA_INTEGRITY_STANDARD.md." },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while operator attribution for HPLC-07's night-shift results is unresolved." }
+  ]
+}

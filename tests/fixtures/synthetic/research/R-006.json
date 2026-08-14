@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-011: unqualified research model promoted into portfolio decisions).",
+  "research_id": "R-006",
+  "findings": [
+    {
+      "category": "assay_comparability",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "compound_identity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "cohort_representativeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "image_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "model_qualification_evidence",
+      "status": "gap",
+      "evidence_ids": [
+        "K-006"
+      ],
+      "gap_description": "Discovery model DM-77 has been used to inform two portfolio prioritization decisions but has no approved intended-use statement or qualification record on file."
+    },
+    {
+      "category": "target_evidence_concordance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    }
+  ]
+}

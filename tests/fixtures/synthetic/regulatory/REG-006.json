@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-049: variation classification dispute).",
+  "submission_id": "REG-006",
+  "findings": [
+    {
+      "category": "identity_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "labeling_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "commitment_tracking",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "sequence_completeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "variation_classification_evidence",
+      "status": "conflict",
+      "evidence_ids": [
+        "K-025"
+      ],
+      "gap_description": "Regulatory and Manufacturing disagree on whether manufacturing change MC-118 is reportable as a variation before implementation; the classification has not been settled."
+    },
+    {
+      "category": "inspection_readiness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    }
+  ]
+}

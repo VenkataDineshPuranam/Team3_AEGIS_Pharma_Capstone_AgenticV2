@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-028: Qualified Person evidence gap -- contract-site audit commitment). The EU release packet lacks confirmation of one contract-site audit commitment -- represented as a supplier_evidence gap, the category this scenario names directly.",
+  "batch_id": "B-009",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-07-01",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Contract manufacturing site CMO-EU-07 committed, in its most recent regulatory inspection response, to close audit finding AF-2291 (temperature-mapping requalification) before the next batch release from that site. No confirmation of closure is present in the release packet for this batch." },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the contract-site audit commitment confirmation is missing." }
+  ]
+}

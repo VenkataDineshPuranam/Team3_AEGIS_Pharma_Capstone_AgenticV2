@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-040 expectedness source conflict, INJ-041 pregnancy/paediatric sensitivity).",
+  "case_id": "PV-004",
+  "comparison_window_version": "cw-2026-08-13",
+  "duplicate_suspected": false,
+  "candidates": [],
+  "source_text": "narrative includes pregnancy exposure and a minor within a general case queue",
+  "normalization_suggestions": [
+    { "normalized_term": "pregnancy exposure during treatment", "confidence": 0.9, "terminology_source": "MedDRA v27.0" }
+  ],
+  "terminology_table_version": "meddra-27.0",
+  "listedness_sources": [
+    { "source_document": "investigator_brochure_v12", "status": "unexpected" },
+    { "source_document": "core_data_sheet_v8", "status": "expected" },
+    { "source_document": "local_label_DE_v3", "status": "not_stated" }
+  ],
+  "sensitive_segment_flags": ["pregnancy_exposure", "paediatric"]
+}

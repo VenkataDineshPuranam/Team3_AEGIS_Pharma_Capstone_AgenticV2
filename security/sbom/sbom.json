@@ -1,0 +1,18 @@
+{
+  "_note": "Stage 21 gap-closure (INJ-070: model/dependency supply-chain compromise; closes half of Stage 19 compliance gap G-2, which flagged zero dependency supply-chain control). Recorded core runtime dependencies with pinned versions, verified against the actual installed environment by security/sbom/verify_sbom.py. This is a real, checkable artifact -- not a promise: verify_sbom.py fails loudly if an installed version drifts from what is recorded here.",
+  "recorded_at": "2026-08-13",
+  "component_type": "runtime_dependency",
+  "components": [
+    { "name": "anthropic", "version": "0.121.0", "purpose": "LLM provider SDK (ADR-009 Route A)" },
+    { "name": "groq", "version": "0.37.1", "purpose": "LLM provider SDK (dev-only substitute, ADR-009)" },
+    { "name": "fastapi", "version": "0.141.1", "purpose": "Orchestrator API framework" },
+    { "name": "uvicorn", "version": "0.44.0", "purpose": "ASGI server" },
+    { "name": "langgraph", "version": "1.1.8", "purpose": "Workflow orchestration -- the graph engine every governed workflow runs on" },
+    { "name": "langgraph-checkpoint", "version": "4.0.2", "purpose": "Graph state checkpointing (HITL interrupt/resume)" },
+    { "name": "neo4j", "version": "6.2.0", "purpose": "Knowledge-graph driver (evidence retrieval)" },
+    { "name": "redis", "version": "8.1.0", "purpose": "Response cache client" },
+    { "name": "pydantic", "version": "2.12.5", "purpose": "Domain payload validation (ADR-004 layer 1 enforcement)" },
+    { "name": "python-dotenv", "version": "1.2.2", "purpose": "Environment configuration loading" },
+    { "name": "jsonschema", "version": "4.23.0", "purpose": "Tool-contract schema validation" }
+  ]
+}

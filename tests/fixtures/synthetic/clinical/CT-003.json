@@ -1,0 +1,63 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-014: eligibility ambiguity -- central-lab vs local-lab range).",
+  "protocol_id": "CT-003",
+  "findings": [
+    {
+      "category": "protocol_version_conformance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "eligibility_criteria",
+      "status": "conflict",
+      "evidence_ids": [
+        "K-008"
+      ],
+      "gap_description": "Participant P-2291 meets the central-lab eligibility range but not the local-lab range encoded by the site's EDC rule; the two ranges have not been reconciled for this participant."
+    },
+    {
+      "category": "randomization_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "blinding_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "consent_status",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "device_data_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "endpoint_adjudication",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "site_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    }
+  ]
+}

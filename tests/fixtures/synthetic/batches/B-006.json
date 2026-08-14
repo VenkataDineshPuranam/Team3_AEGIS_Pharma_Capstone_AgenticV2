@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-025: electronic batch record exception during network degradation). A required step was completed during network degradation and back-entered after the operator's shift ended -- represented as a deviations gap, since a back-entered EBR step outside its normal real-time window is exactly the shape of evidence a deviations category exists to surface.",
+  "batch_id": "B-006",
+  "product_id": "P-200",
+  "site": "Site-EU-02",
+  "manufacture_date": "2026-06-22",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "EBR step ST-1187 (in-process weight check) was completed during a 40-minute plant network degradation window and back-entered by a different operator after the recording operator's shift had ended. No deviation record reconciles the back-entry with the original execution window." },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the back-entered EBR step's deviation record is open." }
+  ]
+}

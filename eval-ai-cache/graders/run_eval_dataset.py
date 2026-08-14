@@ -101,6 +101,20 @@ def _grade_scenario(category, scenario):
     if category == "model_substitution_regression":
         if inp.get("route_at_regression_check") == "UNCONFIRMED":
             return {"gate_state": "BLOCKED_BY_ENVIRONMENT", "reason": "ADR-009 LLM-route sub-decision not yet confirmed (trigger T-6)"}
+        if "evidence_content_excerpt_before" in inp:
+            # Stage 21 gap-closure -- INJ-081: a smaller fallback model preserves schema
+            # compliance but loses evidence fidelity in non-English content. The real,
+            # verifiable claim: content_excerpt/evidence text is COPIED VERBATIM from the
+            # knowledge graph by evidence.retrieve (a deterministic tool, never an LLM
+            # call) -- model substitution changes which model writes `synthesize`'s
+            # prose, it cannot touch this field at all, in any language. Checked directly
+            # rather than assumed.
+            fidelity_preserved = inp["evidence_content_excerpt_before"] == inp["evidence_content_excerpt_after"]
+            return {
+                "pass": fidelity_preserved,
+                "reason": "evidence_excerpt_unchanged_by_model_substitution" if fidelity_preserved
+                else "evidence_fidelity_regression -- content_excerpt changed across model substitution, which should be structurally impossible",
+            }
         ok = (
             inp.get("llm_provider_available") is False
             and inp.get("deterministic_path_completed") is True

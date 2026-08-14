@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-009: omics cohort bias -- model trained mainly on one ancestry group).",
+  "research_id": "R-004",
+  "findings": [
+    {
+      "category": "assay_comparability",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "compound_identity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "cohort_representativeness",
+      "status": "gap",
+      "evidence_ids": [
+        "K-006"
+      ],
+      "gap_description": "Translational model TM-114's training cohort is 86% one ancestry group; a disclosed performance gap on underrepresented groups has not been reconciled against the intended deployment population."
+    },
+    {
+      "category": "image_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "model_qualification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "target_evidence_concordance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    }
+  ]
+}

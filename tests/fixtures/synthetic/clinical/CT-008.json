@@ -1,0 +1,63 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-019: endpoint adjudication backlog -- missing source documents).",
+  "protocol_id": "CT-008",
+  "findings": [
+    {
+      "category": "protocol_version_conformance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "eligibility_criteria",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "randomization_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "blinding_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "consent_status",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "device_data_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "endpoint_adjudication",
+      "status": "conflict",
+      "evidence_ids": [
+        "K-008"
+      ],
+      "gap_description": "Imaging endpoint packet EP-118 is missing 2 source documents and has conflicting reviewer conclusions from the two independent adjudicators; the packet has not been finalized."
+    },
+    {
+      "category": "site_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    }
+  ]
+}

@@ -51,4 +51,7 @@ def generate_options(run_id: str, product_id: str, constraint_set: dict, evidenc
         "options": fixture["options"],
         "inventory_snapshot_version": fixture["inventory_snapshot_version"],
         "tool_accounting": {"latency_ms": latency_ms},
+        # Stage 21 gap-closure (INJ-056) -- informational triage flags only, sourced
+        # straight from the fixture with a safe empty default.
+        "allocation_ethics_flags": fixture.get("allocation_ethics_flags", []),
     }

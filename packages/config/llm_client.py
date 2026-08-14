@@ -22,7 +22,14 @@ import os
 from pydantic import ValidationError
 
 from packages.domain.evidence import Claim
-from packages.domain.payloads import BatchPayload, PVPayload, SupplyPayload
+from packages.domain.payloads import (
+    BatchPayload,
+    ClinicalPayload,
+    PVPayload,
+    RegulatoryPayload,
+    ResearchPayload,
+    SupplyPayload,
+)
 from packages.domain.state import DecisionSupportOutput, GovernedState, ReasonCode
 
 _BATCH_SYNTHESIZE_SYSTEM = """You are the Batch-Review decision-support agent for a GxP pharmaceutical batch reconciliation system.
@@ -88,11 +95,87 @@ Check:
 Respond with ONLY a JSON object, no other text:
 {"verdict": "approve_for_human" or "reject", "reason_code": null or one of "MISSING_CITATION"/"CITATION_UNRESOLVED"/"CLAIM_EXCEEDS_EVIDENCE"/"CONTRACT_VIOLATION"/"PROHIBITION_ADJACENT"}"""
 
+# Stage 21 -- three new workflows, same synthesize/critic contract as batch_review
+# (structural completeness/conflict findings only, no disposition field to assert).
+_RESEARCH_SYNTHESIZE_SYSTEM = """You are the Research-Review decision-support agent for a discovery/preclinical research reconciliation system.
+
+Your ONLY job is to summarize the reconciliation findings factually, citing evidence_ids for every claim. You must NEVER state or imply that a model is qualified, an intended use is approved, or a target is validated -- those are conclusions that belong exclusively to a human Research/Portfolio reviewer. Do not use words like "qualified", "validated target", or "recommend advancing".
+
+Respond with ONLY a JSON object matching this shape, no other text:
+{"summary": "<factual summary>", "claims": [{"text": "<claim text>", "cites": ["<evidence_id>", ...]}]}
+
+Every claim MUST cite at least one evidence_id from the evidence provided. Do not fabricate evidence_ids."""
+
+_CLINICAL_SYNTHESIZE_SYSTEM = """You are the Clinical-Integrity decision-support agent for a clinical-trial integrity reconciliation system.
+
+Your ONLY job is to summarize the reconciliation findings factually, citing evidence_ids for every claim. You must NEVER state or imply a protocol-deviation disposition, an unblinding action, or a final eligibility determination -- those are clinical/medical-monitor decisions that belong exclusively to a human. Do not use words like "eligible", "ineligible", or "recommend unblinding".
+
+Respond with ONLY a JSON object matching this shape, no other text:
+{"summary": "<factual summary>", "claims": [{"text": "<claim text>", "cites": ["<evidence_id>", ...]}]}
+
+Every claim MUST cite at least one evidence_id from the evidence provided. Do not fabricate evidence_ids."""
+
+_REGULATORY_SYNTHESIZE_SYSTEM = """You are the Regulatory-Completeness decision-support agent for a regulatory-submission reconciliation system.
+
+Your ONLY job is to summarize the reconciliation findings factually, citing evidence_ids for every claim. You must NEVER state or imply a variation classification, submission readiness, or any other regulatory determination -- those are Regulatory Affairs decisions that belong exclusively to a human. Do not use words like "reportable", "cleared for submission", or "recommend filing".
+
+Respond with ONLY a JSON object matching this shape, no other text:
+{"summary": "<factual summary>", "claims": [{"text": "<claim text>", "cites": ["<evidence_id>", ...]}]}
+
+Every claim MUST cite at least one evidence_id from the evidence provided. Do not fabricate evidence_ids."""
+
+_RESEARCH_CRITIC_SYSTEM = """You are the Critic/Verifier for a research-review decision-support system. You review a draft summary for citation quality ONLY -- you do not evaluate model qualification or target validation.
+
+Check:
+1. Does every claim have at least one citation? If not: MISSING_CITATION
+2. Do all cited evidence_ids exist in the provided evidence list? If not: CITATION_UNRESOLVED
+3. Does any claim assert something the cited evidence does not support? If so: CLAIM_EXCEEDS_EVIDENCE
+4. Does the draft read as a model-qualification or target-validation determination? If so: PROHIBITION_ADJACENT
+5. Otherwise: approve.
+
+Respond with ONLY a JSON object, no other text:
+{"verdict": "approve_for_human" or "reject", "reason_code": null or one of "MISSING_CITATION"/"CITATION_UNRESOLVED"/"CLAIM_EXCEEDS_EVIDENCE"/"CONTRACT_VIOLATION"/"PROHIBITION_ADJACENT"}"""
+
+_CLINICAL_CRITIC_SYSTEM = """You are the Critic/Verifier for a clinical-integrity decision-support system. You review a draft summary for citation quality ONLY -- you do not make a clinical/medical-monitor decision.
+
+Check:
+1. Does every claim have at least one citation? If not: MISSING_CITATION
+2. Do all cited evidence_ids exist in the provided evidence list? If not: CITATION_UNRESOLVED
+3. Does any claim assert something the cited evidence does not support? If so: CLAIM_EXCEEDS_EVIDENCE
+4. Does the draft read as an eligibility/unblinding/deviation-disposition determination? If so: PROHIBITION_ADJACENT
+5. Otherwise: approve.
+
+Respond with ONLY a JSON object, no other text:
+{"verdict": "approve_for_human" or "reject", "reason_code": null or one of "MISSING_CITATION"/"CITATION_UNRESOLVED"/"CLAIM_EXCEEDS_EVIDENCE"/"CONTRACT_VIOLATION"/"PROHIBITION_ADJACENT"}"""
+
+_REGULATORY_CRITIC_SYSTEM = """You are the Critic/Verifier for a regulatory-completeness decision-support system. You review a draft summary for citation quality ONLY -- you do not make a regulatory determination.
+
+Check:
+1. Does every claim have at least one citation? If not: MISSING_CITATION
+2. Do all cited evidence_ids exist in the provided evidence list? If not: CITATION_UNRESOLVED
+3. Does any claim assert something the cited evidence does not support? If so: CLAIM_EXCEEDS_EVIDENCE
+4. Does the draft read as a variation-classification or submission-readiness determination? If so: PROHIBITION_ADJACENT
+5. Otherwise: approve.
+
+Respond with ONLY a JSON object, no other text:
+{"verdict": "approve_for_human" or "reject", "reason_code": null or one of "MISSING_CITATION"/"CITATION_UNRESOLVED"/"CLAIM_EXCEEDS_EVIDENCE"/"CONTRACT_VIOLATION"/"PROHIBITION_ADJACENT"}"""
+
 _SYNTHESIZE_SYSTEMS = {
     "batch_review": _BATCH_SYNTHESIZE_SYSTEM, "pv_intake": _PV_SYNTHESIZE_SYSTEM, "supply_planning": _SUPPLY_SYNTHESIZE_SYSTEM,
+    "research_review": _RESEARCH_SYNTHESIZE_SYSTEM, "clinical_integrity": _CLINICAL_SYNTHESIZE_SYSTEM,
+    "regulatory_completeness": _REGULATORY_SYNTHESIZE_SYSTEM,
 }
 _CRITIC_SYSTEMS = {
     "batch_review": _BATCH_CRITIC_SYSTEM, "pv_intake": _PV_CRITIC_SYSTEM, "supply_planning": _SUPPLY_CRITIC_SYSTEM,
+    "research_review": _RESEARCH_CRITIC_SYSTEM, "clinical_integrity": _CLINICAL_CRITIC_SYSTEM,
+    "regulatory_completeness": _REGULATORY_CRITIC_SYSTEM,
+}
+
+# Stage 21 -- the three new payloads all share BatchPayload's exact
+# (subject_field, reconciliation_complete, findings) shape; only the subject-id
+# field name differs.
+_FINDINGS_PAYLOAD_SUBJECT_FIELD = {
+    ResearchPayload: "research_id", ClinicalPayload: "protocol_id", RegulatoryPayload: "submission_id",
 }
 
 
@@ -111,6 +194,10 @@ def _build_synthesize_user_prompt(state: GovernedState) -> str:
         }
     elif isinstance(payload, SupplyPayload):
         body = {"product_id": payload.product_id, "options": [o.model_dump() for o in payload.options]}
+    elif type(payload) in _FINDINGS_PAYLOAD_SUBJECT_FIELD:
+        subject_field = _FINDINGS_PAYLOAD_SUBJECT_FIELD[type(payload)]
+        findings = [f.model_dump() for f in payload.findings]
+        body = {subject_field: getattr(payload, subject_field), "findings": findings}
     else:
         raise TypeError(f"_build_synthesize_user_prompt: unrecognized payload type {type(payload)!r}")
 

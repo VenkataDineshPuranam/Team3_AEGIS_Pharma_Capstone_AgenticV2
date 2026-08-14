@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-034: change-control bypass -- emergency hotfix never retrospectively approved). Represented as a change_control gap, the category this scenario names directly.",
+  "batch_id": "B-015",
+  "product_id": "P-200",
+  "site": "Site-EU-02",
+  "manufacture_date": "2026-07-13",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "A vendor hotfix to the fill-line controller (HF-2026-041) was installed under emergency-change procedure EC-0091 on 2026-06-30. The retrospective change-control record required within 5 business days of an emergency change was never filed; EC-0091 remains open with no formal approval on file." },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the emergency-change retrospective approval is missing." }
+  ]
+}

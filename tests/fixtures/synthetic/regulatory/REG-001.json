@@ -1,0 +1,48 @@
+{
+  "_note": "Synthetic fixture, Stage 21. Clean case: every category complete.",
+  "submission_id": "REG-001",
+  "findings": [
+    {
+      "category": "identity_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "labeling_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "commitment_tracking",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "sequence_completeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "variation_classification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "inspection_readiness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    }
+  ]
+}

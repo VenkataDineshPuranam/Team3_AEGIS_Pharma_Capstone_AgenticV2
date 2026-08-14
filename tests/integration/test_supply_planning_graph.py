@@ -81,6 +81,35 @@ def test_empty_option_set_abstains_agent_has_nothing_to_rank():
     assert "__interrupt__" not in result
 
 
+def test_replaying_an_already_approved_leg_does_not_duplicate_the_audit_record():
+    """Stage 21 gap-closure -- INJ-080: an agent resuming a supply-recovery plan from a
+    stale checkpoint duplicating a draft reservation. This system has no reservation
+    write to duplicate (ADR-004), but the equivalent real risk is a duplicate audit
+    write for the same leg's approval -- a resumed run replaying an already-processed
+    resume value. Both the approved_legs set AND the audit record stay idempotent."""
+    from services.integration.audit_store import get_connection, human_overrides
+
+    graph, config, result = _run_to_interrupt("P-100")
+    assert "__interrupt__" in result
+
+    after_first = graph.invoke(Command(resume={"leg": PLANNING_LEG, "action": "approved"}), config=config)
+    assert "__interrupt__" in after_first
+
+    # Replay: the same leg's approval resumes a second time (simulating a stale-
+    # checkpoint resume of an already-applied decision).
+    after_replay = graph.invoke(Command(resume={"leg": PLANNING_LEG, "action": "approved"}), config=config)
+    assert "__interrupt__" in after_replay  # still just waiting on Quality, not duplicated
+
+    conn = get_connection()
+    actions = human_overrides(conn, result["__interrupt__"][0].value["run_id"])
+    planning_approvals = [a for a in actions if a["role"] == "Supply Chain VP" and a["action"] == "approved"]
+    assert len(planning_approvals) == 1, "the replayed resume must not write a second audit record"
+
+    final = graph.invoke(Command(resume={"leg": QUALITY_LEG, "action": "approved"}), config=config)
+    assert final["terminal_state"] == "completed"
+    assert final["hitl_approved_legs"].count(PLANNING_LEG) == 1  # never duplicated in the list either
+
+
 def test_timeout_produces_no_action_even_mid_dual_approval():
     graph, config, result = _run_to_interrupt("P-100")
     assert "__interrupt__" in result

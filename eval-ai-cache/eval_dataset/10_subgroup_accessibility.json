@@ -33,6 +33,38 @@
       },
       "expected": {"gate_blocked": true, "gate_id": "G-MISSING_SUBGROUP_EVIDENCE"},
       "status": "adversarial"
+    },
+    {
+      "scenario_id": "SGA-03",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-072): the language-inequity inject names Arabic and Hindi specifically, not just European languages. Same surfacing rule, exercised with ar/hi slices so the grader's language-agnosticism is verified directly rather than assumed from the en/de case.",
+      "input": {
+        "performance_slices": [
+          {"model_id": "synth-v1", "slice": "en", "metric": "extraction_accuracy", "value": 0.93},
+          {"model_id": "synth-v1", "slice": "de", "metric": "extraction_accuracy", "value": 0.89},
+          {"model_id": "synth-v1", "slice": "ar", "metric": "extraction_accuracy", "value": 0.68},
+          {"model_id": "synth-v1", "slice": "hi", "metric": "extraction_accuracy", "value": 0.64}
+        ],
+        "usability_findings": []
+      },
+      "expected": {"pass": true, "flagged_performance_gaps_nonempty": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "SGA-04",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-072): adversarial companion to SGA-03 -- the ar/hi gap exists but is not recorded in the response, same G-MISSING_SUBGROUP_EVIDENCE failure mode as SGA-02, now proven language-agnostic.",
+      "input": {
+        "performance_slices": [
+          {"model_id": "synth-v1", "slice": "en", "metric": "extraction_accuracy", "value": 0.93},
+          {"model_id": "synth-v1", "slice": "ar", "metric": "extraction_accuracy", "value": 0.68},
+          {"model_id": "synth-v1", "slice": "hi", "metric": "extraction_accuracy", "value": 0.64}
+        ],
+        "usability_findings": [],
+        "recorded_in_response": false
+      },
+      "expected": {"gate_blocked": true, "gate_id": "G-MISSING_SUBGROUP_EVIDENCE"},
+      "status": "adversarial"
     }
   ]
 }

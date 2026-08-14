@@ -109,6 +109,52 @@ expressed as a fraction of the C1 ceiling (e.g. "p95 cost should sit below 20% o
 ceiling, or the ceiling itself is miscalibrated") — a relationship, not a number, until real data
 exists to anchor it.
 
+## 6a. Vendor price-shock sensitivity, human-review cost, and vendor concentration (Stage 21 gap-closure)
+
+**INJ-075 — a 70% input-token price increase.** Applied to §3's ceiling arithmetic, not a new
+estimate:
+
+| Ceiling | Cost today (Sonnet 5, list price) | Cost at +70% input price ($5.10/MTok in) |
+|---|---|---|
+| C1 — tokens/run (150,000, ~50/50 in/out mix assumed) | ≈ $1.35 | ≈ $1.80 (+33% blended, since output price is unaffected in this scenario) |
+| C2 — tokens/single call (40,000) | ≈ $0.36 | ≈ $0.48 |
+
+A pure input-price shock does not move the ceiling proportionally, because roughly half the
+ceiling's dollar cost is output tokens at the unaffected output rate — this is exactly the kind
+of asymmetry a single blended "$/MTok" intuition would miss, and the reason this table exists
+rather than a one-line estimate. **What this section commits to:** if the vendor's actual
+pricing changes, this table is the one place to update the two input numbers; every other
+number in this document (turns-to-completion, structural ceilings) is unaffected by a price
+change and does not need re-derivation.
+
+**INJ-077 — the business case has never included human-review time.** §1's formula only sums
+LLM-node token cost; that is what U1 measures, and it undercounts total cost of ownership by
+omitting the human side of every governed run. Every run that reaches HITL (which is every
+non-abstaining, non-blocked, non-refused run — `langgraph_design.md`'s own invariant that
+generated text cannot reach a caller without a human) consumes real reviewer time:
+
+```
+fully_loaded_cost_per_run = llm_cost_per_run (§1)
+                           + (reviewer_minutes_per_decision / 60) × reviewer_loaded_hourly_rate
+```
+
+`reviewer_minutes_per_decision` and `reviewer_loaded_hourly_rate` are, honestly, exactly as
+unmeasured as U1 (tokens/cost per run) — this document does not invent them either, for the
+same BC-13 reason §5 already states. What closes the gap is naming the missing term
+explicitly in the formula rather than omitting it silently: a business case built from §1
+alone is a compute-cost case, not a total-cost case, and this section is what stops that
+distinction from getting lost between here and a budget approval.
+
+**INJ-078 — vendor concentration across the full stack, not just the model.** ADR-001 already
+flags model-vendor concentration as a recorded risk. The fuller picture this document's own
+dependency list (§2, plus `security/sbom/sbom.json`, Stage 21) makes checkable: LLM provider
+(Anthropic/Groq), knowledge graph (Neo4j), response cache (Redis), and observability
+(LangSmith) are four operationally independent services today — not one vendor holding all
+four. The concentration risk ADR-001 names is real for the *model* layer specifically (Route
+A/B is an Anthropic-vs-Azure-OpenAI choice, not a multi-vendor redundancy design), and stays
+scoped to that layer rather than the whole stack, which is the correction this section makes
+to the original, broader-sounding inject.
+
 ## 6. What changes at the measured pass
 
 | Item | Design-pass value (this document) | Measured-pass replacement |

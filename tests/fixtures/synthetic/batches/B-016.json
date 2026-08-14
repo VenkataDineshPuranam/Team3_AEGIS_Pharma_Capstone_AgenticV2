@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-036: ALCOA+ provenance break -- transcribed certificate, original unlocatable). Represented as a supplier_evidence gap, tied to the real ingestion-time sha256 provenance mechanism (packages/domain/kg/ingest.py) that this scenario's original-document-unlocatable failure mode is the exact case that mechanism exists to catch.",
+  "batch_id": "B-016",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-07-15",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "gap", "evidence_ids": ["K-006", "K-014"], "gap_description": "The excipient certificate of analysis on file for lot EX-7743 is a manually transcribed PDF (retyped from a fax) with no content hash matching any originally-ingested source document; the signed original cannot be located at the supplier or in the document archive. GXP_DATA_INTEGRITY_STANDARD.md's ALCOA+ 'original or true copy' requirement is not met -- this is exactly the class of break the ingestion-time sha256 provenance check (packages/domain/kg/ingest.py) exists to make detectable, and here it correctly found no matching hash." },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while lot EX-7743's certificate provenance is unresolved." }
+  ]
+}

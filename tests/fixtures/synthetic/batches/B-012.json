@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-031: validation-state ambiguity across three systems). The same application is labelled validated, conditionally released and research-only in three different systems -- represented as a validation_state conflict, the category this scenario names directly.",
+  "batch_id": "B-012",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-07-07",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "conflict", "evidence_ids": ["K-006", "K-010"], "gap_description": "The dissolution-analytics application used for this batch's release testing is labelled 'validated' in the validation master plan, 'conditionally released' in the CSV inventory, and 'research-only' in the vendor's own system registry. COMPUTERISED_SYSTEM_LIFECYCLE.md requires a single reconciled validation state before GxP use; the three labels have not been reconciled." },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the dissolution-analytics application's validation state is ambiguous across systems." }
+  ]
+}

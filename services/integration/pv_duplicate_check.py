@@ -57,4 +57,14 @@ def duplicate_check(run_id: str, case_id: str, case_summary_evidence_ids: list[s
         "comparison_window_version": fixture["comparison_window_version"],
         "candidates": fixture["candidates"],
         "tool_accounting": {"latency_ms": latency_ms},
+        # Stage 21 gap-closure fields (INJ-038/039/040/041/042/043/044) -- all optional,
+        # sourced straight from the fixture with safe empty/None defaults so PV-001/PV-002
+        # (which predate these fields) are unaffected.
+        "awareness_dates": fixture.get("awareness_dates", []),
+        "meddra_versions_used": fixture.get("meddra_versions_used", []),
+        "listedness_sources": fixture.get("listedness_sources", []),
+        "sensitive_segment_flags": fixture.get("sensitive_segment_flags", []),
+        "reporter_identifiability": fixture.get("reporter_identifiability"),
+        "related_quality_record_ids": fixture.get("related_quality_record_ids", []),
+        "disproportionality_signal": fixture.get("disproportionality_signal"),
     }

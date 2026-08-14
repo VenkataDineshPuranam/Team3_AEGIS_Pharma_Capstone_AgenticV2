@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegis-pharma.internal/contracts/tool/regulatory.completeness_check",
+  "title": "regulatory.completeness_check",
+  "description": "Structured, rule-based evidence-completeness and conflict check for regulatory-submission integrity (IDMP identity, labeling consistency, commitment tracking, eCTD sequence completeness, variation classification evidence, inspection readiness), over evidence already retrieved and gated. Deterministic given the same evidence set. Stage 21 -- built on the exact same pattern as batch.reconcile.",
+  "contract_version": "1.0.0",
+  "owning_context": "Regulatory Completeness",
+  "read_only": true,
+  "authorization_requirement": "Caller must present a regulatory_completeness graph-run credential. No other workflow may hold this credential (ADR-008).",
+  "rate_limit": { "per_run_ceiling": 1, "server_ceiling_per_minute": 60 },
+  "idempotency": {
+    "guarantee": "Deterministic given the same evidence_ids and policy_contract_version.",
+    "key": "hash(evidence_ids[], policy_contract_version)"
+  },
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["run_id", "submission_id", "evidence_ids", "policy_contract_version"],
+    "properties": {
+      "run_id": { "type": "string" },
+      "submission_id": { "type": "string" },
+      "evidence_ids": {
+        "type": "array", "items": { "type": "string" }, "minItems": 1,
+        "description": "Must be a subset of evidence_ids returned by evidence.retrieve (regulatory scope) in this run."
+      },
+      "policy_contract_version": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["reconciliation_complete", "findings", "tool_accounting"],
+    "properties": {
+      "reconciliation_complete": {
+        "type": "boolean",
+        "description": "Whether every required evidence category (identity consistency, labeling consistency, commitment tracking, sequence completeness, variation classification evidence, inspection readiness) has at least one citable item."
+      },
+      "findings": {
+        "type": "array",
+        "description": "Structured findings only. No field here or anywhere in this schema represents a regulatory determination.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["category", "status", "evidence_ids"],
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": ["identity_consistency", "labeling_consistency", "commitment_tracking", "sequence_completeness", "variation_classification_evidence", "inspection_readiness"]
+            },
+            "status": { "type": "string", "enum": ["complete", "gap", "conflict"] },
+            "evidence_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+            "gap_description": { "type": ["string", "null"] }
+          }
+        }
+      },
+      "tool_accounting": {
+        "type": "object", "additionalProperties": false, "required": ["latency_ms"],
+        "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  },
+  "what_this_schema_cannot_express": [
+    "variation_classification_final", "submission_ready", "regulatory_determination",
+    "Any of these fields would make this tool capable of a Regulatory Affairs decision that belongs exclusively to a human -- ADR-004 layer 1 + layer 2, mirroring batch.reconcile's own pattern exactly."
+  ],
+  "errors": [
+    { "code": "EVIDENCE_ID_NOT_IN_RUN", "meaning": "An evidence_id was not returned by this run's own retrieval call.", "graph_response": "abstain -- treat as a gate defect" },
+    { "code": "POLICY_VERSION_MISMATCH", "graph_response": "abstain, resubmit" },
+    { "code": "RATE_LIMITED", "graph_response": "abstain, dependency_unavailable" }
+  ]
+}

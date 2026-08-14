@@ -28,6 +28,13 @@ class PendingEntry:
     draft_summary: str | None
     draft_claims: list[dict[str, Any]]
     created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    # Stage 21: the evidence the draft cites and the workflow's structured findings, both
+    # captured from the paused run's own state at the moment it interrupted. Held here
+    # rather than re-fetched later because this is precisely the state the approver is
+    # being asked to judge -- re-retrieving it at render time could show a different
+    # corpus than the one the run actually reasoned over.
+    evidence: list[dict[str, Any]] = field(default_factory=list)
+    domain_payload: dict[str, Any] | None = None
 
 
 _PENDING: dict[str, PendingEntry] = {}

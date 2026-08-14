@@ -28,7 +28,12 @@ CREATE TABLE IF NOT EXISTS agent_run (
     recorded_at TEXT NOT NULL,
     llm_calls INTEGER,
     tokens_in INTEGER,
-    tokens_out INTEGER
+    tokens_out INTEGER,
+    subject_id TEXT,
+    requester_role TEXT,
+    approver_roles TEXT,
+    hitl_status TEXT,
+    evidence_ids TEXT
 );
 
 CREATE TABLE IF NOT EXISTS human_override_recorded (
@@ -85,11 +90,23 @@ def get_connection(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
 def _migrate(conn: sqlite3.Connection) -> None:
     """Stage 20b Phase 6: agent_run predates llm_calls/tokens_in/tokens_out (added to
     make the Stage 17 dashboards panels computable from real data). CREATE TABLE IF NOT
-    EXISTS doesn't add columns to an already-existing table -- this does, idempotently."""
+    EXISTS doesn't add columns to an already-existing table -- this does, idempotently.
+
+    Stage 21 adds a second, same-shaped group: subject_id / requester_role /
+    approver_roles / hitl_status / evidence_ids. Every one of these is already in
+    GovernedState at the moment `finalize` runs -- they were simply never persisted, which
+    is why a decided run could not afterwards be answered for ("which batch was this?",
+    "which evidence did it stand on?", "who was it waiting for?"). Recording them makes the
+    audit trail answer its own questions; it is additive (existing rows read NULL, and the
+    UI says so rather than guessing) and changes no governance decision.
+    """
     existing = {row[1] for row in conn.execute("PRAGMA table_info(agent_run)")}
     for column in ("llm_calls", "tokens_in", "tokens_out"):
         if column not in existing:
             conn.execute(f"ALTER TABLE agent_run ADD COLUMN {column} INTEGER")
+    for column in ("subject_id", "requester_role", "approver_roles", "hitl_status", "evidence_ids"):
+        if column not in existing:
+            conn.execute(f"ALTER TABLE agent_run ADD COLUMN {column} TEXT")
     conn.commit()
 
 
@@ -105,14 +122,28 @@ def write_agent_run(
     llm_calls: int | None = None,
     tokens_in: int | None = None,
     tokens_out: int | None = None,
+    subject_id: str | None = None,
+    requester_role: str | None = None,
+    approver_roles: list[str] | None = None,
+    hitl_status: str | None = None,
+    evidence_ids: list[str] | None = None,
 ) -> None:
     """finalize's mandatory write -- a response reaching the caller with no audit write
     is not a valid terminal state (hooks.md). llm_calls/tokens_in/tokens_out (Stage 20b)
-    are what makes dashboards.md's Cost panel computable from real data."""
+    are what makes dashboards.md's Cost panel computable from real data; subject_id /
+    requester_role / approver_roles / hitl_status / evidence_ids (Stage 21) are what make a
+    decided run investigable afterwards without re-running it. All are optional -- an
+    older caller that omits them still writes a valid record."""
     conn.execute(
-        "INSERT INTO agent_run (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out),
+        "INSERT INTO agent_run (run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, recorded_at, llm_calls, tokens_in, tokens_out, subject_id, requester_role, approver_roles, hitl_status, evidence_ids) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version,
+            recorded_at, llm_calls, tokens_in, tokens_out, subject_id, requester_role,
+            json.dumps(approver_roles) if approver_roles is not None else None,
+            hitl_status,
+            json.dumps(evidence_ids) if evidence_ids is not None else None,
+        ),
     )
     conn.commit()
 
@@ -150,6 +181,24 @@ def has_veto(conn: sqlite3.Connection, run_id: str) -> bool:
     return row is not None
 
 
+def has_recorded_action(conn: sqlite3.Connection, run_id: str, role: str, action: str) -> bool:
+    """Stage 21 gap-closure (INJ-080: checkpoint corruption / duplicate writes on
+    resume). Same pattern as has_veto -- a persistent-store check, not an in-memory
+    flag, because LangGraph re-executes a node's Python code from the top on every
+    resume and REPLAYS each already-consumed interrupt()'s return value. Side-effecting
+    code between two interrupt() calls in the same node therefore runs again on every
+    later resume within that node execution; an in-memory list built up during that same
+    re-execution (e.g. a local `approved_legs`) is reset by the replay too, so it cannot
+    detect "I already wrote this." Only a check against what was actually persisted
+    last time is replay-safe -- this is that check, for supply_planning's dual-approval
+    writes specifically."""
+    row = conn.execute(
+        "SELECT 1 FROM human_override_recorded WHERE run_id = ? AND role = ? AND action = ? LIMIT 1",
+        (run_id, role, action),
+    ).fetchone()
+    return row is not None
+
+
 def write_hitl_escalation(
     conn: sqlite3.Connection,
     run_id: str,
@@ -182,3 +231,196 @@ def write_hitl_expired(
         (run_id, workflow, json.dumps(eligible_roles_at_expiry), recorded_at),
     )
     conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Read side (Stage 21). SELECT only.
+#
+# The module docstring's WORM claim is that no function here can modify or remove an
+# existing row -- "which is the actual enforcement, not a comment promising one". Every
+# function below is a SELECT, so that property is unchanged: adding readers cannot make an
+# append-only store less append-only. These exist because an audit trail nothing can read
+# is not an audit trail; until Stage 21 the only reader was dashboard_data.py's aggregate
+# counts, which can tell you ten runs were blocked but not which ten.
+# ---------------------------------------------------------------------------
+
+_RUN_COLUMNS = (
+    "run_id, workflow, terminal_state, abstention_reason, trace_id, policy_contract_version, "
+    "recorded_at, llm_calls, tokens_in, tokens_out, subject_id, requester_role, approver_roles, "
+    "hitl_status, evidence_ids"
+)
+
+
+def _json_or_none(raw: str | None) -> list | None:
+    """A NULL column means 'this run predates the column' -- reported to the caller as
+    None so the UI can say "not recorded" rather than render a misleading empty list."""
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+
+
+def _run_row_to_dict(row: sqlite3.Row | tuple) -> dict:
+    keys = [c.strip() for c in _RUN_COLUMNS.split(",")]
+    record = dict(zip(keys, row))
+    record["approver_roles"] = _json_or_none(record["approver_roles"])
+    record["evidence_ids"] = _json_or_none(record["evidence_ids"])
+    return record
+
+
+def list_agent_runs(
+    conn: sqlite3.Connection,
+    workflow: str | None = None,
+    terminal_state: str | None = None,
+    subject_id: str | None = None,
+    search: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    """Newest-first page of agent_run rows plus the total matching count (for pagination).
+
+    `search` is a case-insensitive substring match over run_id and subject_id only --
+    deliberately not a free-text search over every column, so a caller cannot use it to
+    probe fields (trace_id, policy versions) it was not given a filter for.
+    """
+    clauses: list[str] = []
+    params: list = []
+    if workflow:
+        clauses.append("workflow = ?")
+        params.append(workflow)
+    if terminal_state:
+        clauses.append("terminal_state = ?")
+        params.append(terminal_state)
+    if subject_id:
+        clauses.append("subject_id = ?")
+        params.append(subject_id)
+    if search:
+        clauses.append("(LOWER(run_id) LIKE ? OR LOWER(IFNULL(subject_id, '')) LIKE ?)")
+        params.extend([f"%{search.lower()}%"] * 2)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+    total = conn.execute(f"SELECT COUNT(*) FROM agent_run {where}", params).fetchone()[0]
+    rows = conn.execute(
+        f"SELECT {_RUN_COLUMNS} FROM agent_run {where} ORDER BY recorded_at DESC, rowid DESC LIMIT ? OFFSET ?",
+        (*params, max(1, min(limit, 200)), max(0, offset)),
+    ).fetchall()
+    return [_run_row_to_dict(r) for r in rows], total
+
+
+def get_agent_run(conn: sqlite3.Connection, run_id: str) -> dict | None:
+    row = conn.execute(f"SELECT {_RUN_COLUMNS} FROM agent_run WHERE run_id = ?", (run_id,)).fetchone()
+    return _run_row_to_dict(row) if row else None
+
+
+def distinct_values(conn: sqlite3.Connection, column: str) -> list[str]:
+    """Filter-option source for the UI. `column` is checked against an allowlist rather
+    than interpolated as given -- these values reach SQL, and a caller-supplied column
+    name is the shape of an injection, whether or not today's only caller is trusted."""
+    allowed = {"workflow", "terminal_state", "subject_id", "requester_role", "abstention_reason"}
+    if column not in allowed:
+        raise ValueError(f"{column!r} is not a filterable column.")
+    rows = conn.execute(
+        f"SELECT DISTINCT {column} FROM agent_run WHERE {column} IS NOT NULL ORDER BY {column}"
+    ).fetchall()
+    return [r[0] for r in rows]
+
+
+def run_timeline(conn: sqlite3.Connection, run_id: str) -> list[dict]:
+    """Every audit record this store actually holds for one run, merged and ordered.
+
+    Real events only. This function invents nothing: if the graph never wrote an
+    escalation record, no escalation event appears, and the UI shows a shorter timeline
+    rather than a plausible-looking one. Node-level trace events (evidence retrieved,
+    guard evaluated, critic verified) live in LangSmith, not here -- they are absent from
+    this list because they are absent from this store, and the caller is told so rather
+    than shown a reconstruction.
+    """
+    events: list[dict] = []
+
+    for row in conn.execute(
+        "SELECT recorded_at, terminal_state, abstention_reason, policy_contract_version, workflow "
+        "FROM agent_run WHERE run_id = ?", (run_id,)
+    ):
+        events.append({
+            "at": row[0], "event_type": "AgentRun", "actor": "system", "role": None,
+            "action": f"Run finalized: {row[1]}",
+            "metadata": {
+                "terminal_state": row[1], "abstention_reason": row[2],
+                "policy_contract_version": row[3], "workflow": row[4],
+            },
+        })
+
+    for row in conn.execute(
+        "SELECT recorded_at, role, role_assignment_id, tier_at_action, action, justification "
+        "FROM human_override_recorded WHERE run_id = ? ORDER BY id", (run_id,)
+    ):
+        events.append({
+            "at": row[0], "event_type": "HumanOverrideRecorded", "actor": row[1], "role": row[1],
+            "action": row[4],
+            "metadata": {
+                "role_assignment_id": row[2], "tier_at_action": row[3], "justification": row[5],
+            },
+        })
+
+    for row in conn.execute(
+        "SELECT evaluated_at, tier, conditions, outcome, skip_reason, escalation_role, policy_contract_version "
+        "FROM hitl_escalation WHERE run_id = ? ORDER BY id", (run_id,)
+    ):
+        events.append({
+            "at": row[0], "event_type": "HitlEscalation", "actor": "system", "role": row[5],
+            "action": f"Escalation {row[3]}",
+            "metadata": {
+                "tier": row[1], "conditions": _json_or_none(row[2]), "outcome": row[3],
+                "skip_reason": row[4], "escalation_role": row[5], "policy_contract_version": row[6],
+            },
+        })
+
+    for row in conn.execute(
+        "SELECT recorded_at, eligible_roles_at_expiry, abstention_reason FROM hitl_expired WHERE run_id = ? ORDER BY id",
+        (run_id,)
+    ):
+        events.append({
+            "at": row[0], "event_type": "HitlExpired", "actor": "system", "role": None,
+            "action": "Approval window expired -- no action was taken",
+            "metadata": {"eligible_roles_at_expiry": _json_or_none(row[1]), "abstention_reason": row[2]},
+        })
+
+    for row in conn.execute(
+        "SELECT recorded_at, matched_terms, draft_sha256 FROM prohibited_action_blocked WHERE run_id = ? ORDER BY id",
+        (run_id,)
+    ):
+        events.append({
+            "at": row[0], "event_type": "ProhibitedActionBlocked", "actor": "system", "role": None,
+            "action": "Prohibited action blocked",
+            "metadata": {"matched_terms": _json_or_none(row[1]), "draft_sha256": row[2]},
+        })
+
+    return sorted(events, key=lambda e: e["at"])
+
+
+def human_overrides(conn: sqlite3.Connection, run_id: str) -> list[dict]:
+    """The human actions recorded for one run, in order -- what the Supply dual-approval
+    panel reads to show which leg actually landed, from the audit trail rather than from
+    the UI's own memory of what it just submitted."""
+    rows = conn.execute(
+        "SELECT role, tier_at_action, action, justification, recorded_at "
+        "FROM human_override_recorded WHERE run_id = ? ORDER BY id", (run_id,)
+    ).fetchall()
+    return [
+        {"role": r[0], "tier_at_action": r[1], "action": r[2], "justification": r[3], "recorded_at": r[4]}
+        for r in rows
+    ]
+
+
+def store_stats(conn: sqlite3.Connection) -> dict:
+    """Row counts per table -- the System Health page's "audit store" section, measured
+    rather than asserted."""
+    tables = (
+        "agent_run", "human_override_recorded", "hitl_escalation", "hitl_expired",
+        "prohibited_action_blocked",
+    )
+    counts = {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in tables}
+    latest = conn.execute("SELECT MAX(recorded_at) FROM agent_run").fetchone()[0]
+    return {"row_counts": counts, "latest_run_recorded_at": latest, "db_path": str(DEFAULT_DB_PATH)}

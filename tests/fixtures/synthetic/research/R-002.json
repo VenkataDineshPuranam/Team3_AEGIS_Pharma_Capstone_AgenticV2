@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-007: assay drift -- reagent lot and instrument firmware changed).",
+  "research_id": "R-002",
+  "findings": [
+    {
+      "category": "assay_comparability",
+      "status": "gap",
+      "evidence_ids": [
+        "K-006"
+      ],
+      "gap_description": "Potency assay AS-4471 changed reagent lot (RL-882 -> RL-901) and instrument firmware (v3.2 -> v3.4) between the historical and current measurement sets; comparability has not been re-established."
+    },
+    {
+      "category": "compound_identity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "cohort_representativeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "image_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "model_qualification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    },
+    {
+      "category": "target_evidence_concordance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-006"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-037 multi-source duplicate cluster, INJ-038 reporting-clock conflict, INJ-039 MedDRA version mismatch).",
+  "case_id": "PV-003",
+  "comparison_window_version": "cw-2026-08-13",
+  "duplicate_suspected": true,
+  "candidates": [
+    { "candidate_case_id": "PV-001", "similarity_score": 0.81, "matched_fields": ["product", "event_date", "narrative_similarity"], "source_channel": "patient_programme" },
+    { "candidate_case_id": "PV-002", "similarity_score": 0.76, "matched_fields": ["product", "narrative_similarity"], "source_channel": "literature_vendor" }
+  ],
+  "source_text": "case reported via three independent channels describing the same nausea event after dose",
+  "normalization_suggestions": [
+    { "normalized_term": "nausea", "confidence": 0.95, "terminology_source": "MedDRA v27.0" }
+  ],
+  "terminology_table_version": "meddra-27.0",
+  "awareness_dates": [
+    { "channel": "call_centre", "awareness_date": "2026-07-20" },
+    { "channel": "vendor_receipt", "awareness_date": "2026-07-18" },
+    { "channel": "affiliate_inbox", "awareness_date": "2026-07-22" }
+  ],
+  "meddra_versions_used": ["meddra-26.1", "meddra-27.0"]
+}

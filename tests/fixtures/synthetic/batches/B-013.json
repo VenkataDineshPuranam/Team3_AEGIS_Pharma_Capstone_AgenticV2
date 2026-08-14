@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-032: unapproved spreadsheet used for a GxP calculation). A macro-enabled spreadsheet calculates dissolution acceptance and has no verified version control -- represented as a validation_state gap, since an uncontrolled calculation tool is exactly the completeness question that category exists to surface.",
+  "batch_id": "B-013",
+  "product_id": "P-200",
+  "site": "Site-EU-02",
+  "manufacture_date": "2026-07-09",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "gap", "evidence_ids": ["K-006", "K-010"], "gap_description": "The dissolution acceptance calculation for this batch was performed in a macro-enabled spreadsheet ('Dissolution_Calc_v7_FINAL_use_this_one.xlsm') with no entry in the computerised-system inventory and no verified version-control history, contrary to COMPUTERISED_SYSTEM_LIFECYCLE.md's requirement that any GxP calculation tool be validated and version-controlled." },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the dissolution-calculation spreadsheet's validation status is unresolved." }
+  ]
+}

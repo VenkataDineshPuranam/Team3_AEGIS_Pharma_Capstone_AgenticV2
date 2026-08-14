@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-050: inspection request surge -- traceable evidence spanning multiple domains).",
+  "submission_id": "REG-007",
+  "findings": [
+    {
+      "category": "identity_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "labeling_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "commitment_tracking",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "sequence_completeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "variation_classification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "inspection_readiness",
+      "status": "gap",
+      "evidence_ids": [
+        "K-025"
+      ],
+      "gap_description": "A regulatory inspection request spans trial data, batch history, and safety-case evidence for Product PX-9; not all requested traceability links have been assembled yet."
+    }
+  ]
+}

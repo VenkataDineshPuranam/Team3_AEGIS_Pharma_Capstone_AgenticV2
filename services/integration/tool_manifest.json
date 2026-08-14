@@ -1,0 +1,52 @@
+{
+  "tools": [
+    {
+      "name": "batch_reconcile.schema.json",
+      "sha256": "f10ee7ecf6f2350ed6a9d60a5f2cc1ebe9c9d51e6e92aa0a1043aa21d4dc6e13",
+      "read_only": true,
+      "owning_context": "Batch Review"
+    },
+    {
+      "name": "clinical_integrity_check.schema.json",
+      "sha256": "21d2ed462d1bf268a756a2a1aa232de87804de39d4d33d9892cb52fcd71fb3ae",
+      "read_only": true,
+      "owning_context": "Clinical Integrity"
+    },
+    {
+      "name": "evidence_retrieve.schema.json",
+      "sha256": "227e431863e69542f5ebc5a9d7150600a4789c7b5b61801ab4417b987a634f09",
+      "read_only": true,
+      "owning_context": "Evidence & Provenance (per-binding: Batch Review | PV Intake | Supply Planning)"
+    },
+    {
+      "name": "pv_duplicate_check.schema.json",
+      "sha256": "82e17594deed6906a9da8fc97bf74cda8f62653bfdf26643c5f4a2d680c125bb",
+      "read_only": true,
+      "owning_context": "PV Intake"
+    },
+    {
+      "name": "pv_normalize_terminology.schema.json",
+      "sha256": "9342e8e4b25d8a37c4c95666f25212aa6a60b5bd059fcd53eea519053c50db43",
+      "read_only": true,
+      "owning_context": "PV Intake"
+    },
+    {
+      "name": "regulatory_completeness_check.schema.json",
+      "sha256": "d893773d01493b5e67548b776dfc9603d8532038b3ee2af80fde6ca72659328f",
+      "read_only": true,
+      "owning_context": "Regulatory Completeness"
+    },
+    {
+      "name": "research_reconcile.schema.json",
+      "sha256": "c3161fe43d2b8c6da5a06be4f35e9e867e5d3318251912937d53b1ce32e5f14e",
+      "read_only": true,
+      "owning_context": "Research Review"
+    },
+    {
+      "name": "supply_generate_options.schema.json",
+      "sha256": "c5ffb0bfda92f273eaee243569c1d86b5d1db7afa7acc3e7ab64c03f8e51550b",
+      "read_only": true,
+      "owning_context": "Supply Planning"
+    }
+  ]
+}

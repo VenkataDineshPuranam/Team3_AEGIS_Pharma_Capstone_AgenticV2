@@ -1,0 +1,39 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-051 cold-chain excursion, INJ-052 serialization aggregation break, INJ-053 counterfeit suspicion, INJ-054 sole-source shortage, INJ-055 CMO capacity conflict, INJ-056 allocation ethics, INJ-057 customs mismatch, INJ-058 recall-scope-uncertainty triage info).",
+  "product_id": "P-300",
+  "inventory_snapshot_version": "snap-2026-08-13",
+  "allocation_ethics_flags": ["trial_demand_present", "compassionate_use_present", "cross_market_conflict"],
+  "options": [
+    {
+      "option_id": "OPT-1",
+      "description": "Redirect the EU-West cold-chain lane shipment currently under logger review, pending excursion resolution.",
+      "constraints_satisfied": ["cold_chain_requirements"],
+      "cold_chain_evidence_ids": ["K-009"],
+      "transport_notes": "Lane EU-West-03, biologic shipment SH-8821.",
+      "cold_chain_excursion": {
+        "logger_id": "LOG-4471",
+        "exceeded_range": true,
+        "pallet_association_disputed": true,
+        "note": "Logger LOG-4471 recorded a 3.2h excursion above the upper temperature limit; which pallet the logger was physically attached to during the excursion window is disputed between the carrier and the depot."
+      },
+      "serialization_status": "aggregation_gap",
+      "counterfeit_review_flag": "inconsistent_print_history",
+      "customs_status": "not_applicable"
+    },
+    {
+      "option_id": "OPT-2",
+      "description": "Source replacement excipient volume from the qualified backup supplier for the next campaign window.",
+      "constraints_satisfied": ["market_authorization_scope"],
+      "cold_chain_evidence_ids": [],
+      "transport_notes": "No cold-chain requirement for this excipient.",
+      "shortage_root_cause": { "supplier_type": "sole_source", "recovery_estimate_weeks": 8 },
+      "cmo_capacity_conflict": { "competing_sponsor_count": 2, "window_overlap": true },
+      "customs_status": "description_mismatch",
+      "overlap_information": {
+        "shared_components": ["excipient-lot-EX-7743"],
+        "shared_equipment": ["Line-3-filler"],
+        "shared_distribution_routes": []
+      }
+    }
+  ]
+}

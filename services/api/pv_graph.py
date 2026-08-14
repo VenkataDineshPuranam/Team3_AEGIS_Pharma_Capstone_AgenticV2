@@ -24,7 +24,15 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import interrupt
 
-from packages.domain.payloads import DuplicateCandidate, NormalizationSuggestion, PVPayload
+from packages.domain import hitl_decision
+from packages.domain.payloads import (
+    AwarenessDateRecord,
+    DisproportionalitySignal,
+    DuplicateCandidate,
+    ListednessSource,
+    NormalizationSuggestion,
+    PVPayload,
+)
 from packages.domain.evidence import EvidenceItem
 from packages.domain.state import GovernedState, ReasonCode, RETRYABLE_REASON_CODES
 from infra.policies.denial_of_wallet_guardrail import DenialOfWalletGuard
@@ -103,6 +111,19 @@ def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpo
                 case_id=case_id, duplicate_suspected=result["duplicate_suspected"],
                 comparison_window_version=result["comparison_window_version"], candidates=candidates,
                 normalization_suggestions=(), terminology_table_version="",
+                # Stage 21 gap-closure fields -- all informational/evidence-only, sourced
+                # from the same fixture-backed tool call, never asserted by this node.
+                awareness_dates=tuple(AwarenessDateRecord(**a) for a in result.get("awareness_dates") or ()),
+                meddra_versions_used=tuple(result.get("meddra_versions_used") or ()),
+                listedness_sources=tuple(ListednessSource(**s) for s in result.get("listedness_sources") or ()),
+                sensitive_segment_flags=tuple(result.get("sensitive_segment_flags") or ()),
+                reporter_identifiability=result.get("reporter_identifiability"),
+                related_quality_record_ids=tuple(result.get("related_quality_record_ids") or ()),
+                disproportionality_signal=(
+                    DisproportionalitySignal(**result["disproportionality_signal"])
+                    if result.get("disproportionality_signal")
+                    else None
+                ),
             ),
             "tool_calls": state["tool_calls"] + 1,
         }
@@ -115,6 +136,16 @@ def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpo
             case_id=payload.case_id, duplicate_suspected=payload.duplicate_suspected,
             comparison_window_version=payload.comparison_window_version, candidates=payload.candidates,
             normalization_suggestions=suggestions, terminology_table_version=result["terminology_table_version"],
+            # Carried through from duplicate_check_node's payload -- this node only adds
+            # normalization_suggestions/terminology_table_version, it must not silently
+            # drop the Stage 21 gap-closure fields set on the first construction.
+            awareness_dates=payload.awareness_dates,
+            meddra_versions_used=payload.meddra_versions_used,
+            listedness_sources=payload.listedness_sources,
+            sensitive_segment_flags=payload.sensitive_segment_flags,
+            reporter_identifiability=payload.reporter_identifiability,
+            related_quality_record_ids=payload.related_quality_record_ids,
+            disproportionality_signal=payload.disproportionality_signal,
         )
         return {"domain_payload": updated_payload, "tool_calls": state["tool_calls"] + 1}
 
@@ -159,31 +190,33 @@ def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpo
         }
 
     def hitl_interrupt(state: GovernedState) -> dict:
-        decision = interrupt(
+        decision = hitl_decision.decode(interrupt(
             {"approver_roles": state["approver_roles"], "run_id": state["run_id"], "case_id": case_id}
-        )
-        if decision == "timed_out":
+        ))
+        if decision.action == "timed_out":
             audit_store.write_hitl_expired(
                 audit_conn, state["run_id"], state["workflow"],
                 eligible_roles_at_expiry=state["approver_roles"], recorded_at=datetime.now(UTC).isoformat(),
             )
-            return {"hitl_status": decision, "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
-        if decision == "veto":
+            return {"hitl_status": "timed_out", "terminal_state": "abstained", "abstention_reason": "hitl_timeout"}
+        if decision.action == "veto":
             # failure_and_loop_guards.md SS5.4: registrable at any tier, forces rejected
             # immediately, never overridden. audit_store enforces the "never overridden"
             # half at write time (has_veto check) -- not re-implemented here.
+            # Stage 21: the veto's justification is the vetoing human's own words. The role
+            # written stays PV_VETO_ROLE regardless of anything the caller claimed.
             audit_store.write_human_override(
                 audit_conn, state["run_id"], role=PV_VETO_ROLE, tier_at_action=state.get("hitl_tier") or "T0",
-                action="veto_registered", justification="[20a/20b placeholder -- no structured approver-input UI yet]",
+                action="veto_registered", justification=decision.justification,
                 recorded_at=datetime.now(UTC).isoformat(),
             )
             return {"hitl_status": "rejected", "veto_recorded": True, "terminal_state": "completed"}
         audit_store.write_human_override(
             audit_conn, state["run_id"], role=state["approver_roles"][0], tier_at_action=state.get("hitl_tier") or "T0",
-            action=decision, justification="[20a/20b placeholder -- no structured approver-input UI yet]",
+            action=decision.action, justification=decision.justification,
             recorded_at=datetime.now(UTC).isoformat(),
         )
-        return {"hitl_status": decision, "terminal_state": "completed"}
+        return {"hitl_status": decision.action, "terminal_state": "completed"}
 
     def mark_blocked_prohibition_adjacent(state: GovernedState) -> dict:
         return {"guard_verdict": "blocked", "terminal_state": "blocked", "abstention_reason": "prohibition_adjacent"}
@@ -204,6 +237,9 @@ def build_pv_graph(llm: LLMNodes | None = None, case_id: str = "PV-001", checkpo
             datetime.now(UTC).isoformat(), abstention_reason=state.get("abstention_reason"),
             trace_id=state["trace_id"], policy_contract_version=state.get("policy_contract_version"),
             llm_calls=state["llm_calls"], tokens_in=state["tokens_in"], tokens_out=state["tokens_out"],
+            subject_id=case_id, requester_role=state["requester_role"],
+            approver_roles=state.get("approver_roles") or [], hitl_status=state.get("hitl_status"),
+            evidence_ids=[e.evidence_id for e in state["evidence"]],
         )
         return {"terminal_state": terminal, "audit_record_id": audit_record_id}
 

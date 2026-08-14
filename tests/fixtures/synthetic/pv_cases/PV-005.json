@@ -1,0 +1,22 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-042 social-media authenticity, INJ-043 product-quality-safety link, INJ-044 signal disproportionality instability).",
+  "case_id": "PV-005",
+  "comparison_window_version": "cw-2026-08-13",
+  "duplicate_suspected": false,
+  "candidates": [
+    { "candidate_case_id": "PV-002", "similarity_score": 0.42, "matched_fields": ["narrative_similarity"], "source_channel": "social_media" }
+  ],
+  "source_text": "high-severity post describing particles in the product, no identifiable reporter",
+  "normalization_suggestions": [
+    { "normalized_term": "visible particulates", "confidence": 0.88, "terminology_source": "MedDRA v27.0" }
+  ],
+  "terminology_table_version": "meddra-27.0",
+  "reporter_identifiability": "unidentifiable",
+  "related_quality_record_ids": ["QC-COMPLAINT-3381", "LOT-EX-7743"],
+  "disproportionality_signal": {
+    "metric": "PRR",
+    "value": 2.4,
+    "value_range_under_alternate_assumptions": [1.1, 3.8],
+    "stability_note": "PRR moves from 1.1 to 3.8 depending on whether the two suspected-duplicate reports (PV-002, PV-003) are suppressed and which exposure-denominator estimate is used -- the signal is not stable under those choices."
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-046: labeling divergence across markets).",
+  "submission_id": "REG-003",
+  "findings": [
+    {
+      "category": "identity_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "labeling_consistency",
+      "status": "gap",
+      "evidence_ids": [
+        "K-025"
+      ],
+      "gap_description": "A new risk statement is approved in the EU label, pending review in the US label, and absent from two distributor-market labels; the divergence has not been tracked to resolution."
+    },
+    {
+      "category": "commitment_tracking",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "sequence_completeness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "variation_classification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "inspection_readiness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    }
+  ]
+}

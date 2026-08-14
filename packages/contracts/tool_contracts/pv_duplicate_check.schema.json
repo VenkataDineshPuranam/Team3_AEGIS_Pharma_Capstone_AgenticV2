@@ -53,6 +53,11 @@
             "matched_fields": {
               "type": "array",
               "items": { "type": "string", "enum": ["patient_identifiers", "product", "event_date", "reporter", "narrative_similarity"] }
+            },
+            "source_channel": {
+              "type": ["string", "null"],
+              "enum": ["patient_programme", "literature_vendor", "call_centre", "direct_report", "social_media", "other", null],
+              "description": "Stage 21 (INJ-037): which intake channel this candidate came from, so a multi-channel duplicate cluster can be represented as one cluster. Informational only."
             }
           }
         }
@@ -62,6 +67,63 @@
         "additionalProperties": false,
         "required": ["latency_ms"],
         "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      },
+      "awareness_dates": {
+        "type": "array",
+        "description": "Stage 21 (INJ-038): per-channel awareness dates. The reporting clock is the earliest across these, never the last-processed one (K-024).",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["channel", "awareness_date"],
+          "properties": { "channel": { "type": "string" }, "awareness_date": { "type": "string", "format": "date" } }
+        }
+      },
+      "meddra_versions_used": {
+        "type": "array",
+        "description": "Stage 21 (INJ-039): distinct MedDRA table versions present across this case's coding. More than one entry means an unreconciled version mismatch.",
+        "items": { "type": "string" }
+      },
+      "listedness_sources": {
+        "type": "array",
+        "description": "Stage 21 (INJ-040): each authority document's own expectedness statement. No field here reconciles them to one 'expectedness' conclusion -- that field is banned for pv_intake by policy_contract.v1.json.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source_document", "status"],
+          "properties": {
+            "source_document": { "type": "string" },
+            "status": { "type": "string", "enum": ["expected", "unexpected", "not_stated"] }
+          }
+        }
+      },
+      "sensitive_segment_flags": {
+        "type": "array",
+        "description": "Stage 21 (INJ-041): e.g. pregnancy_exposure, paediatric. Informational routing flag only.",
+        "items": { "type": "string" }
+      },
+      "reporter_identifiability": {
+        "type": ["string", "null"],
+        "enum": ["identifiable", "unidentifiable", "not_stated", null],
+        "description": "Stage 21 (INJ-042): whether the reporter/patient can be identified from this case's source. Informational only."
+      },
+      "related_quality_record_ids": {
+        "type": "array",
+        "description": "Stage 21 (INJ-043): cross-referenced quality/complaint record ids that may relate to this case. Never a causal determination.",
+        "items": { "type": "string" }
+      },
+      "disproportionality_signal": {
+        "type": ["object", "null"],
+        "description": "Stage 21 (INJ-044): a computed statistical ratio presented as evidence, never a signal determination -- 'signal_confirmed' remains banned for pv_intake.",
+        "additionalProperties": false,
+        "required": ["metric", "value", "value_range_under_alternate_assumptions", "stability_note"],
+        "properties": {
+          "metric": { "type": "string", "enum": ["PRR", "ROR", "EBGM"] },
+          "value": { "type": "number" },
+          "value_range_under_alternate_assumptions": {
+            "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2
+          },
+          "stability_note": { "type": "string" }
+        }
       }
     }
   },

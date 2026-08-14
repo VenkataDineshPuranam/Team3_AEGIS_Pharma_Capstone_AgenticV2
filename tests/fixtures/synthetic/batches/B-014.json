@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-033: CAPA effectiveness failure -- recurring deviation under a different taxonomy code). Represented as a capa conflict, the category this scenario names directly.",
+  "batch_id": "B-014",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-07-11",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "conflict", "evidence_ids": ["K-006"], "gap_description": "CAPA-1188 (closed 2026-05-20, taxonomy 'equipment/seal-failure') was intended to prevent the fill-weight excursion pattern seen on Line 3. Deviation DEV-2201 (2026-07-08, taxonomy 'process/fill-weight-drift') describes what appears to be the same recurring failure mode under a different taxonomy code, which would evade CAPA-1188's effectiveness check if the two are not reconciled." },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the CAPA-1188/DEV-2201 taxonomy-code reconciliation is open." }
+  ]
+}

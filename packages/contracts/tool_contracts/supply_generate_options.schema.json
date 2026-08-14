@@ -62,13 +62,72 @@
             },
             "constraints_satisfied": { "type": "array", "items": { "type": "string" } },
             "cold_chain_evidence_ids": { "type": "array", "items": { "type": "string" } },
-            "transport_notes": { "type": "string" }
+            "transport_notes": { "type": "string" },
+            "cold_chain_excursion": {
+              "type": ["object", "null"],
+              "description": "Stage 21 (INJ-051). Informational evidence only.",
+              "additionalProperties": false,
+              "required": ["logger_id", "exceeded_range", "pallet_association_disputed", "note"],
+              "properties": {
+                "logger_id": { "type": "string" },
+                "exceeded_range": { "type": "boolean" },
+                "pallet_association_disputed": { "type": "boolean" },
+                "note": { "type": "string" }
+              }
+            },
+            "serialization_status": {
+              "type": ["string", "null"], "enum": ["aggregated", "aggregation_gap", "not_applicable", null],
+              "description": "Stage 21 (INJ-052)."
+            },
+            "counterfeit_review_flag": {
+              "type": ["string", "null"], "enum": ["consistent", "inconsistent_print_history", "not_reviewed", null],
+              "description": "Stage 21 (INJ-053)."
+            },
+            "shortage_root_cause": {
+              "type": ["object", "null"],
+              "description": "Stage 21 (INJ-054). Informational context only.",
+              "additionalProperties": false,
+              "required": ["supplier_type"],
+              "properties": {
+                "supplier_type": { "type": "string", "enum": ["sole_source", "multi_source"] },
+                "recovery_estimate_weeks": { "type": ["integer", "null"] }
+              }
+            },
+            "cmo_capacity_conflict": {
+              "type": ["object", "null"],
+              "description": "Stage 21 (INJ-055). Informational flag only.",
+              "additionalProperties": false,
+              "required": ["competing_sponsor_count", "window_overlap"],
+              "properties": {
+                "competing_sponsor_count": { "type": "integer", "minimum": 0 },
+                "window_overlap": { "type": "boolean" }
+              }
+            },
+            "customs_status": {
+              "type": ["string", "null"], "enum": ["consistent", "description_mismatch", "not_applicable", null],
+              "description": "Stage 21 (INJ-057)."
+            },
+            "overlap_information": {
+              "type": ["object", "null"],
+              "description": "Stage 21 (INJ-058). Shared-component/equipment/route triage information only — deliberately never a recall_scope, which cannot exist anywhere in this schema.",
+              "additionalProperties": false,
+              "properties": {
+                "shared_components": { "type": "array", "items": { "type": "string" } },
+                "shared_equipment": { "type": "array", "items": { "type": "string" } },
+                "shared_distribution_routes": { "type": "array", "items": { "type": "string" } }
+              }
+            }
           }
         }
       },
       "inventory_snapshot_version": {
         "type": "string",
         "description": "Every option is only valid as of this snapshot. The Supply-Planning Agent's output must carry this version forward so a human reviewer knows exactly how fresh the options are."
+      },
+      "allocation_ethics_flags": {
+        "type": "array",
+        "description": "Stage 21 (INJ-056). Informational triage signals (e.g. trial_demand_present, compassionate_use_present, cross_market_conflict) — SUPPLY_ALLOCATION_ETHICS.md (K-029) requires visibility, not resolution by this tool.",
+        "items": { "type": "string" }
       },
       "tool_accounting": {
         "type": "object",

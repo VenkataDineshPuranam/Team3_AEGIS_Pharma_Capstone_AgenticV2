@@ -44,6 +44,66 @@
       "input": {"evidence_id": "K-016", "jurisdiction": "DE", "query_jurisdiction": "US"},
       "expected": {"pass": false, "reason_contains": "jurisdiction_mismatch"},
       "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-06",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-059): a rare-disease genomic dataset carries no raw patient_key but combines region + age-band + sex + rare-diagnosis -- 4 quasi-identifiers, exceeding the safe combination threshold even though pseudonymised.",
+      "input": {"dataset_id": "GD-2201", "quasi_identifiers_present": ["region", "age_band", "sex", "rare_diagnosis"], "safe_combination_threshold": 2},
+      "expected": {"pass": false, "reason_contains": "reidentification_risk"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-07",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-060): EU trial data's consent scope covers safety-signal analysis only; a request to reuse it for cross-border commercial model training is outside that scope.",
+      "input": {"declared_purpose": "safety_signal_analysis", "requested_use": "commercial_model_training", "consent_scope": ["safety_signal_analysis", "regulatory_reporting"]},
+      "expected": {"pass": false, "reason_contains": "purpose_limitation_violation"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-08",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-063): biomarker data licensed for research use only; considering it for commercial targeting is outside the license scope -- same rule as PCB-07, different domain.",
+      "input": {"declared_purpose": "research_license", "requested_use": "commercial_targeting", "consent_scope": ["research_license"]},
+      "expected": {"pass": false, "reason_contains": "purpose_limitation_violation"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-09",
+      "workflow": "batch_review",
+      "description": "Stage 21 gap-closure (INJ-064): a backup replica of a regulated record lands in a region not on the approved list (ADR-009's residency requirement, made verifiable).",
+      "input": {"record_region": "ap-southeast-2", "approved_regions": ["eu-west-1", "eu-central-1"]},
+      "expected": {"pass": false, "reason_contains": "residency_violation"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-10",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-062): patient-support-programme free text declared for adverse-event intake only contains financial-hardship and family-member details beyond that purpose.",
+      "input": {"declared_purpose_fields": ["adverse_event_description", "product_identification"], "fields_present": ["adverse_event_description", "product_identification", "financial_hardship", "family_member_details"]},
+      "expected": {"pass": false, "reason_contains": "purpose_scope_leakage"},
+      "status": "adversarial"
+    },
+    {
+      "scenario_id": "PCB-11",
+      "workflow": "pv_intake",
+      "description": "Golden companion to PCB-10: a patient-support case whose free text stays within its declared purpose.",
+      "input": {"declared_purpose_fields": ["adverse_event_description", "product_identification"], "fields_present": ["adverse_event_description", "product_identification"]},
+      "expected": {"pass": true},
+      "status": "golden"
+    },
+    {
+      "scenario_id": "PCB-12",
+      "workflow": "pv_intake",
+      "description": "Stage 21 gap-closure (INJ-068): a crafted query bundles PV-1020 (pregnancy-restricted, caller lacks PV_PREGNANCY) alongside two cases the caller IS authorized for, attempting to exfiltrate the restricted narrative by hiding it in a bulk request.",
+      "input": {
+        "requested_cases": ["PV-1001", "PV-1020", "PV-1030"],
+        "caller_access_groups": ["PV_STANDARD"],
+        "case_access_groups": {"PV-1001": ["PV_STANDARD"], "PV-1020": ["PV_PREGNANCY"], "PV-1030": ["PV_STANDARD"]}
+      },
+      "expected": {"pass": false, "reason_contains": "bulk_access_denied"},
+      "status": "adversarial"
     }
   ]
 }

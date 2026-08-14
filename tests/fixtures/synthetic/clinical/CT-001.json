@@ -1,0 +1,62 @@
+{
+  "_note": "Synthetic fixture, Stage 21. Clean case: every category complete.",
+  "protocol_id": "CT-001",
+  "findings": [
+    {
+      "category": "protocol_version_conformance",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "eligibility_criteria",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "randomization_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "blinding_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "consent_status",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "device_data_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "endpoint_adjudication",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    },
+    {
+      "category": "site_integrity",
+      "status": "complete",
+      "evidence_ids": [
+        "K-008"
+      ]
+    }
+  ]
+}

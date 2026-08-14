@@ -40,6 +40,39 @@
       "banned_field_names": [
         "allocated_quantity", "reserved_for", "ship_to", "release_authorization", "recall_scope"
       ]
+    },
+    "research_review": {
+      "workflow": "research_review",
+      "banned_terms": [
+        "model is qualified", "qualified for portfolio use", "intended use is approved",
+        "target is validated", "confirmed target", "validated target",
+        "recommend advancing", "recommend qualification"
+      ],
+      "banned_field_names": [
+        "model_qualified", "intended_use_approved", "target_validated", "disposition"
+      ]
+    },
+    "clinical_integrity": {
+      "workflow": "clinical_integrity",
+      "banned_terms": [
+        "protocol deviation is acceptable", "deviation disposition", "unblind the",
+        "recommend unblinding", "participant is eligible", "participant is ineligible",
+        "eligibility determination", "recommend enrollment", "recommend discontinuation"
+      ],
+      "banned_field_names": [
+        "protocol_deviation_disposition", "unblinding_action", "eligibility_final_determination", "disposition"
+      ]
+    },
+    "regulatory_completeness": {
+      "workflow": "regulatory_completeness",
+      "banned_terms": [
+        "is reportable", "not reportable", "variation is classified as",
+        "submission is ready", "cleared for submission", "recommend filing",
+        "regulatory determination is"
+      ],
+      "banned_field_names": [
+        "variation_classification_final", "submission_ready", "regulatory_determination", "disposition"
+      ]
     }
   }
 }

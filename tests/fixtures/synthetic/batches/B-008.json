@@ -1,0 +1,19 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-027: process-analytical-technology model drift). A PAT model version changed without a synchronized update to the batch record recipe -- represented in the new process_analytical category added this stage (packages/domain/payloads.py, batch_reconcile.schema.json).",
+  "batch_id": "B-008",
+  "product_id": "P-200",
+  "site": "Site-EU-02",
+  "manufacture_date": "2026-06-28",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "process_analytical", "status": "gap", "evidence_ids": ["K-027"], "gap_description": "PAT model PAT-DISS-v3 was promoted to production for real-time dissolution prediction, but the batch record recipe (Recipe-114, rev C) still references PAT-DISS-v2's calibration parameters. The model and recipe versions are not synchronized for this batch." },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the PAT model/recipe version mismatch is open." }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic fixture, Stage 21 gap-closure (INJ-026: cleaning-validation boundary after campaign sequencing change). Campaign sequencing changed after a new high-potency product was introduced -- represented as a change_control conflict, since the sequencing change and the cleaning-validation boundary it implies are exactly a change-control category concern.",
+  "batch_id": "B-007",
+  "product_id": "P-100",
+  "site": "Site-EU-01",
+  "manufacture_date": "2026-06-25",
+  "findings": [
+    { "category": "genealogy", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "lab_results", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "environmental_monitoring", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "deviations", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "capa", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "change_control", "status": "conflict", "evidence_ids": ["K-006"], "gap_description": "Campaign sequencing was changed to insert this batch immediately after a newly introduced high-potency product on the shared line. The cleaning-validation study on file (CV-0042) was executed against the prior sequencing and does not cover cross-contamination carryover from the new high-potency product." },
+    { "category": "validation_state", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "supplier_evidence", "status": "complete", "evidence_ids": ["K-006"] },
+    { "category": "release_packet_completeness", "status": "gap", "evidence_ids": ["K-006"], "gap_description": "Release packet cannot be marked complete while the cleaning-validation boundary conflict from the campaign-sequencing change is open." }
+  ]
+}

@@ -50,7 +50,7 @@
           "properties": {
             "category": {
               "type": "string",
-              "enum": ["genealogy", "lab_results", "environmental_monitoring", "deviations", "capa", "change_control", "validation_state", "supplier_evidence", "release_packet_completeness"]
+              "enum": ["genealogy", "lab_results", "environmental_monitoring", "deviations", "capa", "change_control", "validation_state", "supplier_evidence", "release_packet_completeness", "process_analytical"]
             },
             "status": {
               "type": "string",

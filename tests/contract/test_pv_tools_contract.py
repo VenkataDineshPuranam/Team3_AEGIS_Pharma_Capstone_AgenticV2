@@ -71,6 +71,66 @@ def test_duplicate_check_rejects_evidence_not_in_run():
         duplicate_check(run_id=run_id, case_id="PV-001", case_summary_evidence_ids=["K-999-NOT-RETRIEVED"])
 
 
+def test_multi_source_cluster_surfaces_channel_and_clock_conflict(duplicate_check_schema):
+    """Stage 21 gap-closure -- INJ-037 (multi-channel duplicate cluster), INJ-038
+    (reporting-clock conflict), INJ-039 (MedDRA version mismatch)."""
+    from services.integration.pv_duplicate_check import duplicate_check
+
+    run_id = "R-pv-multisource"
+    retr = _retrieve_evidence(run_id)
+    evidence_ids = [item["evidence_id"] for item in retr["items"]]
+    result = duplicate_check(run_id=run_id, case_id="PV-003", case_summary_evidence_ids=evidence_ids)
+    validate(instance=result, schema=duplicate_check_schema["output"])
+
+    channels = {c["source_channel"] for c in result["candidates"]}
+    assert channels == {"patient_programme", "literature_vendor"}
+
+    dates = {a["channel"]: a["awareness_date"] for a in result["awareness_dates"]}
+    earliest = min(dates.values())
+    assert earliest == "2026-07-18"  # vendor_receipt -- earliest, not the last-processed one
+
+    assert len(result["meddra_versions_used"]) > 1  # unreconciled version mismatch
+
+
+def test_expectedness_conflict_and_sensitive_segments_are_surfaced_not_reconciled(duplicate_check_schema):
+    """Stage 21 gap-closure -- INJ-040 (expectedness source conflict), INJ-041 (pregnancy/
+    paediatric sensitivity). No field anywhere in this output reconciles the three
+    listedness sources to one conclusion -- that is the point."""
+    from services.integration.pv_duplicate_check import duplicate_check
+
+    run_id = "R-pv-listedness"
+    retr = _retrieve_evidence(run_id)
+    evidence_ids = [item["evidence_id"] for item in retr["items"]]
+    result = duplicate_check(run_id=run_id, case_id="PV-004", case_summary_evidence_ids=evidence_ids)
+    validate(instance=result, schema=duplicate_check_schema["output"])
+
+    statuses = {s["status"] for s in result["listedness_sources"]}
+    assert statuses == {"expected", "unexpected", "not_stated"}  # genuinely disagree
+    assert "pregnancy_exposure" in result["sensitive_segment_flags"]
+    assert "paediatric" in result["sensitive_segment_flags"]
+
+
+def test_disproportionality_signal_is_informational_never_a_confirmation(duplicate_check_schema):
+    """Stage 21 gap-closure -- INJ-042 (reporter identifiability), INJ-043 (quality-record
+    cross-reference), INJ-044 (disproportionality instability). Structural check: no key
+    on this model could ever spell 'signal_confirmed' -- banned by policy_contract.v1.json
+    for pv_intake regardless of what this test asserts."""
+    from services.integration.pv_duplicate_check import duplicate_check
+
+    run_id = "R-pv-disprop"
+    retr = _retrieve_evidence(run_id)
+    evidence_ids = [item["evidence_id"] for item in retr["items"]]
+    result = duplicate_check(run_id=run_id, case_id="PV-005", case_summary_evidence_ids=evidence_ids)
+    validate(instance=result, schema=duplicate_check_schema["output"])
+
+    assert result["reporter_identifiability"] == "unidentifiable"
+    assert "QC-COMPLAINT-3381" in result["related_quality_record_ids"]
+    signal = result["disproportionality_signal"]
+    assert "signal_confirmed" not in signal
+    lo, hi = signal["value_range_under_alternate_assumptions"]
+    assert lo < signal["value"] < hi  # genuinely unstable across assumptions, not a point estimate
+
+
 def test_normalize_terminology_matches_schema_and_never_applies(normalize_schema):
     from services.integration.pv_normalize_terminology import normalize_terminology
 

@@ -1,29 +1,38 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AppShell } from "@/components/layout/AppShell";
+import { OperatorProvider } from "@/components/layout/OperatorContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter for UI (excellent at small sizes, real tabular figures), JetBrains Mono for
+// identifiers -- run ids, evidence ids and hashes are compared character by character, so
+// they need a face where 0/O and 1/l/I are unmistakable.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "AEGIS Pharma AI -- Approver Dashboard",
-  description: "Human-in-the-loop approval interface for the batch_review, pv_intake, and supply_planning agentic workflows.",
+  title: "AEGIS Control Center",
+  description:
+    "Governed AI decision support and human approval for regulated pharmaceutical workflows: GxP batch review, pharmacovigilance intake, and supply/cold-chain planning.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
+      <body className="min-h-dvh">
+        <OperatorProvider>
+          <AppShell>{children}</AppShell>
+        </OperatorProvider>
+      </body>
     </html>
   );
 }

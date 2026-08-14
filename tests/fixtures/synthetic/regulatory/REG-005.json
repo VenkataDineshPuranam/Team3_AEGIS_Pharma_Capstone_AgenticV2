@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic fixture, Stage 21 (INJ-048: eCTD sequence gap).",
+  "submission_id": "REG-005",
+  "findings": [
+    {
+      "category": "identity_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "labeling_consistency",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "commitment_tracking",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "sequence_completeness",
+      "status": "gap",
+      "evidence_ids": [
+        "K-025"
+      ],
+      "gap_description": "Submission sequence 0034's index references document DOC-881, which is not present in the archived sequence; the gap has not been resolved."
+    },
+    {
+      "category": "variation_classification_evidence",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    },
+    {
+      "category": "inspection_readiness",
+      "status": "complete",
+      "evidence_ids": [
+        "K-025"
+      ]
+    }
+  ]
+}

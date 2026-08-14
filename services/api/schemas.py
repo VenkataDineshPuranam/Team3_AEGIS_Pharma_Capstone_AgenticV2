@@ -5,9 +5,19 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-Workflow = Literal["batch_review", "pv_intake", "supply_planning"]
+Workflow = Literal[
+    "batch_review", "pv_intake", "supply_planning",
+    "research_review", "clinical_integrity", "regulatory_completeness",
+]
+
+# Minimum characters for an approval/rejection/veto justification. Not a governance
+# threshold invented here -- escalation_override_log_design.md SS3 already requires a
+# non-empty justification and audit_store.write_human_override already rejects a blank
+# one. This is the API refusing to accept a single space as a considered rationale before
+# it reaches the graph, so the failure is a clean 422 rather than a mid-graph exception.
+MIN_JUSTIFICATION_CHARS = 12
 
 
 class SubmitRunRequest(BaseModel):
@@ -17,9 +27,60 @@ class SubmitRunRequest(BaseModel):
 
 
 class DecideRequest(BaseModel):
+    """A human's decision at an HITL interrupt.
+
+    `justification` is REQUIRED for every action a human takes. It is persisted to the
+    real audit record (human_override_recorded.justification) by the graph's own
+    hitl_interrupt node -- not held in the API, and not held in React state.
+
+    `claimed_identity` is exactly what its name says: an unverified assertion. No
+    authentication exists in this build, so it is recorded as context, never consulted to
+    decide whether the action is permitted. The graph writes the governance layer's own
+    approver role into the audit record regardless of this field.
+    """
+
     workflow: Workflow
     action: Literal["approved", "rejected", "veto", "timed_out"]
+    justification: str = Field(min_length=MIN_JUSTIFICATION_CHARS, max_length=4000)
+    claimed_identity: str | None = Field(default=None, max_length=200)
     leg: Literal["planning", "quality"] | None = None  # supply_planning only
+
+
+class EvidenceRef(BaseModel):
+    """One evidence item as it reached a run's GovernedState. Everything here passed the
+    ADR-003 citable filter server-side before it existed as an EvidenceItem at all, which
+    is why `status` is only ever approved/draft on this model -- see EvidenceCatalogItem
+    for the wider view that CAN show untrusted/superseded."""
+
+    evidence_id: str
+    source: str
+    status: str
+    effective_date: str
+    jurisdiction: str | None = None
+    supersedes: str | None = None
+    content_excerpt: str = ""
+
+
+class EvidenceCatalogItem(BaseModel):
+    """A knowledge-graph evidence node as it actually is, INCLUDING non-citable ones.
+
+    The Evidence Explorer must be able to show an untrusted or superseded document and
+    label it as unusable -- that is the point of the page. Showing it here does not make
+    it citable: `citable` is computed from the same two-status rule the retrieval tool
+    enforces in its own Cypher, and no run can pick an item up from this endpoint. This
+    is a read-only catalog view, not an input to any graph.
+    """
+
+    evidence_id: str
+    source: str
+    status: str
+    citable: bool
+    authority: str | None = None
+    jurisdiction: str | None = None
+    effective_date: str | None = None
+    supersedes: str | None = None
+    superseded_by: str | None = None
+    content_excerpt: str = ""
 
 
 class RunResult(BaseModel):
@@ -34,6 +95,7 @@ class RunResult(BaseModel):
     approver_roles: list[str] = []
     required_legs: list[str] | None = None
     approved_legs: list[str] = []
+    veto_recorded: bool = False
 
 
 class QueueEntry(BaseModel):
@@ -47,6 +109,92 @@ class QueueEntry(BaseModel):
     draft_summary: str | None
     draft_claims: list[dict[str, Any]]
     created_at: str
+    # Stage 21 -- what the queue previously could not show: which evidence the findings
+    # stand on, and the workflow's own structured findings (batch reconciliation
+    # categories / PV duplicate candidates / supply planning options).
+    evidence: list[EvidenceRef] = []
+    domain_payload: dict[str, Any] | None = None
+    evidence_accounting: dict[str, Any] | None = None
+
+
+class AuditEvent(BaseModel):
+    at: str
+    event_type: str
+    actor: str | None = None
+    role: str | None = None
+    action: str
+    metadata: dict[str, Any] = {}
+
+
+class AuditedRun(BaseModel):
+    """One row of the append-only agent_run table. Fields added in Stage 21 read None for
+    runs recorded before that migration -- the UI renders those as "not recorded", never
+    as a zero or an empty list."""
+
+    run_id: str
+    workflow: str
+    terminal_state: str
+    abstention_reason: str | None = None
+    trace_id: str | None = None
+    policy_contract_version: str | None = None
+    recorded_at: str
+    llm_calls: int | None = None
+    tokens_in: int | None = None
+    tokens_out: int | None = None
+    subject_id: str | None = None
+    requester_role: str | None = None
+    approver_roles: list[str] | None = None
+    hitl_status: str | None = None
+    evidence_ids: list[str] | None = None
+
+
+class RunHistoryPage(BaseModel):
+    items: list[AuditedRun]
+    total: int
+    limit: int
+    offset: int
+
+
+class RunDetail(BaseModel):
+    """Everything the system can truthfully say about one run.
+
+    `pending` is populated only while the run is still parked at its interrupt in THIS API
+    process (services/api/pending_queue.py is in-memory by design). `audit` is populated
+    once finalize has written the record. A run can legitimately have one, the other, or
+    both -- and `decision_support_available` states plainly which, so the UI never has to
+    infer that an empty field means "nothing happened".
+    """
+
+    run_id: str
+    pending: QueueEntry | None = None
+    audit: AuditedRun | None = None
+    timeline: list[AuditEvent] = []
+    human_actions: list[dict[str, Any]] = []
+    decision_support_available: bool = False
+    decision_support_unavailable_reason: str | None = None
+
+
+class GovernanceSnapshot(BaseModel):
+    policy_contract_version: str
+    prohibited_actions: dict[str, Any]
+    hitl_rules: dict[str, Any]
+    approver_roles: dict[str, Any]
+    evidence_authority: dict[str, Any]
+    authentication: dict[str, Any]
+
+
+class DependencyHealth(BaseModel):
+    name: str
+    status: Literal["ok", "degraded", "unavailable", "not_configured"]
+    detail: str | None = None
+    latency_ms: int | None = None
+
+
+class HealthDetail(BaseModel):
+    api: DependencyHealth
+    dependencies: list[DependencyHealth]
+    audit_store: dict[str, Any]
+    checked_at: str
 
 
 class DashboardResponse(BaseModel):
@@ -55,3 +203,29 @@ class DashboardResponse(BaseModel):
     guardrail_trip: dict[str, Any]
     terminal_states: dict[str, Any]
     cache: dict[str, Any]
+
+
+class EvalScorecard(BaseModel):
+    """services/api/eval_dashboard.py:eval_scorecard() -- executed live on every request
+    (~25ms, pure grading logic, no LLM/network calls). Not a cached snapshot."""
+
+    total_scenarios: int
+    passed: int
+    failed: int
+    accepted_non_pass: int
+    category_count: int
+    categories: list[dict[str, Any]]
+    source: str
+
+
+class InjectCoverage(BaseModel):
+    """The curated 84-inject V2-to-V3 coverage mapping -- read from a reviewed file, not
+    computed per-request. See services/api/eval_dashboard.py's module docstring."""
+
+    methodology: str
+    source_dataset: str
+    reviewed_at: str
+    total_injects: int
+    by_status: dict[str, int]
+    dimensions: list[dict[str, Any]]
+    injects: list[dict[str, Any]]
