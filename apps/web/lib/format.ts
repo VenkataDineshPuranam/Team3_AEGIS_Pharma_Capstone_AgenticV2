@@ -139,6 +139,25 @@ export function terminalStateTone(state: string | null | undefined): BadgeTone {
 }
 
 /**
+ * HITL wait-severity, from services/integration/hitl_timer.py's tier -- display only,
+ * recomputed on every poll. Reaching T2 does not widen who is authorized to decide; it is
+ * a visual severity signal, not an access change.
+ */
+export const HITL_TIER_TONE: Record<string, BadgeTone> = {
+  T0: "neutral",
+  T1: "pending",
+  T2: "refused",
+  T3: "blocked",
+};
+
+export const HITL_TIER_NEXT_STEP: Record<string, string> = {
+  T0: "On time — no action needed yet.",
+  T1: "Past the 8-hour reminder threshold. Still fully valid to decide.",
+  T2: "Past the 16-hour escalation threshold. Waiting long enough that a second reviewer should take a look.",
+  T3: "Past the 24-hour expiry threshold. If this reaches a real timeout, the run abstains — a timeout is never an implicit approval.",
+};
+
+/**
  * Why a run stopped, in plain language. Every key here is a real `abstention_reason`
  * value written by the graphs -- an unknown reason falls through to the raw value rather
  * than being hidden, so a new backend reason shows up instead of disappearing.

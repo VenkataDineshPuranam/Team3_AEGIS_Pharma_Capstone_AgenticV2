@@ -3,20 +3,30 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { Select } from "@/components/ui/Form";
-import { Notice } from "@/components/ui/States";
-import { DOMAIN_ROLES, useOperator, type DomainRole } from "./OperatorContext";
+import { useAuth } from "./AuthContext";
 
 /**
- * The operator identity control in the sidebar footer.
- *
- * Every surface of this control says the same thing: this is not a login. The warning is
- * not tucked into a tooltip, because a user who believes they are authenticated when they
- * are not is exactly the misunderstanding this build must not create (Phase 25).
+ * The signed-in identity control in the sidebar footer. Replaced the old "claimed
+ * identity" free-text picker (Phase 25's honest "no sign-in" warning) once Stage 22 added
+ * real login -- what's shown here is the authenticated session from
+ * services/api/auth.py, not a self-reported label.
  */
 export function OperatorBar() {
-  const { role, identity } = useOperator();
+  const { session, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  if (!session) return null;
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+      setOpen(false);
+    }
+  }
 
   return (
     <>
@@ -29,14 +39,14 @@ export function OperatorBar() {
           aria-hidden="true"
           className="grid size-7 shrink-0 place-items-center rounded-full border border-[var(--border-default)] bg-[var(--surface-sunken)] text-[11px] font-semibold text-[var(--text-secondary)]"
         >
-          {initials(identity || role)}
+          {initials(session.display_name)}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[12px] font-medium text-[var(--text-primary)]">
-            {role}
+            {session.display_name}
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-[var(--status-pending-fg)]">
-            <span aria-hidden="true">!</span> Unverified — no sign-in
+          <span className="block truncate text-[10px] text-[var(--text-tertiary)]">
+            {session.role}
           </span>
         </span>
       </button>
@@ -44,76 +54,36 @@ export function OperatorBar() {
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title="Operator context"
-        description="Used to label your actions in the audit trail. It is not a sign-in."
+        title="Signed in"
+        description="Attached to every action you take as the authenticated approver of record."
         footer={
-          <Button variant="primary" onClick={() => setOpen(false)}>
-            Done
+          <Button variant="danger" onClick={handleSignOut} loading={signingOut} loadingLabel="Signing out…">
+            Sign out
           </Button>
         }
       >
-        <div className="space-y-4">
-          <Notice tone="warning" title="This application has no authentication">
-            Nothing you select here grants any permission. The Orchestrator API performs no
-            server-side authorization in this build: anyone who can reach it can submit a run
-            and record a decision, with any role string. Your selection is recorded alongside
-            your decisions as a <strong>claimed, unverified</strong> label, so the audit trail
-            reflects what was asserted rather than what was proven.
-            <br />
-            <br />
-            Microsoft Entra ID is the planned identity provider. Until it is in place, this
-            application should not be deployed outside a trusted local environment.
-          </Notice>
-
-          <RoleSelect />
-          <IdentityInput />
-        </div>
+        <dl className="space-y-2.5 text-[13px]">
+          <div className="flex justify-between gap-3">
+            <dt className="text-[var(--text-tertiary)]">Name</dt>
+            <dd className="font-medium text-[var(--text-primary)]">{session.display_name}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-[var(--text-tertiary)]">User ID</dt>
+            <dd className="font-mono text-[var(--text-primary)]">{session.user_id}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-[var(--text-tertiary)]">Role</dt>
+            <dd className="font-medium text-[var(--text-primary)]">{session.role}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-[var(--text-tertiary)]">Session expires</dt>
+            <dd className="text-[var(--text-primary)]">
+              {new Date(session.expires_at).toLocaleString()}
+            </dd>
+          </div>
+        </dl>
       </Dialog>
     </>
-  );
-}
-
-function RoleSelect() {
-  const { role, setRole } = useOperator();
-  return (
-    <Select
-      label="Acting as"
-      value={role}
-      onChange={(e) => setRole(e.target.value as DomainRole)}
-      hint="Determines which queues are highlighted for you. It does not gate any action."
-    >
-      {DOMAIN_ROLES.map((r) => (
-        <option key={r} value={r}>
-          {r}
-        </option>
-      ))}
-    </Select>
-  );
-}
-
-function IdentityInput() {
-  const { identity, setIdentity } = useOperator();
-  return (
-    <div>
-      <label
-        htmlFor="operator-identity"
-        className="block text-[13px] font-medium text-[var(--text-primary)]"
-      >
-        Identifier <span className="font-normal text-[var(--text-tertiary)]">(optional)</span>
-      </label>
-      <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-        Recorded with your decisions as unverified context — for example a name or work email.
-      </p>
-      <input
-        id="operator-identity"
-        type="text"
-        value={identity}
-        maxLength={200}
-        onChange={(e) => setIdentity(e.target.value)}
-        placeholder="e.g. a.qp@novacura.example"
-        className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-raised)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]"
-      />
-    </div>
   );
 }
 

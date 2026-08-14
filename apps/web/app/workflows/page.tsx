@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PageBody, PageHeader } from "@/components/layout/AppShell";
-import { useOperator } from "@/components/layout/OperatorContext";
+import { useAuth } from "@/components/layout/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Form";
@@ -114,7 +114,8 @@ function WorkflowSection({ workflow }: { workflow: Workflow }) {
 
 function StartRunForm({ workflow }: { workflow: Workflow }) {
   const router = useRouter();
-  const { identity } = useOperator();
+  const { session } = useAuth();
+  const identity = session?.display_name ?? "";
   const [subjectId, setSubjectId] = useState(SUBJECT_OPTIONS[workflow][0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -129,7 +130,7 @@ function StartRunForm({ workflow }: { workflow: Workflow }) {
       const r = await submitRun({
         workflow,
         subject_id: subjectId,
-        requester_role: identity.trim() || DEFAULT_ROLE[workflow],
+        requester_role: session?.role || DEFAULT_ROLE[workflow],
       });
       setResult({ runId: r.run_id, pending: r.status === "pending_approval" });
     } catch (err) {
@@ -159,9 +160,9 @@ function StartRunForm({ workflow }: { workflow: Workflow }) {
           Start run
         </Button>
         <p className="text-[11px] text-[var(--text-tertiary)]">
-          Requested as {identity.trim() || DEFAULT_ROLE[workflow]}. Runs against the real
-          governed graph — this synchronously executes retrieval, synthesis, guard and
-          Critic passes.
+          Requested as {identity || "you"} ({session?.role || DEFAULT_ROLE[workflow]}). Runs
+          against the real governed graph — this synchronously executes retrieval, synthesis,
+          guard and Critic passes.
         </p>
       </form>
 

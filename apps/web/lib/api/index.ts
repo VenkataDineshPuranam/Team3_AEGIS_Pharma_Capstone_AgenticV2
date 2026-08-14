@@ -3,7 +3,7 @@
  * app -- so the no-retry-on-human-action rule in client.ts cannot be bypassed by a page
  * that reaches for `fetch` directly.
  */
-import { mutate, read } from "./client";
+import { mutate, mutatePublic, read } from "./client";
 import type {
   DashboardResponse,
   DecisionAction,
@@ -12,9 +12,11 @@ import type {
   GovernanceSnapshot,
   HealthDetail,
   QueueEntry,
+  RoleCatalogEntry,
   RunDetail,
   RunHistoryPage,
   RunResult,
+  SessionInfo,
   SupplyLeg,
   Workflow,
 } from "./types";
@@ -32,6 +34,16 @@ function query(params: Record<string, string | number | undefined | null>): stri
   const qs = search.toString();
   return qs ? `?${qs}` : "";
 }
+
+// --- auth --------------------------------------------------------------------
+
+export const login = (user_id: string, password: string) =>
+  mutatePublic<SessionInfo>("/api/auth/login", { user_id, password });
+
+export const logout = () => mutate<{ status: string }>("/api/auth/logout", {});
+
+export const getRoleCatalog = (signal?: AbortSignal) =>
+  read<Record<string, RoleCatalogEntry>>("/api/auth/roles", signal);
 
 // --- reads -----------------------------------------------------------------
 

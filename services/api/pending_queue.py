@@ -12,7 +12,7 @@ state describing "what's currently waiting," rebuilt from scratch on every proce
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 
@@ -56,6 +56,19 @@ def update_approved_legs(run_id: str, approved_legs: list[str]) -> None:
     entry = _PENDING.get(run_id)
     if entry is not None:
         entry.approved_legs = approved_legs
+
+
+def debug_backdate(run_id: str, hours_ago: float) -> PendingEntry | None:
+    """Dev-only aid for exercising the hitl_timer severity tiers without waiting real
+    hours. Rewrites created_at on an already-real, already-evidence-backed pending entry
+    -- nothing about the run's findings, evidence, or governance state is touched, only
+    the timestamp the severity badge reads. Wired to a debug-only endpoint in main.py;
+    not reachable from any UI control."""
+    entry = _PENDING.get(run_id)
+    if entry is None:
+        return None
+    entry.created_at = (datetime.now(UTC) - timedelta(hours=hours_ago)).isoformat()
+    return entry
 
 
 def list_all(workflow: str | None = None) -> list[PendingEntry]:

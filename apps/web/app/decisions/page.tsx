@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageBody, PageHeader } from "@/components/layout/AppShell";
-import { useOperator } from "@/components/layout/OperatorContext";
+import { useAuth } from "@/components/layout/AuthContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SearchInput, SegmentedControl, Select } from "@/components/ui/Form";
 import { EmptyState, ErrorState, Notice, SkeletonRows } from "@/components/ui/States";
 import { Identifier, WorkflowChip } from "@/components/domain/Chips";
+import { HitlTimerBadge } from "@/components/decisions/HitlTimerBadge";
 import { useApiResource, useVisiblePolling } from "@/hooks/useApiResource";
 import { getQueue, type QueueEntry, type Workflow } from "@/lib/api";
 import { WORKFLOW_SUBJECT_LABEL, formatAge, formatDateTime } from "@/lib/format";
@@ -29,7 +30,8 @@ type SortKey = "oldest" | "newest" | "workflow";
  * flat table would flatten into indistinguishable columns.
  */
 export default function DecisionQueuePage() {
-  const { role } = useOperator();
+  const { session } = useAuth();
+  const role = session?.role ?? "";
   const pollMs = useVisiblePolling(10_000);
   const queue = useApiResource((s) => getQueue(undefined, s), [], { pollMs });
 
@@ -284,15 +286,11 @@ function QueueRow({ entry, operatorRole }: { entry: QueueEntry; operatorRole: st
               </div>
             </div>
 
-            {/* right rail: waiting time and approval state */}
+            {/* right rail: waiting time/severity and approval state */}
             <div className="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
-              <span
-                className="tnum text-sm font-medium text-[var(--text-primary)]"
-                title={formatDateTime(entry.created_at)}
-              >
-                {formatAge(entry.created_at)}
+              <span title={formatDateTime(entry.created_at)}>
+                <HitlTimerBadge timer={entry.hitl_timer} />
               </span>
-              <span className="text-[11px] text-[var(--text-tertiary)]">waiting</span>
 
               {dualLeg ? (
                 <DualLegPill

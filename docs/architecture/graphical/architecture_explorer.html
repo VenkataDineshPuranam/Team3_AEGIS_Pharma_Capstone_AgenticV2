@@ -1,772 +1,2466 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AEGIS-PHARMA V3 — Architecture Explorer</title>
+<title>AEGIS-PHARMA V3 Architecture Explorer</title>
 <style>
   :root {
-    --bg: #f6f7f9;
+    --bg: #f7f8fa;
+    --bg-canvas: #ffffff;
     --panel: #ffffff;
-    --canvas: #fbfcfd;
-    --ink: #16202c;
-    --ink-2: #5a6675;
-    --ink-3: #8b96a4;
-    --line: #dfe4ea;
-    --line-2: #eef1f4;
-    --edge: #9aa5b1;
-    --edge-hl: #1c6fd6;
-    --accent: #1c6fd6;
-    --accent-soft: #e8f1fd;
-    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+    --border: #d8dce3;
+    --border-strong: #b7bdc9;
+    --text: #1b1f27;
+    --text-dim: #5b6472;
+    --text-faint: #8890a0;
+    --accent: #3457d5;
+    --accent-soft: #e8edfc;
+    --edge: #b9c0cc;
+    --edge-active: #d1481f;
+    --node-active-ring: #d1481f;
+    --shadow: 0 1px 2px rgba(20,24,34,.06), 0 4px 14px rgba(20,24,34,.06);
+    --radius: 8px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
 
-    --ok: #1f8a4c;      --ok-bg: #e8f6ed;
-    --warn: #b8860b;    --warn-bg: #fdf5e2;
-    --danger: #c23934;  --danger-bg: #fdeceb;
-    --info: #1c6fd6;    --info-bg: #eaf2fd;
-    --neutral: #8b96a4; --neutral-bg: #f2f4f7;
-
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    --c-frontend_page: #3457d5;
+    --c-frontend_component: #6b8afd;
+    --c-frontend_lib: #9db2ff;
+    --c-api_endpoint: #1f9e6d;
+    --c-graph_node: #b5460f;
+    --c-tool: #b8860b;
+    --c-store: #7a3fd1;
+    --c-policy: #c22b6e;
+    --c-eval: #12878a;
+    --c-domain: #55606f;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0f1319; --panel: #151b23; --canvas: #111820; --ink: #e7edf4; --ink-2: #9dabbb;
-      --ink-3: #6d7b8b; --line: #26303c; --line-2: #1d252f; --edge: #566475; --edge-hl: #66a8ff;
-      --accent: #66a8ff; --accent-soft: #16283f;
+      --bg: #14161c;
+      --bg-canvas: #191c24;
+      --panel: #1d212a;
+      --border: #2c313d;
+      --border-strong: #3c4353;
+      --text: #eef0f4;
+      --text-dim: #a4acbb;
+      --text-faint: #6c7484;
+      --accent: #7f9bff;
+      --accent-soft: #232a44;
+      --edge: #3a4152;
+      --edge-active: #ff8a5c;
+      --node-active-ring: #ff8a5c;
       --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-      --ok: #52c07d; --ok-bg: #14291d; --warn: #e3b341; --warn-bg: #2b2413;
-      --danger: #f0736c; --danger-bg: #2e1717; --info: #66a8ff; --info-bg: #14243a;
-      --neutral: #7d8b9c; --neutral-bg: #1c242e;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0f1319; --panel: #151b23; --canvas: #111820; --ink: #e7edf4; --ink-2: #9dabbb;
-    --ink-3: #6d7b8b; --line: #26303c; --line-2: #1d252f; --edge: #566475; --edge-hl: #66a8ff;
-    --accent: #66a8ff; --accent-soft: #16283f;
+    --bg: #14161c;
+    --bg-canvas: #191c24;
+    --panel: #1d212a;
+    --border: #2c313d;
+    --border-strong: #3c4353;
+    --text: #eef0f4;
+    --text-dim: #a4acbb;
+    --text-faint: #6c7484;
+    --accent: #7f9bff;
+    --accent-soft: #232a44;
+    --edge: #3a4152;
+    --edge-active: #ff8a5c;
+    --node-active-ring: #ff8a5c;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-    --ok: #52c07d; --ok-bg: #14291d; --warn: #e3b341; --warn-bg: #2b2413;
-    --danger: #f0736c; --danger-bg: #2e1717; --info: #66a8ff; --info-bg: #14243a;
-    --neutral: #7d8b9c; --neutral-bg: #1c242e;
   }
 
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: var(--sans); font-size: 14px; line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+    margin: 0; font-family: var(--font); background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; min-height: 100vh;
   }
-
-  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-
   header.top {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    padding: 12px 18px; background: var(--panel);
-    border-bottom: 1px solid var(--line);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--panel);
+    flex-wrap: wrap;
   }
-  .brand { display: flex; flex-direction: column; gap: 1px; margin-right: 4px; }
-  .brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
-  .brand .sub { font-size: 11.5px; color: var(--ink-3); font-family: var(--mono); }
-
-  .tabs { display: flex; gap: 4px; background: var(--line-2); padding: 3px; border-radius: 9px; }
-  .tab {
-    appearance: none; border: 0; background: transparent; color: var(--ink-2);
-    font: inherit; font-size: 13px; font-weight: 550; padding: 6px 13px;
-    border-radius: 7px; cursor: pointer; white-space: nowrap;
-  }
-  .tab:hover { color: var(--ink); }
-  .tab[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
-
-  .spacer { flex: 1 1 auto; }
-  .tools { display: flex; align-items: center; gap: 6px; }
-  .btn {
-    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2);
-    font: inherit; font-size: 12.5px; padding: 5px 10px; border-radius: 7px; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .btn:hover { color: var(--ink); border-color: var(--edge); }
-  .btn.icon { padding: 5px 8px; font-family: var(--mono); }
-
-  .body { flex: 1 1 auto; display: flex; min-height: 0; }
-
-  .stage-wrap { flex: 1 1 auto; position: relative; min-width: 0; background: var(--canvas); }
-  svg.stage { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
-  svg.stage.dragging { cursor: grabbing; }
-
-  .viewnote {
-    position: absolute; left: 16px; bottom: 16px; right: 16px; max-width: 620px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    padding: 10px 13px; font-size: 12.5px; color: var(--ink-2); box-shadow: var(--shadow);
-    pointer-events: none;
-  }
-  .viewnote b { color: var(--ink); font-weight: 600; }
-
-  .zoombar {
-    position: absolute; right: 14px; top: 14px; display: flex; flex-direction: column; gap: 5px;
-  }
-  .zoombar .btn { justify-content: center; }
-
-  /* ---------- side panel ---------- */
-  aside.panel {
-    width: 400px; flex: 0 0 400px; background: var(--panel); border-left: 1px solid var(--line);
-    display: flex; flex-direction: column; min-height: 0;
-  }
-  .panel-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
-  .panel-head h2 { margin: 0 0 3px; font-size: 13px; font-weight: 650; letter-spacing: .01em; }
-  .panel-head p { margin: 0; font-size: 12px; color: var(--ink-3); }
-
-  .flowlist { flex: 1 1 auto; overflow-y: auto; padding: 10px; }
-
-  .flow {
-    border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px;
-    background: var(--panel); overflow: hidden; transition: border-color .12s, box-shadow .12s;
-  }
-  .flow:hover { border-color: var(--edge); }
-  .flow.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .flow > button {
-    appearance: none; width: 100%; text-align: left; border: 0; background: transparent;
-    color: inherit; font: inherit; padding: 11px 13px; cursor: pointer; display: block;
-  }
-  .flow .ftitle { display: flex; align-items: baseline; gap: 8px; }
-  .flow .fname { font-weight: 600; font-size: 13px; flex: 1 1 auto; }
-  .flow .fcount {
-    font-family: var(--mono); font-size: 10.5px; color: var(--ink-3);
-    border: 1px solid var(--line); border-radius: 20px; padding: 1px 7px; white-space: nowrap;
-  }
-  .flow .fsum { margin: 5px 0 0; font-size: 12px; color: var(--ink-2); }
-  .flow .kind {
-    display: inline-block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
-    text-transform: uppercase; padding: 1px 6px; border-radius: 4px; margin-bottom: 6px;
-    background: var(--info-bg); color: var(--info);
-  }
-  .flow .kind.invariant { background: var(--warn-bg); color: var(--warn); }
-
-  .steps { border-top: 1px dashed var(--line); padding: 8px 10px 11px; }
-  .step {
-    display: flex; gap: 9px; align-items: flex-start; padding: 6px 7px; border-radius: 7px;
+  header.top h1 { font-size: 16px; margin: 0 0 3px; letter-spacing: -.01em; }
+  header.top p { font-size: 12.5px; color: var(--text-dim); margin: 0; max-width: 62ch; line-height: 1.45; }
+  .top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  button.ctrl {
+    font-family: inherit; font-size: 12px; padding: 6px 10px; border-radius: 6px;
+    border: 1px solid var(--border-strong); background: var(--bg-canvas); color: var(--text);
     cursor: pointer;
   }
-  .step:hover { background: var(--line-2); }
-  .step.on { background: var(--accent-soft); }
-  .step .num {
-    flex: 0 0 20px; height: 20px; border-radius: 50%; background: var(--edge); color: #fff;
-    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  button.ctrl:hover { background: var(--accent-soft); border-color: var(--accent); }
+  button.ctrl.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  main.layout {
+    flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0;
   }
-  .step.on .num { background: var(--accent); }
-  .step .stext { flex: 1 1 auto; min-width: 0; }
-  .step .slabel { font-size: 12.5px; font-weight: 550; }
-  .step .snote { font-size: 11.5px; color: var(--ink-2); margin-top: 1px; }
-
-  .stepnav { display: flex; gap: 6px; align-items: center; padding: 8px 10px 0; }
-  .stepnav .btn { flex: 0 0 auto; }
-  .stepnav .pos { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-left: auto; }
-
-  .legend { border-top: 1px solid var(--line); padding: 11px 16px 14px; }
-  .legend h3 { margin: 0 0 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 600; }
-  .legend .items { display: flex; flex-wrap: wrap; gap: 5px 12px; }
-  .legend .li { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); }
-  .legend .sw { width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid; }
-  .legend .foot { margin: 9px 0 0; font-size: 11px; color: var(--ink-3); }
-  .legend .foot code { font-family: var(--mono); font-size: 10.5px; }
-
-  /* ---------- svg ---------- */
-  .cluster-box { fill: var(--line-2); stroke: var(--line); stroke-width: 1; rx: 12; }
-  .cluster-label { fill: var(--ink-3); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-
-  .node { cursor: pointer; }
-  .node rect.box { stroke-width: 1.6; rx: 9; }
-  .node text { pointer-events: none; }
-  .node .nlabel { font-size: 12px; font-weight: 570; }
-  .node .nbadge { font-size: 9.8px; font-style: italic; }
-  .node:hover rect.box { stroke-width: 2.6; }
-
-  .edge path { fill: none; stroke: var(--edge); stroke-width: 1.5; }
-  .edge.dashed path { stroke-dasharray: 5 4; }
-  .edge .elabel { font-size: 10px; fill: var(--ink-3); }
-  .edge .ehit { stroke: transparent; stroke-width: 14; fill: none; cursor: pointer; }
-
-  .dim { opacity: .13; }
-  .edge.hl path { stroke: var(--edge-hl); stroke-width: 2.6; }
-  .edge.hl .elabel { fill: var(--edge-hl); font-weight: 600; }
-  .edge.focus path { stroke-width: 4; }
-  .edge.focus .ehit { stroke-width: 0; }
-  .node.hl rect.box { stroke-width: 2.8; }
-  .node.hl rect.ring { fill: none; stroke: var(--edge-hl); stroke-width: 2; opacity: .55; rx: 13; }
-
-  .stepbadge circle { fill: var(--edge-hl); }
-  .stepbadge text { fill: #fff; font-family: var(--mono); font-size: 10px; font-weight: 700; text-anchor: middle; }
-  .node.focus rect.ring { stroke-width: 3.5; opacity: 1; }
-
-  /* ---------- tooltip ---------- */
-  .tip {
-    position: fixed; z-index: 50; max-width: 330px; pointer-events: none; opacity: 0;
-    transition: opacity .1s; background: var(--panel); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
-    padding: 10px 12px; font-size: 12px;
+  @media (max-width: 900px) {
+    main.layout { grid-template-columns: 1fr; }
+    aside.flows { border-left: none !important; border-top: 1px solid var(--border); }
   }
-  .tip.on { opacity: 1; }
-  .tip .t-head { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
-  .tip .t-dot { width: 9px; height: 9px; border-radius: 3px; border: 1.5px solid; flex: 0 0 auto; }
-  .tip .t-name { font-weight: 650; font-size: 12.5px; }
-  .tip .t-kind { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
-  .tip .t-body { color: var(--ink-2); }
-  .tip .t-src { margin-top: 7px; padding-top: 6px; border-top: 1px dashed var(--line); font-family: var(--mono); font-size: 10px; color: var(--ink-3); word-break: break-word; }
 
-  @media (max-width: 940px) {
-    .app { height: auto; }
-    .body { flex-direction: column; }
-    .stage-wrap { height: 62vh; min-height: 380px; }
-    aside.panel { width: auto; flex: 1 1 auto; border-left: 0; border-top: 1px solid var(--line); }
-    .flowlist { max-height: none; }
-    .viewnote { max-width: none; }
+  .canvas-wrap {
+    position: relative; overflow: auto; background: var(--bg-canvas);
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 28px 28px; background-position: -1px -1px;
+    opacity: 1;
+  }
+  .canvas-wrap svg { display: block; }
+
+  .legend {
+    position: sticky; top: 0; left: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px;
+    padding: 8px 12px; background: color-mix(in srgb, var(--panel) 92%, transparent);
+    border-bottom: 1px solid var(--border); backdrop-filter: blur(4px);
+    font-size: 11px; color: var(--text-dim);
+  }
+  .legend .item { display: flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; user-select: none; }
+  .legend .item.dimmed { opacity: .35; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  aside.flows {
+    border-left: 1px solid var(--border); background: var(--panel);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  aside.flows .flows-head { padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+  aside.flows .flows-head h2 { font-size: 13px; margin: 0 0 2px; }
+  aside.flows .flows-head p { font-size: 11.5px; color: var(--text-dim); margin: 0; line-height: 1.4; }
+  .flow-search { margin: 8px 14px 0; }
+  .flow-search input {
+    width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-strong);
+    background: var(--bg-canvas); color: var(--text); font-size: 12px; font-family: inherit;
+  }
+  .flow-list { overflow-y: auto; flex: 1; padding: 8px; }
+  .flow-item {
+    padding: 9px 10px; border-radius: 7px; cursor: pointer; margin-bottom: 4px;
+    border: 1px solid transparent;
+  }
+  .flow-item:hover { background: var(--accent-soft); }
+  .flow-item.selected { background: var(--accent-soft); border-color: var(--accent); }
+  .flow-item .fname { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  .flow-item .fdesc { font-size: 11.5px; color: var(--text-dim); line-height: 1.4; }
+  .flow-item .fsteps { font-size: 10.5px; color: var(--text-faint); margin-top: 4px; }
+
+  .detail-panel {
+    border-top: 1px solid var(--border); padding: 12px 14px; max-height: 40%; overflow-y: auto;
+    display: none;
+  }
+  .detail-panel.show { display: block; }
+  .detail-panel h3 { font-size: 13px; margin: 0 0 4px; }
+  .detail-panel .dtype {
+    display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+    padding: 2px 6px; border-radius: 4px; margin-bottom: 8px; font-weight: 700;
+  }
+  .detail-panel .dfile {
+    font-family: var(--mono); font-size: 11px; color: var(--accent); word-break: break-all;
+    background: var(--accent-soft); padding: 4px 6px; border-radius: 5px; display: inline-block; margin-bottom: 8px;
+  }
+  .detail-panel .ddesc { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
+  .detail-panel .dclose {
+    float: right; cursor: pointer; color: var(--text-faint); font-size: 12px; border: none; background: none;
+  }
+
+  /* SVG node/edge styling */
+  .lane-label { font-size: 10.5px; font-weight: 700; fill: var(--text-faint); text-transform: uppercase; letter-spacing: .05em; }
+  .edge-path { fill: none; stroke: var(--edge); stroke-width: 1.1; opacity: .55; }
+  .edge-path.active { stroke: var(--edge-active); stroke-width: 2; opacity: .95; }
+  .edge-path.dimmed { opacity: .06; }
+  .node-rect {
+    stroke: var(--border-strong); stroke-width: 1; cursor: pointer;
+    transition: filter .1s ease;
+  }
+  .node-rect:hover { filter: brightness(1.08); }
+  .node-rect.active { stroke: var(--node-active-ring); stroke-width: 2.5; }
+  .node-rect.dimmed { opacity: .22; }
+  .node-label {
+    font-size: 10px; fill: #fff; pointer-events: none; font-weight: 600;
+  }
+  .node-label.dimmed { opacity: .22; }
+  .node-group.selected .node-rect { stroke: var(--text); stroke-width: 2.5; }
+
+  #tooltip {
+    position: fixed; z-index: 50; max-width: 320px; background: var(--panel);
+    border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow);
+    padding: 10px 12px; font-size: 12px; color: var(--text); pointer-events: none;
+    display: none; line-height: 1.5;
+  }
+  #tooltip .tt-type {
+    display: inline-block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em;
+    padding: 1px 5px; border-radius: 4px; margin-bottom: 5px; font-weight: 700; color: #fff;
+  }
+  #tooltip .tt-file { font-family: var(--mono); font-size: 10.5px; color: var(--accent); word-break: break-all; display: block; margin-bottom: 5px; }
+  #tooltip .tt-desc { color: var(--text-dim); }
+
+  footer.bottom {
+    padding: 6px 20px; font-size: 10.5px; color: var(--text-faint); border-top: 1px solid var(--border);
+    background: var(--panel); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
   }
 </style>
-</head>
-<body>
-<div class="app">
-  <header class="top">
-    <div class="brand">
-      <h1>AEGIS-PHARMA V3 — Architecture Explorer</h1>
-      <div class="sub">Stage 08 · graphical views</div>
-    </div>
-    <div class="tabs" role="tablist" id="tabs"></div>
-    <div class="spacer"></div>
-    <div class="tools">
-      <button class="btn" id="clearBtn" hidden>Clear selection</button>
-      <button class="btn icon" id="themeBtn" title="Toggle light / dark">◐</button>
-    </div>
-  </header>
 
-  <div class="body">
-    <div class="stage-wrap">
-      <svg class="stage" id="stage"></svg>
-      <div class="zoombar">
-        <button class="btn icon" id="zoomIn"  title="Zoom in">+</button>
-        <button class="btn icon" id="zoomOut" title="Zoom out">−</button>
-        <button class="btn icon" id="zoomFit" title="Fit to view">⤢</button>
-      </div>
-      <div class="viewnote" id="viewnote"></div>
-    </div>
-
-    <aside class="panel">
-      <div class="panel-head">
-        <h2>Flows</h2>
-        <p id="panelSub"></p>
-      </div>
-      <div class="flowlist" id="flowlist"></div>
-      <div class="legend">
-        <h3>Legend</h3>
-        <div class="items" id="legendItems"></div>
-        <p class="foot">Hover any component for detail. Machine-readable twin: <code>architecture_graph.json</code>.</p>
-      </div>
-    </aside>
+<header class="top">
+  <div>
+    <h1 id="meta-name">AEGIS-PHARMA V3 Architecture Explorer</h1>
+    <p id="meta-desc"></p>
   </div>
-</div>
+  <div class="top-actions">
+    <button class="ctrl" id="zoom-out">−</button>
+    <button class="ctrl" id="zoom-reset">Reset</button>
+    <button class="ctrl" id="zoom-in">+</button>
+    <button class="ctrl" id="theme-toggle">Theme</button>
+  </div>
+</header>
 
-<div class="tip" id="tip" role="tooltip"></div>
+<main class="layout">
+  <div class="canvas-wrap" id="canvas-wrap">
+    <div class="legend" id="legend"></div>
+    <svg id="diagram" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <aside class="flows">
+    <div class="flows-head">
+      <h2>Flows</h2>
+      <p>Real end-to-end paths through the system. Select one to highlight its nodes and edges on the diagram. Click any node for details.</p>
+    </div>
+    <div class="flow-search"><input type="text" id="flow-search" placeholder="Filter flows…"></div>
+    <div class="flow-list" id="flow-list"></div>
+    <div class="detail-panel" id="detail-panel"></div>
+  </aside>
+</main>
 
+<footer class="bottom">
+  <span id="meta-note"></span>
+  <span id="meta-counts"></span>
+</footer>
+
+<div id="tooltip"></div>
+
+<script id="graph-data" type="application/json">{
+  "meta": {
+    "name": "AEGIS-PHARMA V3 Architecture Explorer",
+    "generated": "2026-08-14",
+    "description": "Interactive map of the actual implemented AEGIS-PHARMA V3 system: a FastAPI orchestrator wrapping six governed LangGraph workflows sharing one 14-node spine, a Next.js/React operator UI, SQLite audit + user stores, Neo4j evidence corpus, Redis response cache, and the eval-ai-cache harness.",
+    "note": "Reflects the actual implemented V3 codebase as read from services/api, services/integration, packages/, security/, infra/, apps/web, and eval-ai-cache -- not the Stage 08 design-only view this file replaces. Every node's file path and every edge was verified against real source during this analysis."
+  },
+  "nodes": [
+    {
+      "id": "fe_overview",
+      "label": "Overview",
+      "type": "frontend_page",
+      "file": "apps/web/app/page.tsx",
+      "description": "The ten-second read: pending queue count, dashboard terminal-state distribution, dependency health, and 8 most-recent runs. Polls /api/dashboard, /api/queue, /api/health/detail, /api/runs."
+    },
+    {
+      "id": "fe_decisions",
+      "label": "Decision Queue",
+      "type": "frontend_page",
+      "file": "apps/web/app/decisions/page.tsx",
+      "description": "Primary operational page: every run currently paused awaiting a human decision, filterable client-side by workflow/search/sort. Reads /api/queue."
+    },
+    {
+      "id": "fe_decision_detail",
+      "label": "Decision Detail",
+      "type": "frontend_page",
+      "file": "apps/web/app/decisions/[runId]/page.tsx",
+      "description": "One pending decision opened from the queue; wraps RunDetailView with back-link to the queue."
+    },
+    {
+      "id": "fe_runs",
+      "label": "Run History",
+      "type": "frontend_page",
+      "file": "apps/web/app/runs/page.tsx",
+      "description": "Server-side filtered/paginated history over the append-only audit store. Reads /api/runs and /api/runs/filters."
+    },
+    {
+      "id": "fe_run_detail",
+      "label": "Run Detail (history)",
+      "type": "frontend_page",
+      "file": "apps/web/app/runs/[runId]/page.tsx",
+      "description": "A historical (possibly already-decided) run opened from Run History; wraps RunDetailView."
+    },
+    {
+      "id": "fe_evidence",
+      "label": "Evidence Explorer",
+      "type": "frontend_page",
+      "file": "apps/web/app/evidence/page.tsx",
+      "description": "Read-only browse of the full evidence corpus including non-citable items, so a reviewer can check 'can I rely on this?'. Reads /api/evidence and /api/evidence/stats."
+    },
+    {
+      "id": "fe_governance",
+      "label": "Governance Center",
+      "type": "frontend_page",
+      "file": "apps/web/app/governance/page.tsx",
+      "description": "Displays the controls actually enforced elsewhere (prohibitions, approver roles, evidence authority, HITL tiers) as a read model. Reads /api/governance."
+    },
+    {
+      "id": "fe_health",
+      "label": "System Health",
+      "type": "frontend_page",
+      "file": "apps/web/app/health/page.tsx",
+      "description": "Measured dependency status (Redis, Neo4j, audit store, LLM config) from actual probes. Reads /api/health/detail."
+    },
+    {
+      "id": "fe_workflows",
+      "label": "Workflows / Submit Run",
+      "type": "frontend_page",
+      "file": "apps/web/app/workflows/page.tsx",
+      "description": "Form to submit a new governed run against one of the 6 workflows and a fixture subject id; posts to /api/runs (submitRun)."
+    },
+    {
+      "id": "fe_coverage",
+      "label": "Evaluation & Security Coverage",
+      "type": "frontend_page",
+      "file": "apps/web/app/coverage/page.tsx",
+      "description": "Two tabs: live eval-ai-cache scorecard (/api/evals/scorecard) and curated 84-inject V2->V3 coverage ledger (/api/coverage/injects)."
+    },
+    {
+      "id": "fe_appshell",
+      "label": "AppShell / Nav",
+      "type": "frontend_component",
+      "file": "apps/web/components/layout/AppShell.tsx",
+      "description": "Persistent sidebar navigation across all 8 pages, with a live pending-queue badge from /api/queue."
+    },
+    {
+      "id": "fe_operator_context",
+      "label": "AuthContext (authenticated)",
+      "type": "frontend_component",
+      "file": "apps/web/components/layout/AuthContext.tsx",
+      "description": "Stage 22: replaced the old unauthenticated OperatorContext. Wraps lib/auth/session.ts via useSyncExternalStore and exposes signIn/signOut, backed by real POST /api/auth/login and /api/auth/logout calls."
+    },
+    {
+      "id": "fe_operator_bar",
+      "label": "OperatorBar",
+      "type": "frontend_component",
+      "file": "apps/web/components/layout/OperatorBar.tsx",
+      "description": "Sidebar-footer control showing the authenticated user (display name, role, session expiry) and a Sign out action, sourced entirely from AuthContext -- no free-text identity entry remains."
+    },
+    {
+      "id": "fe_session",
+      "label": "auth session store",
+      "type": "frontend_lib",
+      "file": "apps/web/lib/auth/session.ts",
+      "description": "Stage 22 localStorage-backed session store for the real bearer-token login. Read directly by lib/api/client.ts (both read() and mutate()) to attach the Authorization header on every request, and by AuthContext/RequireAuth to gate every route except /login."
+    },
+    {
+      "id": "fe_api_client",
+      "label": "API client (read/mutate)",
+      "type": "frontend_lib",
+      "file": "apps/web/lib/api/client.ts",
+      "description": "The single HTTP boundary to the Orchestrator API. Both read() (retries idempotent GETs) and mutate() (submitRun/decideRun, sent exactly once, never retried) attach the bearer token from session.ts; a 401 response clears the local session so the app re-prompts for login."
+    },
+    {
+      "id": "fe_approval_panel",
+      "label": "ApprovalPanel",
+      "type": "frontend_component",
+      "file": "apps/web/components/decisions/ApprovalPanel.tsx",
+      "description": "The human action panel: approve/reject/veto/dual-approval-leg controls, mandatory >=12-char justification, and the automation-bias 'exceptions acknowledged' checkbox. Calls decideRun -> POST /api/runs/{run_id}/decide."
+    },
+    {
+      "id": "fe_run_detail_view",
+      "label": "RunDetailView",
+      "type": "frontend_component",
+      "file": "apps/web/components/decisions/RunDetailView.tsx",
+      "description": "Shared two-column workspace (investigation + action) used by both the live Decision Detail and historical Run Detail pages. Reads /api/runs/{run_id}."
+    },
+    {
+      "id": "fe_decision_support",
+      "label": "DecisionSupport tab",
+      "type": "frontend_component",
+      "file": "apps/web/components/decisions/DecisionSupport.tsx",
+      "description": "Renders the draft summary/claims and cited evidence for a pending run's decision-support package."
+    },
+    {
+      "id": "fe_domain_findings",
+      "label": "DomainFindings tab",
+      "type": "frontend_component",
+      "file": "apps/web/components/decisions/DomainFindings.tsx",
+      "description": "Renders the workflow-specific structured payload (BatchPayload/PVPayload/SupplyPayload/etc.) for a pending run."
+    },
+    {
+      "id": "fe_governance_checks",
+      "label": "GovernanceChecks tab",
+      "type": "frontend_component",
+      "file": "apps/web/components/decisions/GovernanceChecks.tsx",
+      "description": "Shows which guard/critic/policy checks a run passed and the approver roles/legs required."
+    },
+    {
+      "id": "fe_audit_timeline",
+      "label": "AuditTimeline",
+      "type": "frontend_component",
+      "file": "apps/web/components/audit/AuditTimeline.tsx",
+      "description": "Renders the merged, ordered audit event list (AgentRun, HumanOverrideRecorded, HitlEscalation, HitlExpired, ProhibitedActionBlocked) for one run."
+    },
+    {
+      "id": "fe_evidence_card",
+      "label": "EvidenceCard",
+      "type": "frontend_component",
+      "file": "apps/web/components/evidence/EvidenceCard.tsx",
+      "description": "Renders one evidence catalog item with its citable/authority/supersedes badges."
+    },
+    {
+      "id": "fe_coverage_components",
+      "label": "StatusBar / InjectRow",
+      "type": "frontend_component",
+      "file": "apps/web/components/coverage",
+      "description": "Coverage-status pill and per-inject row renderers for the Evaluation & Security Coverage page."
+    },
+    {
+      "id": "api_login",
+      "label": "POST /api/auth/login",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Verifies user_id/password against user_store (PBKDF2-HMAC), issues a server-side session row + bearer token."
+    },
+    {
+      "id": "api_logout",
+      "label": "POST /api/auth/logout",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Deletes the caller's session row. Requires a valid bearer token via require_user."
+    },
+    {
+      "id": "api_me",
+      "label": "GET /api/auth/me",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Returns the caller's own resolved session info. Requires require_user."
+    },
+    {
+      "id": "api_roles",
+      "label": "GET /api/auth/roles",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Public: the role/boundary catalog (product_use, must_never) so the frontend can render it without a second hardcoded copy."
+    },
+    {
+      "id": "api_submit_run",
+      "label": "POST /api/runs",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Builds/fetches the cached (workflow, subject_id) graph, invokes it with a fresh GovernedState, and registers a pending queue entry if it interrupts. Requires require_user."
+    },
+    {
+      "id": "api_get_queue",
+      "label": "GET /api/queue",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Lists all pending (interrupted) runs from the in-memory pending_queue registry."
+    },
+    {
+      "id": "api_decide_run",
+      "label": "POST /api/runs/{run_id}/decide",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Resumes a paused run with a human decision (Command(resume=...)). Enforces shape + Stage 22 authorization (user_store.approver_string_for/can_veto) before the request reaches the graph. Never retried."
+    },
+    {
+      "id": "api_list_runs",
+      "label": "GET /api/runs",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Filtered/paginated page of historical runs from the append-only audit store."
+    },
+    {
+      "id": "api_run_filters",
+      "label": "GET /api/runs/filters",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Distinct column values actually present in the audit store, for the History page's filter dropdowns."
+    },
+    {
+      "id": "api_get_run",
+      "label": "GET /api/runs/{run_id}",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "One run merged from two sources: the in-memory pending registry (if still paused in this process) and the audit store (once finalized)."
+    },
+    {
+      "id": "api_list_evidence",
+      "label": "GET /api/evidence",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Full evidence catalog including non-citable items, each labelled with whether it may be relied upon."
+    },
+    {
+      "id": "api_evidence_stats",
+      "label": "GET /api/evidence/stats",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Evidence corpus counts by status/citability, from Neo4j."
+    },
+    {
+      "id": "api_governance",
+      "label": "GET /api/governance",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Governance Center snapshot, assembled by governance_view.py from live enforcement artefacts."
+    },
+    {
+      "id": "api_evals_scorecard",
+      "label": "GET /api/evals/scorecard",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Runs the real eval-ai-cache grading harness in-process, live, on every request (~25ms, no LLM/network calls)."
+    },
+    {
+      "id": "api_inject_coverage",
+      "label": "GET /api/coverage/injects",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Serves the curated, versioned V2-inject-to-V3-reality coverage mapping file, read-only."
+    },
+    {
+      "id": "api_dashboard",
+      "label": "GET /api/dashboard",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Cost/guardrail-trip/terminal-state/cache-hit panels computed from the audit store and Redis counters."
+    },
+    {
+      "id": "api_health",
+      "label": "GET /api/health",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Trivial liveness check + list of the 6 workflow names the API serves."
+    },
+    {
+      "id": "api_health_detail",
+      "label": "GET /api/health/detail",
+      "type": "api_endpoint",
+      "file": "services/api/main.py",
+      "description": "Measured dependency health for every dependency (Redis, Neo4j, audit store, LLM config) plus current pending-queue depth."
+    },
+    {
+      "id": "auth_require_user",
+      "label": "require_user dependency",
+      "type": "policy",
+      "file": "services/api/auth.py",
+      "description": "FastAPI dependency resolving a Bearer token to a live user_store.Session, or raising 401. Establishes identity only -- does not itself decide permission."
+    },
+    {
+      "id": "store_user",
+      "label": "user_store (SQLite)",
+      "type": "store",
+      "file": "services/integration/user_store.py",
+      "description": "10 synthetic role-backed accounts, PBKDF2-HMAC password hashes, server-side session rows with 8h expiry. Same SQLite file as audit_store. Holds ROLE_CATALOG mapping login roles to each graph's PRIMARY_APPROVER strings, and approver_string_for()/can_veto() used by decide_run's authorization check."
+    },
+    {
+      "id": "tool_seed_users",
+      "label": "seed_users script",
+      "type": "tool",
+      "file": "services/integration/seed_users.py",
+      "description": "One-off script that creates the 10 ROLE_CATALOG accounts in user_store via create_user()."
+    },
+    {
+      "id": "spine_intake",
+      "label": "intake",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Node 1 of the shared 14-node spine, present identically in all 6 workflow graphs. Runs DenialOfWalletGuard.check_and_admit before anything else; refuses (no tokens spent) if the daily run/spend ceiling is exceeded."
+    },
+    {
+      "id": "spine_policy_load",
+      "label": "policy_load",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Loads the versioned prohibition contract for this workflow. Fail-closed: PolicyEngineUnavailable -> terminal_state=refused, no cached-policy fallback (ADR-005)."
+    },
+    {
+      "id": "spine_retrieve",
+      "label": "retrieve",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Calls evidence.retrieve (Neo4j-backed, server-filtered to approved/draft only). One scope-preserving broadening permitted (G3) before the evidence gate abstains."
+    },
+    {
+      "id": "spine_evidence_gate",
+      "label": "evidence_gate",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Second independent check over the retrieved evidence list as a whole (ADR-003). Routes to the domain tool if sufficient, back to retrieve once to broaden, or abstains/defect-halts."
+    },
+    {
+      "id": "spine_domain_tool",
+      "label": "domain tool (workflow-specific)",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "The one node that differs in NAME per workflow: reconcile (batch_review/research_review), duplicate_check+normalize_terminology (pv_intake, hard-ordered before synthesize), generate_options (supply_planning), integrity_check (clinical_integrity), completeness_check (regulatory_completeness). Always deterministic, no LLM."
+    },
+    {
+      "id": "spine_synthesize",
+      "label": "synthesize",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "First LLM call: drafts a DecisionSupportOutput (summary + cited claims). Checks response_cache first (batch_review/research_review only). ADR-007: any exception -> abstained/degraded_mode, never a guess."
+    },
+    {
+      "id": "spine_guard1",
+      "label": "guard1 (prohibited_action_guard)",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "First of two runtime-guard passes over the freshly-generated draft text. Blocked verdict routes straight to finalize as terminal_state=blocked."
+    },
+    {
+      "id": "spine_critic_verify",
+      "label": "critic_verify",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Second LLM call: an independent Critic model verifies the draft. approve_for_human -> guard2; a reject reason code routes to retry-synthesize, hitl_escalate, or blocked_terminal depending on the code and MAX_LLM_CALLS=6 (G1)."
+    },
+    {
+      "id": "spine_guard2",
+      "label": "guard2 (prohibited_action_guard, +cache write)",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Second guard pass, over whatever the Critic approved. The ONLY point that writes a cleared draft into response_cache (batch_review/research_review only)."
+    },
+    {
+      "id": "spine_hitl_route",
+      "label": "hitl_route",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Sets the required approver_roles (single role for 4 workflows, two-role dual-approval for supply_planning) and hitl_status=pending."
+    },
+    {
+      "id": "spine_hitl_interrupt",
+      "label": "hitl_interrupt",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Calls LangGraph interrupt(), pausing the graph until services/api decide_run resumes it with Command(resume=...). Writes HumanOverrideRecorded / HitlExpired to the audit store. supply_planning loops here until both legs land; pv_intake's veto short-circuits here to rejected."
+    },
+    {
+      "id": "spine_blocked_terminal",
+      "label": "blocked_terminal",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Marks terminal_state=blocked for the PROHIBITION_ADJACENT critic route, which bypasses guard2 entirely and is never retried."
+    },
+    {
+      "id": "spine_abstain_cap",
+      "label": "abstain_cap",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "Marks terminal_state=abstained/cap_exceeded when MAX_LLM_CALLS (6) is hit -- alerted as an engineering defect (SEV-3), never silently retried further."
+    },
+    {
+      "id": "spine_finalize",
+      "label": "finalize",
+      "type": "graph_node",
+      "file": "services/api/graph.py (+5 sibling graphs)",
+      "description": "The mandatory last node on every path. Records real token usage into DenialOfWalletGuard, then writes the AgentRun record to audit_store -- a response cannot reach the caller without this write (ADR-006)."
+    },
+    {
+      "id": "graph_batch_review",
+      "label": "batch_review graph",
+      "type": "graph_node",
+      "file": "services/api/graph.py",
+      "description": "build_graph(). Domain tool: batch.reconcile. Approver: EU Qualified Person. Has response_cache read/write. Stable since Stage 10/20a."
+    },
+    {
+      "id": "graph_pv_intake",
+      "label": "pv_intake graph",
+      "type": "graph_node",
+      "file": "services/api/pv_graph.py",
+      "description": "build_pv_graph(). Domain tools: pv.duplicate_check -> pv.normalize_terminology (hard order). Approver: Global Head of Pharmacovigilance. Unique: Patient Safety Representative's advisory veto, 100% escalation (no cache)."
+    },
+    {
+      "id": "graph_supply_planning",
+      "label": "supply_planning graph",
+      "type": "graph_node",
+      "file": "services/api/supply_graph.py",
+      "description": "build_supply_graph(). Domain tool: supply.generate_options. Dual approval: Supply Chain VP (planning leg) + EU Qualified Person (quality leg) -- both required, replay-safe via audit_store.has_recorded_action."
+    },
+    {
+      "id": "graph_research_review",
+      "label": "research_review graph",
+      "type": "graph_node",
+      "file": "services/api/research_graph.py",
+      "description": "build_research_graph(). Domain tool: research.reconcile. Approver: Head of Preclinical Research. Has response_cache read/write (Stage 21)."
+    },
+    {
+      "id": "graph_clinical_integrity",
+      "label": "clinical_integrity graph",
+      "type": "graph_node",
+      "file": "services/api/clinical_graph.py",
+      "description": "build_clinical_graph(). Domain tool: clinical.integrity_check. Approver: Clinical Trial Medical Monitor."
+    },
+    {
+      "id": "graph_regulatory_completeness",
+      "label": "regulatory_completeness graph",
+      "type": "graph_node",
+      "file": "services/api/regulatory_graph.py",
+      "description": "build_regulatory_graph(). Domain tool: regulatory.completeness_check. Approver: Head of Regulatory Affairs."
+    },
+    {
+      "id": "tool_evidence_retrieve",
+      "label": "evidence.retrieve",
+      "type": "tool",
+      "file": "services/integration/evidence_retrieve.py",
+      "description": "Neo4j-backed. Server-side filters untrusted/superseded items out INSIDE the Cypher query (ADR-003, BC-2) -- no code path returns them to a run. Enforces the single-broadening ceiling (G3) via a per-run counter."
+    },
+    {
+      "id": "tool_evidence_gate",
+      "label": "evidence_gate.check",
+      "type": "tool",
+      "file": "services/integration/evidence_gate.py",
+      "description": "Second independent ADR-003 check over the retrieved list as a whole. Structurally defends against an empty/wrong-status list being mistaken for sufficient."
+    },
+    {
+      "id": "tool_batch_reconcile",
+      "label": "batch.reconcile",
+      "type": "tool",
+      "file": "services/integration/batch_reconcile.py",
+      "description": "Deterministic reconciliation over synthetic batch fixtures (tests/fixtures/synthetic/batches/*.json). Rejects any evidence_id not returned by this run's own retrieval call."
+    },
+    {
+      "id": "tool_pv_duplicate_check",
+      "label": "pv.duplicate_check",
+      "type": "tool",
+      "file": "services/integration/pv_duplicate_check.py",
+      "description": "Deterministic duplicate-candidate check over synthetic PV case fixtures. Must complete before synthesize (DDD hard ordering), enforced as a graph edge, not by this tool."
+    },
+    {
+      "id": "tool_pv_normalize_terminology",
+      "label": "pv.normalize_terminology",
+      "type": "tool",
+      "file": "services/integration/pv_normalize_terminology.py",
+      "description": "MedDRA-style terminology normalization suggestions. `applied` is fixed False by the schema -- a caller cannot construct a response claiming the suggestion was applied."
+    },
+    {
+      "id": "tool_supply_generate_options",
+      "label": "supply.generate_options",
+      "type": "tool",
+      "file": "services/integration/supply_generate_options.py",
+      "description": "Deterministic shortage-option generation over synthetic supply fixtures. Constraint filtering happens before the tool returns; the agent ranks, never widens, the result set."
+    },
+    {
+      "id": "tool_research_reconcile",
+      "label": "research.reconcile",
+      "type": "tool",
+      "file": "services/integration/research_reconcile.py",
+      "description": "Deterministic reconciliation over synthetic research fixtures. Same pattern as batch.reconcile (Stage 21)."
+    },
+    {
+      "id": "tool_clinical_integrity_check",
+      "label": "clinical.integrity_check",
+      "type": "tool",
+      "file": "services/integration/clinical_integrity_check.py",
+      "description": "Deterministic integrity check over synthetic clinical fixtures (Stage 21)."
+    },
+    {
+      "id": "tool_regulatory_completeness_check",
+      "label": "regulatory.completeness_check",
+      "type": "tool",
+      "file": "services/integration/regulatory_completeness_check.py",
+      "description": "Deterministic completeness check over synthetic regulatory fixtures (Stage 21)."
+    },
+    {
+      "id": "tool_prohibited_action_guard",
+      "label": "prohibited_action_guard.check",
+      "type": "tool",
+      "file": "services/integration/prohibited_action_guard.py",
+      "description": "ADR-004 layer-3 runtime guard: pattern-matches generated draft text against the workflow's banned_terms/banned_field_names. One implementation, called twice per run (guard1, guard2) -- never asks the model to judge its own output."
+    },
+    {
+      "id": "tool_policy_engine",
+      "label": "policy_engine",
+      "type": "tool",
+      "file": "services/integration/policy_engine.py",
+      "description": "Loads security/policies/policy_contract.v1.json and returns a workflow's ProhibitionContract. Raises PolicyEngineUnavailable (fail-closed, no fallback) if unreadable or version-mismatched."
+    },
+    {
+      "id": "tool_response_cache",
+      "label": "response_cache",
+      "type": "tool",
+      "file": "services/integration/response_cache.py",
+      "description": "Redis-backed. Only ever caches a guard-and-Critic-CLEARED draft (never raw/blocked). Key includes subject_id (fixed a real cross-subject collision bug) but never policy_contract_version. Re-validates every cached evidence_id's CURRENT status in Neo4j on read -- a since-superseded entry is a miss, not a stale hit."
+    },
+    {
+      "id": "tool_hitl_route",
+      "label": "hitl_route (4-tier ladder)",
+      "type": "tool",
+      "file": "services/integration/hitl_route.py",
+      "description": "Batch-review-specific escalation ladder module (T0->T1 reminder 8h->T2 escalation 16h widens to Chief Quality Officer->T3 expiry 24h = timed_out). Timeout is always no-action, never auto-approve."
+    },
+    {
+      "id": "tool_hitl_decision",
+      "label": "hitl_decision.decode",
+      "type": "tool",
+      "file": "packages/domain/hitl_decision.py",
+      "description": "Shared across all 6 graphs (unlike the graph modules themselves): decodes an interrupt() resume payload into a structured HitlDecision(action, justification, claimed_identity, leg), with legacy bare-string backward compatibility."
+    },
+    {
+      "id": "tool_dow_guard",
+      "label": "DenialOfWalletGuard",
+      "type": "tool",
+      "file": "infra/policies/denial_of_wallet_guardrail.py",
+      "description": "Hard per-(user, workflow, day) ceiling: 20 runs/day, $45/day at worst-case token estimate. Checked at intake (check_and_admit) and updated with real usage at finalize (record_run). A ceiling, not a tuned budget."
+    },
+    {
+      "id": "tool_evidence_catalog",
+      "label": "evidence_catalog",
+      "type": "tool",
+      "file": "services/integration/evidence_catalog.py",
+      "description": "Read-only Neo4j query layer for the Evidence Explorer ONLY -- structurally separate from evidence_retrieve (returns EvidenceCatalogItem, not the domain EvidenceItem type; nothing in any graph imports this module). Deliberately shows non-citable/superseded items."
+    },
+    {
+      "id": "tool_manifest",
+      "label": "tool_manifest.verify_manifest",
+      "type": "tool",
+      "file": "services/integration/tool_manifest.py",
+      "description": "SHA-256 integrity check over every tool_contracts/*.schema.json against tool_manifest.json, detecting a tampered or newly-registered write-capable tool contract (INJ-066). Run at process startup / CI, not per-request."
+    },
+    {
+      "id": "store_audit",
+      "label": "audit_store (SQLite, append-only)",
+      "type": "store",
+      "file": "services/integration/audit_store.py",
+      "description": "evidence/audit_store.sqlite3. Tables: agent_run, human_override_recorded, hitl_escalation, hitl_expired, prohibited_action_blocked. No UPDATE/DELETE exists anywhere in this module -- WORM emulated by the absence of any mutating function, not by a comment."
+    },
+    {
+      "id": "store_pending_queue",
+      "label": "pending_queue (in-memory)",
+      "type": "store",
+      "file": "services/api/pending_queue.py",
+      "description": "Module-level dict of currently-paused runs' decision-support packages. Single-process, does not survive a restart -- explicitly NOT the audit trail."
+    },
+    {
+      "id": "store_policy_contract",
+      "label": "policy_contract.v1.json",
+      "type": "store",
+      "file": "security/policies/policy_contract.v1.json",
+      "description": "Versioned prohibition contracts (banned_terms/banned_field_names) for all 6 workflows. The one file every guard and policy_load node ultimately reads."
+    },
+    {
+      "id": "store_kg",
+      "label": "Knowledge graph (Neo4j)",
+      "type": "store",
+      "file": "packages/domain/kg/",
+      "description": "The evidence corpus: EvidenceItem nodes with status/authority/jurisdiction/supersedes edges. Backs evidence.retrieve (governed, filtered) and evidence_catalog (unfiltered, read-only) identically but through separate query paths."
+    },
+    {
+      "id": "store_redis",
+      "label": "Redis (response cache)",
+      "type": "store",
+      "file": "packages/config/redis_client.py",
+      "description": "Backs response_cache's cleared-draft cache and hit/miss counters. Unconfigured/unreachable is a documented ADR-007 bypass (ok, degraded_mode 'not_configured'), never a hard run failure."
+    },
+    {
+      "id": "store_sbom",
+      "label": "SBOM",
+      "type": "policy",
+      "file": "security/sbom/sbom.json",
+      "description": "Software bill of materials; verify_sbom.py checks it at CI cadence, same pattern as tool_manifest."
+    },
+    {
+      "id": "governance_view",
+      "label": "governance_view.snapshot",
+      "type": "policy",
+      "file": "services/api/governance_view.py",
+      "description": "Assembles the Governance Center's data purely by importing from the modules that actually enforce each rule (policy_engine, graph approver constants, evidence_retrieve's citable set, hitl_route's tier durations) -- never a second hand-maintained copy."
+    },
+    {
+      "id": "health_probe",
+      "label": "health_probe (dependency probes)",
+      "type": "policy",
+      "file": "services/api/health_probe.py",
+      "description": "Actually touches each dependency (Redis PING, Neo4j query, audit store row count) rather than checking configuration alone. Four distinct statuses: ok / degraded / unavailable / not_configured."
+    },
+    {
+      "id": "eval_dashboard_module",
+      "label": "eval_dashboard (read model)",
+      "type": "policy",
+      "file": "services/api/eval_dashboard.py",
+      "description": "Two distinct data sources kept apart: eval_scorecard() runs the live eval-ai-cache grading harness in-process; inject_coverage() reads the curated, human-reviewed coverage file as-is."
+    },
+    {
+      "id": "eval_harness_runner",
+      "label": "run_eval_dataset.py",
+      "type": "eval",
+      "file": "eval-ai-cache/graders/run_eval_dataset.py",
+      "description": "Loads eval_dataset/*.json, dispatches each scenario to its grader module (evidence_authority, prohibited_action, schema, audit_trail, pv_duplicate_clock, trajectory, security, privacy, subgroup, latency_cost, loop_guard), compares actual vs expected, produces a scorecard."
+    },
+    {
+      "id": "eval_dataset",
+      "label": "eval_dataset/*.json (15 categories)",
+      "type": "eval",
+      "file": "eval-ai-cache/eval_dataset/",
+      "description": "Synthetic scenario fixtures across 15 grading categories (business outcome, evidence fidelity, GxP safety boundary, audit trail, retrieval poisoning, structured-output abstention, PV duplicate/clock, tool authorization, privacy, subgroup, latency/cost DoW, model substitution, wrong handoff, loop-guard trip, unauthorized tool call)."
+    },
+    {
+      "id": "inject_coverage_file",
+      "label": "inject_coverage_v2_to_v3.json",
+      "type": "eval",
+      "file": "evidence/quality-gates/inject_coverage_v2_to_v3.json",
+      "description": "Curated, human-reviewed mapping of the 84 V2 tabletop-exercise 'injects' to what V3's actual codebase does about each today, with real file citations per verdict."
+    },
+    {
+      "id": "domain_state",
+      "label": "GovernedState / ProhibitionContract",
+      "type": "domain",
+      "file": "packages/domain/state.py",
+      "description": "The shared TypedDict state every graph node reads/writes (evidence, draft_output, guard_verdict, critic_verdict, hitl_*, terminal_state, tokens/llm_calls, ...), plus ReasonCode enum and RETRYABLE_REASON_CODES."
+    },
+    {
+      "id": "domain_payloads",
+      "label": "Workflow payload models",
+      "type": "domain",
+      "file": "packages/domain/payloads.py",
+      "description": "Pydantic models (extra=forbid) for each workflow's structured findings: BatchPayload, PVPayload, SupplyPayload, ResearchPayload, ClinicalPayload, RegulatoryPayload and their nested finding/candidate/option types. Schema-level ADR-004 layer-1 defense: a prohibited field cannot even be constructed."
+    },
+    {
+      "id": "domain_evidence",
+      "label": "EvidenceItem / Claim",
+      "type": "domain",
+      "file": "packages/domain/evidence.py",
+      "description": "EvidenceItem's CitableStatus Literal structurally permits only approved/draft -- a non-citable item cannot be constructed as retrieved evidence anywhere in the system."
+    },
+    {
+      "id": "domain_hitl_decision",
+      "label": "HitlDecision",
+      "type": "domain",
+      "file": "packages/domain/hitl_decision.py",
+      "description": "See tool_hitl_decision -- domain-level dataclass shared by every graph's hitl_interrupt node."
+    },
+    {
+      "id": "llm_client",
+      "label": "llm_client / LLMNodes",
+      "type": "domain",
+      "file": "packages/config/llm_client.py",
+      "description": "Implements the synthesize/critic LLMNodes protocol for two providers (anthropic, groq-dev-substitute), selected via LLM_PROVIDER. Same prompting/parsing regardless of provider -- swapping is a constructor choice."
+    }
+  ],
+  "edges": [
+    {
+      "from": "fe_appshell",
+      "to": "fe_overview",
+      "type": "renders",
+      "description": "AppShell wraps every page including Overview"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_decisions",
+      "type": "renders",
+      "description": "Nav item: Decision Queue"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_runs",
+      "type": "renders",
+      "description": "Nav item: Run History"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_evidence",
+      "type": "renders",
+      "description": "Nav item: Evidence"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_workflows",
+      "type": "renders",
+      "description": "Nav item: Workflows"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_governance",
+      "type": "renders",
+      "description": "Nav item: Governance"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_health",
+      "type": "renders",
+      "description": "Nav item: System Health"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_coverage",
+      "type": "renders",
+      "description": "Nav item: Evaluation & Security"
+    },
+    {
+      "from": "fe_appshell",
+      "to": "fe_operator_bar",
+      "type": "renders",
+      "description": "Sidebar footer identity control"
+    },
+    {
+      "from": "fe_operator_bar",
+      "to": "fe_operator_context",
+      "type": "reads",
+      "description": "Reads/writes role+identity via useOperator()"
+    },
+    {
+      "from": "fe_decision_detail",
+      "to": "fe_run_detail_view",
+      "type": "renders",
+      "description": "Wraps shared RunDetailView"
+    },
+    {
+      "from": "fe_run_detail",
+      "to": "fe_run_detail_view",
+      "type": "renders",
+      "description": "Wraps shared RunDetailView"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_approval_panel",
+      "type": "renders",
+      "description": "Action panel when a decision is still pending"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_decision_support",
+      "type": "renders",
+      "description": "Decision support tab"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_domain_findings",
+      "type": "renders",
+      "description": "Structured findings tab"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_governance_checks",
+      "type": "renders",
+      "description": "Governance tab"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_audit_timeline",
+      "type": "renders",
+      "description": "Audit tab"
+    },
+    {
+      "from": "fe_evidence",
+      "to": "fe_evidence_card",
+      "type": "renders",
+      "description": "One card per catalog item"
+    },
+    {
+      "from": "fe_coverage",
+      "to": "fe_coverage_components",
+      "type": "renders",
+      "description": "StatusBar + InjectRow per inject"
+    },
+    {
+      "from": "fe_approval_panel",
+      "to": "fe_operator_context",
+      "type": "reads",
+      "description": "Reads claimed role/identity to attach to the decide() call"
+    },
+    {
+      "from": "fe_overview",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getDashboard/getQueue/getHealthDetail/getRunHistory"
+    },
+    {
+      "from": "fe_decisions",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getQueue"
+    },
+    {
+      "from": "fe_runs",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getRunHistory/getRunFilters"
+    },
+    {
+      "from": "fe_run_detail_view",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getRun"
+    },
+    {
+      "from": "fe_evidence",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getEvidence/getEvidenceStats"
+    },
+    {
+      "from": "fe_governance",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getGovernance"
+    },
+    {
+      "from": "fe_health",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getHealthDetail"
+    },
+    {
+      "from": "fe_workflows",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "submitRun"
+    },
+    {
+      "from": "fe_coverage",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "getEvalScorecard/getInjectCoverage"
+    },
+    {
+      "from": "fe_approval_panel",
+      "to": "fe_api_client",
+      "type": "calls",
+      "description": "decideRun (mutate, never retried)"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "fe_session",
+      "type": "reads",
+      "description": "read() attaches Authorization: Bearer <token> from session.ts; mutate() does not"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_get_queue",
+      "type": "calls",
+      "description": "GET /api/queue"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_list_runs",
+      "type": "calls",
+      "description": "GET /api/runs"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_run_filters",
+      "type": "calls",
+      "description": "GET /api/runs/filters"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_get_run",
+      "type": "calls",
+      "description": "GET /api/runs/{run_id}"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_list_evidence",
+      "type": "calls",
+      "description": "GET /api/evidence"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_evidence_stats",
+      "type": "calls",
+      "description": "GET /api/evidence/stats"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_governance",
+      "type": "calls",
+      "description": "GET /api/governance"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_health_detail",
+      "type": "calls",
+      "description": "GET /api/health/detail"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_dashboard",
+      "type": "calls",
+      "description": "GET /api/dashboard"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_evals_scorecard",
+      "type": "calls",
+      "description": "GET /api/evals/scorecard"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_inject_coverage",
+      "type": "calls",
+      "description": "GET /api/coverage/injects"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_submit_run",
+      "type": "calls",
+      "description": "POST /api/runs"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_decide_run",
+      "type": "calls",
+      "description": "POST /api/runs/{run_id}/decide"
+    },
+    {
+      "from": "fe_api_client",
+      "to": "api_login",
+      "type": "calls",
+      "description": "POST /api/auth/login (available; no login page currently calls it)"
+    },
+    {
+      "from": "api_login",
+      "to": "store_user",
+      "type": "calls",
+      "description": "user_store.login() verifies password hash, inserts app_session row"
+    },
+    {
+      "from": "api_logout",
+      "to": "auth_require_user",
+      "type": "calls",
+      "description": "Depends(require_user) resolves the caller first"
+    },
+    {
+      "from": "api_logout",
+      "to": "store_user",
+      "type": "writes",
+      "description": "user_store.logout() deletes the session row"
+    },
+    {
+      "from": "api_me",
+      "to": "auth_require_user",
+      "type": "calls",
+      "description": "Depends(require_user)"
+    },
+    {
+      "from": "api_roles",
+      "to": "store_user",
+      "type": "reads",
+      "description": "Serves ROLE_CATALOG's product_use/must_never"
+    },
+    {
+      "from": "auth_require_user",
+      "to": "store_user",
+      "type": "reads",
+      "description": "resolve_session(token) -- 401 if invalid/expired"
+    },
+    {
+      "from": "tool_seed_users",
+      "to": "store_user",
+      "type": "writes",
+      "description": "create_user() for each of the 10 ROLE_CATALOG accounts"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "auth_require_user",
+      "type": "calls",
+      "description": "Depends(require_user) -- login required to submit"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_batch_review",
+      "type": "calls",
+      "description": "workflow == batch_review"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_pv_intake",
+      "type": "calls",
+      "description": "workflow == pv_intake"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_supply_planning",
+      "type": "calls",
+      "description": "workflow == supply_planning"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_research_review",
+      "type": "calls",
+      "description": "workflow == research_review"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_clinical_integrity",
+      "type": "calls",
+      "description": "workflow == clinical_integrity"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "graph_regulatory_completeness",
+      "type": "calls",
+      "description": "workflow == regulatory_completeness"
+    },
+    {
+      "from": "api_submit_run",
+      "to": "store_pending_queue",
+      "type": "writes",
+      "description": "Registers a PendingEntry if the graph interrupts"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "auth_require_user",
+      "type": "calls",
+      "description": "Depends(require_user)"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "store_user",
+      "type": "calls",
+      "description": "approver_string_for()/can_veto() -- 403 if role is not eligible"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "store_pending_queue",
+      "type": "reads",
+      "description": "Looks up the paused entry by run_id; 404 if absent"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_batch_review",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...)) resumes the matching cached graph"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_pv_intake",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...))"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_supply_planning",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...)) -- one leg per call"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_research_review",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...))"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_clinical_integrity",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...))"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "graph_regulatory_completeness",
+      "type": "calls",
+      "description": "graph.invoke(Command(resume=...))"
+    },
+    {
+      "from": "api_decide_run",
+      "to": "store_pending_queue",
+      "type": "writes",
+      "description": "Removes the entry (or updates approved_legs for supply_planning) after resume"
+    },
+    {
+      "from": "api_list_runs",
+      "to": "store_audit",
+      "type": "reads",
+      "description": "list_agent_runs() -- newest-first, filtered/paginated"
+    },
+    {
+      "from": "api_run_filters",
+      "to": "store_audit",
+      "type": "reads",
+      "description": "distinct_values() over an allowlisted column set"
+    },
+    {
+      "from": "api_get_run",
+      "to": "store_pending_queue",
+      "type": "reads",
+      "description": "Decision-support package, only while paused in this process"
+    },
+    {
+      "from": "api_get_run",
+      "to": "store_audit",
+      "type": "reads",
+      "description": "get_agent_run() + run_timeline() + human_overrides()"
+    },
+    {
+      "from": "api_list_evidence",
+      "to": "tool_evidence_catalog",
+      "type": "calls",
+      "description": "list_catalog()"
+    },
+    {
+      "from": "api_evidence_stats",
+      "to": "tool_evidence_catalog",
+      "type": "calls",
+      "description": "catalog_stats()"
+    },
+    {
+      "from": "api_governance",
+      "to": "governance_view",
+      "type": "calls",
+      "description": "snapshot()"
+    },
+    {
+      "from": "api_evals_scorecard",
+      "to": "eval_dashboard_module",
+      "type": "calls",
+      "description": "eval_scorecard()"
+    },
+    {
+      "from": "api_inject_coverage",
+      "to": "eval_dashboard_module",
+      "type": "calls",
+      "description": "inject_coverage()"
+    },
+    {
+      "from": "api_dashboard",
+      "to": "store_audit",
+      "type": "reads",
+      "description": "cost/guardrail-trip/terminal-state panels (packages/observability/dashboard_data.py)"
+    },
+    {
+      "from": "api_dashboard",
+      "to": "store_redis",
+      "type": "reads",
+      "description": "cache_hit_rate_panel()"
+    },
+    {
+      "from": "api_health_detail",
+      "to": "health_probe",
+      "type": "calls",
+      "description": "all_dependencies()"
+    },
+    {
+      "from": "api_health_detail",
+      "to": "store_audit",
+      "type": "reads",
+      "description": "store_stats()"
+    },
+    {
+      "from": "api_health_detail",
+      "to": "store_pending_queue",
+      "type": "reads",
+      "description": "current pending-run count"
+    },
+    {
+      "from": "governance_view",
+      "to": "tool_policy_engine",
+      "type": "reads",
+      "description": "load_policy_contract()"
+    },
+    {
+      "from": "governance_view",
+      "to": "store_policy_contract",
+      "type": "reads",
+      "description": "security/policies/policy_contract.v1.json"
+    },
+    {
+      "from": "governance_view",
+      "to": "graph_pv_intake",
+      "type": "reads",
+      "description": "imports PV_PRIMARY_APPROVER / PV_VETO_ROLE constants"
+    },
+    {
+      "from": "governance_view",
+      "to": "graph_supply_planning",
+      "type": "reads",
+      "description": "imports SUPPLY_PLANNING_APPROVER / SUPPLY_QUALITY_APPROVER"
+    },
+    {
+      "from": "governance_view",
+      "to": "graph_research_review",
+      "type": "reads",
+      "description": "imports RESEARCH_PRIMARY_APPROVER"
+    },
+    {
+      "from": "governance_view",
+      "to": "graph_clinical_integrity",
+      "type": "reads",
+      "description": "imports CLINICAL_PRIMARY_APPROVER"
+    },
+    {
+      "from": "governance_view",
+      "to": "graph_regulatory_completeness",
+      "type": "reads",
+      "description": "imports REGULATORY_PRIMARY_APPROVER"
+    },
+    {
+      "from": "governance_view",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "imports _CITABLE_STATUSES / broadening ceiling"
+    },
+    {
+      "from": "governance_view",
+      "to": "tool_hitl_route",
+      "type": "reads",
+      "description": "imports tier durations"
+    },
+    {
+      "from": "health_probe",
+      "to": "store_redis",
+      "type": "calls",
+      "description": "PING"
+    },
+    {
+      "from": "health_probe",
+      "to": "store_kg",
+      "type": "calls",
+      "description": "test query"
+    },
+    {
+      "from": "health_probe",
+      "to": "store_audit",
+      "type": "calls",
+      "description": "row-count query"
+    },
+    {
+      "from": "eval_dashboard_module",
+      "to": "eval_harness_runner",
+      "type": "calls",
+      "description": "run_all() in-process, live"
+    },
+    {
+      "from": "eval_dashboard_module",
+      "to": "eval_dataset",
+      "type": "reads",
+      "description": "eval-ai-cache/eval_dataset/*.json scenarios"
+    },
+    {
+      "from": "eval_dashboard_module",
+      "to": "inject_coverage_file",
+      "type": "reads",
+      "description": "served as-is, not recomputed"
+    },
+    {
+      "from": "spine_intake",
+      "to": "tool_dow_guard",
+      "type": "guards",
+      "description": "check_and_admit() before any evidence/LLM cost is incurred"
+    },
+    {
+      "from": "spine_policy_load",
+      "to": "tool_policy_engine",
+      "type": "calls",
+      "description": "get_prohibition_contract(version, workflow)"
+    },
+    {
+      "from": "spine_policy_load",
+      "to": "store_policy_contract",
+      "type": "reads",
+      "description": "underlying JSON file"
+    },
+    {
+      "from": "spine_retrieve",
+      "to": "tool_evidence_retrieve",
+      "type": "calls",
+      "description": "retrieve(run_id, terms, policy_contract_version, broadening)"
+    },
+    {
+      "from": "tool_evidence_retrieve",
+      "to": "store_kg",
+      "type": "reads",
+      "description": "Cypher query filtered to approved/draft status only"
+    },
+    {
+      "from": "spine_evidence_gate",
+      "to": "tool_evidence_gate",
+      "type": "calls",
+      "description": "check(evidence, broadenings_used)"
+    },
+    {
+      "from": "spine_synthesize",
+      "to": "llm_client",
+      "type": "calls",
+      "description": "llm.synthesize(state) -- first LLM call"
+    },
+    {
+      "from": "spine_synthesize",
+      "to": "tool_response_cache",
+      "type": "reads",
+      "description": "response_cache.get() (batch_review, research_review only)"
+    },
+    {
+      "from": "spine_guard1",
+      "to": "tool_prohibited_action_guard",
+      "type": "calls",
+      "description": "check(draft, prohibition_contract)"
+    },
+    {
+      "from": "spine_critic_verify",
+      "to": "llm_client",
+      "type": "calls",
+      "description": "llm.critic(state) -- second, independent LLM call"
+    },
+    {
+      "from": "spine_guard2",
+      "to": "tool_prohibited_action_guard",
+      "type": "calls",
+      "description": "check(draft, prohibition_contract) -- second pass"
+    },
+    {
+      "from": "spine_guard2",
+      "to": "tool_response_cache",
+      "type": "writes",
+      "description": "response_cache.set_cleared() (batch_review, research_review only) -- the only cache-write point"
+    },
+    {
+      "from": "tool_response_cache",
+      "to": "store_redis",
+      "type": "reads",
+      "description": "cache get/set/incr"
+    },
+    {
+      "from": "tool_response_cache",
+      "to": "store_kg",
+      "type": "reads",
+      "description": "re-validates cached evidence_ids' CURRENT status before serving a hit"
+    },
+    {
+      "from": "spine_hitl_route",
+      "to": "graph_batch_review",
+      "type": "guards",
+      "description": "sets approver_roles=[EU Qualified Person] for batch_review"
+    },
+    {
+      "from": "spine_hitl_interrupt",
+      "to": "tool_hitl_decision",
+      "type": "calls",
+      "description": "hitl_decision.decode(interrupt(...))"
+    },
+    {
+      "from": "spine_hitl_interrupt",
+      "to": "store_audit",
+      "type": "writes",
+      "description": "write_human_override() / write_hitl_expired()"
+    },
+    {
+      "from": "spine_hitl_interrupt",
+      "to": "tool_hitl_route",
+      "type": "reads",
+      "description": "batch_review only: 4-tier escalation ladder constants"
+    },
+    {
+      "from": "spine_finalize",
+      "to": "tool_dow_guard",
+      "type": "writes",
+      "description": "record_run() with REAL token usage"
+    },
+    {
+      "from": "spine_finalize",
+      "to": "store_audit",
+      "type": "writes",
+      "description": "write_agent_run() -- mandatory, every terminal path (ADR-006)"
+    },
+    {
+      "from": "graph_batch_review",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_batch_review",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_batch_reconcile",
+      "type": "calls",
+      "description": "batch_review's concrete domain tool"
+    },
+    {
+      "from": "graph_pv_intake",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_pv_intake",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_pv_duplicate_check",
+      "type": "calls",
+      "description": "pv_intake's concrete domain tool"
+    },
+    {
+      "from": "graph_supply_planning",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_supply_planning",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_supply_generate_options",
+      "type": "calls",
+      "description": "supply_planning's concrete domain tool"
+    },
+    {
+      "from": "graph_research_review",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_research_review",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_research_reconcile",
+      "type": "calls",
+      "description": "research_review's concrete domain tool"
+    },
+    {
+      "from": "graph_clinical_integrity",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_clinical_integrity",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_clinical_integrity_check",
+      "type": "calls",
+      "description": "clinical_integrity's concrete domain tool"
+    },
+    {
+      "from": "graph_regulatory_completeness",
+      "to": "spine_intake",
+      "type": "calls",
+      "description": "instantiates the shared spine (14 nodes)"
+    },
+    {
+      "from": "graph_regulatory_completeness",
+      "to": "spine_domain_tool",
+      "type": "calls",
+      "description": "the domain-tool step of the spine, bound to this workflow's own tool"
+    },
+    {
+      "from": "spine_domain_tool",
+      "to": "tool_regulatory_completeness_check",
+      "type": "calls",
+      "description": "regulatory_completeness's concrete domain tool"
+    },
+    {
+      "from": "graph_pv_intake",
+      "to": "tool_pv_normalize_terminology",
+      "type": "calls",
+      "description": "normalize_terminology_node -- runs after duplicate_check, hard-ordered before synthesize"
+    },
+    {
+      "from": "tool_batch_reconcile",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_pv_duplicate_check",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_supply_generate_options",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_research_reconcile",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_clinical_integrity_check",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_regulatory_completeness_check",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "tool_pv_normalize_terminology",
+      "to": "tool_evidence_retrieve",
+      "type": "reads",
+      "description": "validates evidence_ids against get_run_evidence_ids() -- rejects any id this run did not itself retrieve"
+    },
+    {
+      "from": "domain_payloads",
+      "to": "domain_state",
+      "type": "reads",
+      "description": "GovernedState.domain_payload holds one of these Pydantic models"
+    },
+    {
+      "from": "domain_evidence",
+      "to": "domain_state",
+      "type": "reads",
+      "description": "GovernedState.evidence: list[EvidenceItem]"
+    },
+    {
+      "from": "tool_prohibited_action_guard",
+      "to": "domain_state",
+      "type": "reads",
+      "description": "DecisionSupportOutput / ProhibitionContract types"
+    },
+    {
+      "from": "tool_manifest",
+      "to": "tool_batch_reconcile",
+      "type": "reads",
+      "description": "hashes packages/contracts/tool_contracts/*.schema.json, cross-checked against tool_manifest.json"
+    },
+    {
+      "from": "store_sbom",
+      "to": "tool_manifest",
+      "type": "reads",
+      "description": "verify_sbom.py runs at the same CI cadence as verify_manifest()"
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow_login",
+      "name": "Operator logs in",
+      "description": "A real credential check against user_store at the dedicated /login page (RequireAuth redirects any unauthenticated visit there), issuing a bearer-token session that the API's require_user dependency verifies on every subsequent request, including submit/decide calls.",
+      "steps": [
+        "fe_operator_bar",
+        "fe_session",
+        "fe_api_client",
+        "api_login",
+        "store_user",
+        "auth_require_user"
+      ]
+    },
+    {
+      "id": "flow_submit_batch",
+      "name": "Submit a batch_review run",
+      "description": "An operator picks a fixture batch id on the Workflows page; the API builds/reuses a cached graph and drives it end-to-end through the shared spine until it interrupts for EU QP approval.",
+      "steps": [
+        "fe_workflows",
+        "fe_api_client",
+        "api_submit_run",
+        "graph_batch_review",
+        "spine_intake",
+        "spine_policy_load",
+        "spine_retrieve",
+        "spine_evidence_gate",
+        "spine_domain_tool",
+        "tool_batch_reconcile",
+        "spine_synthesize",
+        "spine_guard1",
+        "spine_critic_verify",
+        "spine_guard2",
+        "spine_hitl_route",
+        "spine_hitl_interrupt",
+        "store_pending_queue"
+      ]
+    },
+    {
+      "id": "flow_approve",
+      "name": "Approve a pending decision",
+      "description": "The EU Qualified Person opens the paused run in the Decision Queue, reviews the decision-support package and evidence, and submits an approval with a justification -- resuming the graph to completion and writing the audit record.",
+      "steps": [
+        "fe_decisions",
+        "fe_decision_detail",
+        "fe_run_detail_view",
+        "fe_approval_panel",
+        "fe_api_client",
+        "api_decide_run",
+        "store_user",
+        "graph_batch_review",
+        "spine_hitl_interrupt",
+        "tool_hitl_decision",
+        "store_audit",
+        "spine_finalize"
+      ]
+    },
+    {
+      "id": "flow_guard_blocks",
+      "name": "A prohibited-action guard blocks a draft",
+      "description": "The LLM's synthesized draft contains a banned term or field. guard1 (or, after Critic clearance, guard2) matches it against the workflow's ProhibitionContract and routes straight to finalize as blocked -- the human never sees it.",
+      "steps": [
+        "spine_synthesize",
+        "tool_policy_engine",
+        "store_policy_contract",
+        "spine_guard1",
+        "tool_prohibited_action_guard",
+        "spine_blocked_terminal",
+        "spine_finalize",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_dual_approval_supply",
+      "name": "Dual-approval supply_planning leg",
+      "description": "supply_planning requires BOTH the Supply Chain VP (planning leg) and the EU Qualified Person (quality leg) to approve independently; one leg approving alone leaves the run paused, and a replay-safe audit-store check prevents duplicate writes on LangGraph's node re-execution.",
+      "steps": [
+        "fe_workflows",
+        "api_submit_run",
+        "graph_supply_planning",
+        "spine_domain_tool",
+        "tool_supply_generate_options",
+        "spine_hitl_route",
+        "spine_hitl_interrupt",
+        "fe_approval_panel",
+        "api_decide_run",
+        "store_audit",
+        "spine_finalize"
+      ]
+    },
+    {
+      "id": "flow_pv_veto",
+      "name": "Patient Safety Representative registers a veto",
+      "description": "At any point during pv_intake's HITL wait, the advisory veto forces hitl_status=rejected immediately; audit_store.write_human_override structurally refuses to let any later approval supersede a recorded veto.",
+      "steps": [
+        "fe_decision_detail",
+        "fe_approval_panel",
+        "api_decide_run",
+        "store_user",
+        "graph_pv_intake",
+        "spine_hitl_interrupt",
+        "tool_hitl_decision",
+        "store_audit",
+        "spine_finalize"
+      ]
+    },
+    {
+      "id": "flow_evidence_broadening",
+      "name": "Evidence gate broadens once, then abstains",
+      "description": "retrieve returns no citable evidence; evidence_gate permits exactly one scope-preserving broadening (G3) before abstaining with insufficient_evidence rather than looping indefinitely.",
+      "steps": [
+        "spine_retrieve",
+        "tool_evidence_retrieve",
+        "store_kg",
+        "spine_evidence_gate",
+        "tool_evidence_gate",
+        "spine_finalize",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_cache_hit",
+      "name": "Cached response bypasses the LLM",
+      "description": "synthesize finds a prior guard-and-Critic-cleared draft for the same (workflow, subject_id, evidence_ids) in Redis and re-validates every cited evidence_id's current status in Neo4j before serving it as a zero-token hit.",
+      "steps": [
+        "spine_synthesize",
+        "tool_response_cache",
+        "store_redis",
+        "store_kg",
+        "spine_guard1",
+        "spine_critic_verify",
+        "spine_guard2",
+        "spine_hitl_route"
+      ]
+    },
+    {
+      "id": "flow_denial_of_wallet",
+      "name": "Denial-of-wallet ceiling refuses a run at intake",
+      "description": "A requester who has already hit the daily run count or projected spend ceiling for (user, workflow) is refused before any evidence retrieval or LLM call -- zero tokens spent.",
+      "steps": [
+        "fe_workflows",
+        "api_submit_run",
+        "graph_batch_review",
+        "spine_intake",
+        "tool_dow_guard",
+        "spine_finalize",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_policy_unavailable",
+      "name": "Policy engine unavailable -> fail-closed refusal",
+      "description": "If the versioned policy contract file is missing, unreadable, or version-mismatched, policy_load raises and the graph refuses outright -- there is no cached-policy fallback (ADR-005).",
+      "steps": [
+        "spine_policy_load",
+        "tool_policy_engine",
+        "store_policy_contract",
+        "spine_finalize",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_evidence_browse",
+      "name": "Read-only evidence catalog browse",
+      "description": "An operator browses the full evidence corpus -- including non-citable and superseded items -- to judge what may be relied on, via a query path structurally separate from any graph's retrieval.",
+      "steps": [
+        "fe_evidence",
+        "fe_evidence_card",
+        "fe_api_client",
+        "api_list_evidence",
+        "api_evidence_stats",
+        "tool_evidence_catalog",
+        "store_kg"
+      ]
+    },
+    {
+      "id": "flow_run_history",
+      "name": "Investigate a historical run",
+      "description": "An investigator filters/searches the append-only audit store for a past run and opens its full detail: audit timeline, recorded human actions, and (if the process never restarted) the original decision-support package.",
+      "steps": [
+        "fe_runs",
+        "fe_api_client",
+        "api_list_runs",
+        "api_run_filters",
+        "store_audit",
+        "fe_run_detail",
+        "fe_run_detail_view",
+        "api_get_run",
+        "store_pending_queue",
+        "fe_audit_timeline"
+      ]
+    },
+    {
+      "id": "flow_governance_center",
+      "name": "Browse the Governance Center",
+      "description": "Every value shown is read live from the artefact that actually enforces it, never a hand-maintained second copy that could drift.",
+      "steps": [
+        "fe_governance",
+        "fe_api_client",
+        "api_governance",
+        "governance_view",
+        "tool_policy_engine",
+        "store_policy_contract",
+        "tool_evidence_retrieve",
+        "tool_hitl_route"
+      ]
+    },
+    {
+      "id": "flow_health_probe",
+      "name": "System Health measures every dependency",
+      "description": "Each status is the result of an actual probe call (Redis PING, a Neo4j query, an audit-store row count) at the moment the page loaded, not an inference from configuration.",
+      "steps": [
+        "fe_health",
+        "fe_api_client",
+        "api_health_detail",
+        "health_probe",
+        "store_redis",
+        "store_kg",
+        "store_audit",
+        "store_pending_queue"
+      ]
+    },
+    {
+      "id": "flow_eval_scorecard",
+      "name": "Live eval-ai-cache scorecard",
+      "description": "Every page load re-runs the real grading harness in-process against synthetic fixtures (~25ms, no network/LLM calls) -- numbers can differ from five minutes ago if grader code changed.",
+      "steps": [
+        "fe_coverage",
+        "fe_api_client",
+        "api_evals_scorecard",
+        "eval_dashboard_module",
+        "eval_harness_runner",
+        "eval_dataset"
+      ]
+    },
+    {
+      "id": "flow_inject_coverage",
+      "name": "Browse the 84-inject V2->V3 coverage ledger",
+      "description": "A curated, human-reviewed, file-cited mapping of every V2 tabletop inject to what V3's actual code does about it today -- served as-is, not recomputed per request.",
+      "steps": [
+        "fe_coverage",
+        "fe_api_client",
+        "api_inject_coverage",
+        "eval_dashboard_module",
+        "inject_coverage_file"
+      ]
+    },
+    {
+      "id": "flow_hitl_timeout",
+      "name": "HITL approval window expires -> no action",
+      "description": "BC-12: a timeout is never treated as an implicit action. The graph records HitlExpired and abstains with hitl_timeout, exactly the same terminal shape as if no human had ever looked at it.",
+      "steps": [
+        "spine_hitl_route",
+        "spine_hitl_interrupt",
+        "tool_hitl_decision",
+        "store_audit",
+        "spine_finalize"
+      ]
+    },
+    {
+      "id": "flow_critic_retry_loop",
+      "name": "Critic rejects and the graph retries synthesis",
+      "description": "A retryable Critic reason code sends the graph back to synthesize (a fresh LLM call), bounded by MAX_LLM_CALLS=6 (G1) -- a repeated code or PROHIBITION_ADJACENT escalates/blocks instead of looping forever.",
+      "steps": [
+        "spine_synthesize",
+        "spine_guard1",
+        "spine_critic_verify",
+        "spine_synthesize",
+        "spine_abstain_cap",
+        "spine_finalize"
+      ]
+    },
+    {
+      "id": "flow_degraded_mode",
+      "name": "LLM provider unreachable -> abstain, never guess",
+      "description": "ADR-007: any exception from the synthesize or critic LLM call is caught and the run abstains with degraded_mode -- it never fabricates a draft or verdict. Deterministic partial results computed earlier (the domain tool's findings) still survive into the audit record.",
+      "steps": [
+        "spine_synthesize",
+        "llm_client",
+        "spine_finalize",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_research_review",
+      "name": "Submit and approve a research_review run",
+      "description": "Same 14-node spine as batch_review, closing D02's OUT_OF_SCOPE research injects (assay drift, compound genealogy collision, etc.) via research.reconcile and the Head of Preclinical Research's single-approver HITL gate.",
+      "steps": [
+        "fe_workflows",
+        "api_submit_run",
+        "graph_research_review",
+        "spine_domain_tool",
+        "tool_research_reconcile",
+        "spine_synthesize",
+        "spine_hitl_route",
+        "spine_hitl_interrupt",
+        "fe_approval_panel",
+        "api_decide_run",
+        "store_audit"
+      ]
+    },
+    {
+      "id": "flow_clinical_regulatory",
+      "name": "Submit clinical_integrity / regulatory_completeness runs",
+      "description": "Two more Stage-21 workflows on the identical spine: clinical.integrity_check with the Clinical Trial Medical Monitor as approver, and regulatory.completeness_check with the Head of Regulatory Affairs as approver.",
+      "steps": [
+        "fe_workflows",
+        "api_submit_run",
+        "graph_clinical_integrity",
+        "graph_regulatory_completeness",
+        "spine_domain_tool",
+        "tool_clinical_integrity_check",
+        "tool_regulatory_completeness_check",
+        "spine_hitl_route",
+        "spine_hitl_interrupt",
+        "store_audit"
+      ]
+    }
+  ]
+}</script>
 <script>
-const GRAPH = {"meta":{"name":"AEGIS-PHARMA V3 — Architecture Graph","description":"Machine-readable node/edge/flow model of the Stage 08 graphical views. Derived from current_state.md, interim_state.md and final_state.md in this folder; those Mermaid views and their upstream source documents remain authoritative.","version":"1.0.0","generated":"2026-08-12","stage":"08 — Graphical views","authority":"view","sources":["docs/architecture/graphical/current_state.md","docs/architecture/graphical/interim_state.md","docs/architecture/graphical/final_state.md"],"rule":"These are views, not sources. If this file and its source document disagree, the document wins and this file is the defect."},"views":[{"id":"current","label":"Current state","subtitle":"What exists today — design artefacts only","source":"docs/architecture/graphical/current_state.md","sourceOfTruth":"docs/product/state/current/current_state_assessment.md","canvas":{"width":1000,"height":800},"note":"Measured 2026-08-12: 249 tracked files, 4 of 21 stages complete, zero implementation. There is no system yet — only design artefacts and their workshop mirrors."},{"id":"interim","label":"Interim state","subtitle":"One workflow end-to-end — Batch Review","source":"docs/architecture/graphical/interim_state.md","sourceOfTruth":"docs/product/state/interim/interim_state.md","canvas":{"width":1060,"height":960},"note":"The minimum governed workflow: one domain agent, one Critic/Verifier, two MCP tools, one named approver, and the Prohibited-Action Guard present from day one. Exists to prove seven assumptions before the design is replicated three times."},{"id":"final","label":"Final state","subtitle":"Three graphs, one deployment","source":"docs/architecture/graphical/final_state.md","sourceOfTruth":"docs/product/state/final/final_state.md, docs/architecture/c4/","canvas":{"width":1200,"height":1400},"note":"All three governed workflows as separate LangGraph graphs in a single deployment (ADR-008), under a shared policy engine, evidence layer, cache, observability and owned audit store."}],"clusters":[{"id":"c_done","view":"current","label":"COMPLETE — design artefacts (docs/)","x":30,"y":58,"w":920,"h":116,"status":"ok"},{"id":"c_pending","view":"current","label":"NOT STARTED — scaffold only","x":30,"y":208,"w":920,"h":116,"status":"neutral"},{"id":"c_block","view":"current","label":"BLOCKERS — both now CLOSED","x":30,"y":358,"w":560,"h":116,"status":"ok"},{"id":"c_real","view":"current","label":"Repository — real content","x":30,"y":508,"w":920,"h":116,"status":"ok"},{"id":"c_stub","view":"current","label":"Repository — scaffold only (README stubs)","x":30,"y":658,"w":920,"h":116,"status":"neutral"},{"id":"i_app","view":"interim","label":"Web App","x":400,"y":118,"w":280,"h":100,"status":"info"},{"id":"i_orch","view":"interim","label":"Orchestrator API — LangGraph","x":378,"y":248,"w":324,"h":288,"status":"info"},{"id":"i_tools","view":"interim","label":"MCP Tool Servers — 2 only","x":40,"y":248,"w":300,"h":190,"status":"info"},{"id":"i_gov","view":"interim","label":"Governance / Policy Engine","x":740,"y":338,"w":280,"h":112,"status":"warn"},{"id":"i_assume","view":"interim","label":"The seven assumptions under test","x":40,"y":676,"w":980,"h":254,"status":"neutral"},{"id":"f_orch","view":"final","label":"Orchestrator API — one deployment, three graphs (ADR-008)","x":40,"y":226,"w":760,"h":238,"status":"info"},{"id":"f_g1","view":"final","parent":"f_orch","label":"Graph A · Batch Review","x":58,"y":264,"w":232,"h":180,"status":"info"},{"id":"f_g2","view":"final","parent":"f_orch","label":"Graph B · PV Intake","x":306,"y":264,"w":232,"h":180,"status":"info"},{"id":"f_g3","view":"final","parent":"f_orch","label":"Graph C · Supply Planning","x":554,"y":264,"w":232,"h":180,"status":"info"},{"id":"f_tools","view":"final","label":"MCP Tool Servers — all read-only","x":40,"y":500,"w":1120,"h":124,"status":"info"},{"id":"f_gates","view":"final","label":"Completion gates","x":40,"y":866,"w":1120,"h":230,"status":"neutral"},{"id":"f_delta","view":"final","label":"Interim → final delta","x":40,"y":1136,"w":1120,"h":236,"status":"neutral"},{"id":"f_di","view":"final","parent":"f_delta","label":"INTERIM","x":58,"y":1174,"w":492,"h":178,"status":"neutral"},{"id":"f_df","view":"final","parent":"f_delta","label":"FINAL","x":648,"y":1174,"w":492,"h":178,"status":"ok"}],"nodes":[{"id":"S1","view":"current","cluster":"c_done","kind":"stage","status":"ok","label":"Stage 01\nDiscovery + SCQA","badge":"stable","x":50,"y":86,"w":160,"h":64,"tooltip":"Process discovery and SCQA/Minto framing for the V3 agentic redesign. Produced the evidence-acquisition backlog whose items EAB-2 and EAB-3 gated everything downstream.","source":"docs/product/discovery/discovery.md, docs/product/scqa/scqa.md"},{"id":"S2","view":"current","cluster":"c_done","kind":"stage","status":"ok","label":"Stage 02\nDomain-Driven Design","badge":"stable","x":230,"y":86,"w":160,"h":64,"tooltip":"Six bounded contexts (3 core, 2 supporting, 1 generic), four named domain agents, and the schema-level invariants that make prohibited actions unrepresentable. Upgraded provisional → stable when EAB-3 closed.","source":"docs/architecture/ddd/domain_model.md"},{"id":"S3","view":"current","cluster":"c_done","kind":"stage","status":"ok","label":"Stage 03\nC4 architecture","badge":"stable","x":410,"y":86,"w":160,"h":64,"tooltip":"Context, Container and Component levels; nine containers, each mapped to a Stage 20 repo folder. Level 4 (Code) deliberately deferred — no implementation exists to describe. Upgraded on EAB-2 closure.","source":"docs/architecture/c4/"},{"id":"S4","view":"current","cluster":"c_done","kind":"stage","status":"ok","label":"Stage 04\nADRs — 8 accepted","badge":"review: pass","x":590,"y":86,"w":160,"h":64,"tooltip":"All eight ADRs accepted; ADR-003 corrected an error in the DDD model by verifying it against V2's authority_grader.py. ADR-009 (Azure) was added afterwards as a sponsor directive.","source":"docs/adr/decision_index.md"},{"id":"S5","view":"current","cluster":"c_done","kind":"stage","status":"ok","label":"Stage 05\nCurrent state","badge":"this measurement","x":770,"y":86,"w":160,"h":64,"tooltip":"Re-measurement of the repo in its post-ADR position: 249 tracked files, zero implementation. The honest baseline every later claim is measured against.","source":"docs/product/state/current/current_state_assessment.md"},{"id":"P1","view":"current","cluster":"c_pending","kind":"stage","status":"neutral","label":"Stages 06–09\ninterim · final · graphical · DMAIC","x":50,"y":236,"w":200,"h":64,"tooltip":"Transition and target state definition plus the DMAIC/Lean workbook. Stages 06, 07 and 08 are now complete; 09 remains.","source":"STAGES.md"},{"id":"P2","view":"current","cluster":"c_pending","kind":"stage","status":"neutral","label":"Stages 10–13\nagentic arch · MCP · skills+hooks · ontology","x":282,"y":236,"w":200,"h":64,"tooltip":"The build-design stages: LangGraph graph design, MCP tool contracts, the Prohibited-Action Guard as an enforced hook, and enough semantic layer for scoped status-aware retrieval.","source":"STAGES.md"},{"id":"P3","view":"current","cluster":"c_pending","kind":"stage","status":"neutral","label":"Stages 14–19\neval-cache · perf · governance · observability · security · compliance","x":514,"y":236,"w":200,"h":64,"tooltip":"The assurance stages. Unblocked by EAB-3's closure, since named accountable approvers are a precondition for the governance and compliance work.","source":"STAGES.md"},{"id":"P4","view":"current","cluster":"c_pending","kind":"stage","status":"neutral","label":"Stages 20–21\nimplementation · documentation","x":746,"y":236,"w":200,"h":64,"tooltip":"Implementation is deliberately last. Unblocked by EAB-2's closure — cloud-connected operation confirmed, so the hosted dependencies are ratified rather than assumed.","source":"STAGES.md"},{"id":"B1","view":"current","cluster":"c_block","kind":"blocker","status":"ok","label":"EAB-2 — air-gap?  CLOSED","badge":"cloud-connected confirmed","x":50,"y":386,"w":250,"h":64,"tooltip":"Was the system required to run air-gapped? Sponsor confirmed cloud-connected operation is acceptable. The air-gapped variant is recorded as a known limitation in ADR-007 rather than silently dropped.","source":"docs/adr/ADR-007-degraded-mode-safe-not-offline-capable.md"},{"id":"B2","view":"current","cluster":"c_block","kind":"blocker","status":"ok","label":"EAB-3 — HITL approvers?  CLOSED","badge":"named from V2 stakeholder pack","x":320,"y":386,"w":250,"h":64,"tooltip":"Who is accountable for each workflow's human sign-off? Roles taken verbatim from V2's STAKEHOLDER_PACK.md — EU Qualified Person, Global Head of Pharmacovigilance, Supply Chain VP with Quality co-approval. Not invented.","source":"docs/governance/hitl_control_model.md"},{"id":"R1","view":"current","cluster":"c_real","kind":"artefact","status":"ok","label":"docs/ — 59 files\nadr · architecture · product","x":50,"y":536,"w":200,"h":64,"tooltip":"The substantive design output: discovery, SCQA, DDD, C4, nine ADRs, the three state documents and this graphical stage.","source":"docs/"},{"id":"R2","view":"current","cluster":"c_real","kind":"artefact","status":"ok","label":"prompts/ — 25 files\n13 adapted + 10 new","x":282,"y":536,"w":200,"h":64,"tooltip":"The stage-driving prompts. Thirteen adapted from V2, ten written for V3's agentic stages.","source":"prompts/"},{"id":"R3","view":"current","cluster":"c_real","kind":"artefact","status":"ok","label":"workshop/ — 47 files\nmirrors of stages 01–04","x":514,"y":536,"w":200,"h":64,"tooltip":"Participant-facing mirrors of each completed stage's output, so the workshop track stays in step with the canonical docs/ tree.","source":"workshop/participant-output/"},{"id":"R4","view":"current","cluster":"c_real","kind":"artefact","status":"warn","label":"eval-ai-cache/ — 29 files\nUNCONSUMED","x":746,"y":536,"w":200,"h":64,"tooltip":"The notable box. 29 files of directly-applicable reference material — a 24-file brownfield-evals runbook, a Redis caching runbook, an OpenTelemetry runbook — that no stage has drawn on yet. Stages 14/15/17 should consume it rather than derive equivalents (NAB-4).","source":"eval-ai-cache/"},{"id":"T1c","view":"current","cluster":"c_stub","kind":"artefact","status":"neutral","label":"apps/ services/ packages/ tests/\n0 implementation","x":50,"y":686,"w":200,"h":64,"tooltip":"README stubs only. Every C4 container has a named home here, but nothing has been written — Stage 20 is deliberately last.","source":"apps/, services/, packages/, tests/"},{"id":"T2c","view":"current","cluster":"c_stub","kind":"artefact","status":"neutral","label":"security/ ops/ infra/\nquality/ deploy/","x":282,"y":686,"w":200,"h":64,"tooltip":"Operational scaffolding awaiting Stages 15–19. Structure exists so later stages have an unambiguous destination.","source":"security/, ops/, infra/, quality/, deploy/"},{"id":"T3c","view":"current","cluster":"c_stub","kind":"artefact","status":"neutral","label":"evidence/ — 0 records\n(correct: nothing has run)","x":514,"y":686,"w":200,"h":64,"tooltip":"Emptiness here is correct, not a gap. Evidence records are produced by real runs; asserting them before the system runs would be the defect.","source":"evidence/"},{"id":"T4c","view":"current","cluster":"c_stub","kind":"artefact","status":"neutral","label":"templates/ — 10 blank","x":746,"y":686,"w":200,"h":64,"tooltip":"ADR, change-plan, threat-model, incident-record and other templates, ready but unfilled.","source":"templates/"},{"id":"USER","view":"interim","kind":"actor","status":"ok","label":"EU Qualified Person","badge":"named approver — EAB-3 closed","x":420,"y":38,"w":240,"h":60,"tooltip":"The accountable human for Batch Review. Their own mandate in V2's stakeholder pack already states that final certification remains human-only — which is exactly the boundary ADR-004 enforces structurally. Escalation: Chief Quality Officer.","source":"docs/governance/hitl_control_model.md §2"},{"id":"UI","view":"interim","cluster":"i_app","kind":"app","status":"info","label":"Batch Review view","x":430,"y":146,"w":220,"h":56,"tooltip":"The single UI surface in the interim state — workflow input and decision-support output for one workflow only.","source":"docs/architecture/c4/c4_containers.md"},{"id":"BA","view":"interim","cluster":"i_orch","kind":"agent","status":"info","label":"Batch-Review\nAgent node","x":400,"y":278,"w":280,"h":60,"tooltip":"The one domain agent in the interim slice. May propose evidence reconciliation and flag deviations/gaps. Its aggregate schema has no release/reject field — the prohibited action is unrepresentable, not merely unrecommended.","source":"docs/architecture/ddd/domain_model.md §10"},{"id":"CV","view":"interim","cluster":"i_orch","kind":"critic","status":"info","label":"Critic / Verifier\nnode","x":400,"y":368,"w":280,"h":60,"tooltip":"Checks every proposed output against the prohibited-action contract and evidence-citation completeness before it can reach a human. Never modifies domain output — it either approves-for-human-review or rejects back to the domain agent.","source":"docs/architecture/c4/c4_components.md"},{"id":"HITL","view":"interim","cluster":"i_orch","kind":"policy","status":"info","label":"HITL interrupt handler","x":400,"y":456,"w":280,"h":56,"tooltip":"Pauses graph execution, notifies the named approver role, and enforces default-safe-on-timeout: no action, never auto-proceed. Silence from a reviewer is never approval.","source":"docs/architecture/ddd/domain_model.md §11"},{"id":"IT1","view":"interim","cluster":"i_tools","kind":"tool","status":"info","label":"Evidence Retrieval","badge":"scoped, read-only","x":60,"y":278,"w":260,"h":60,"tooltip":"Retrieval scoped per bounded context — a Batch Review agent retrieves only from Batch Review's evidence scope, never PV or Supply. Filters non-citable documents at the retrieval boundary so they never enter the context window.","source":"docs/architecture/c4/c4_components.md"},{"id":"IT2","view":"interim","cluster":"i_tools","kind":"tool","status":"info","label":"Reconciliation","badge":"read-only","x":60,"y":358,"w":260,"h":60,"tooltip":"Structured evidence-completeness and conflict check for Batch Review. Read-only — no write capability to any brownfield system exists anywhere in this architecture.","source":"docs/architecture/c4/c4_components.md"},{"id":"PAG","view":"interim","cluster":"i_gov","kind":"policy","status":"warn","label":"Prohibited-Action Guard","badge":"present from day one","x":760,"y":368,"w":240,"h":60,"tooltip":"Not staged in later. ADR-004's argument is that prohibited-action enforcement cannot be retrofitted safely, so the guard is present in the very first slice — as an enforced hook, not an instruction.","source":"docs/adr/ADR-004-prohibited-actions-structurally-unrepresentable.md"},{"id":"EP","view":"interim","kind":"store","status":"warn","label":"Evidence & Provenance","badge":"untrusted + superseded NON-CITABLE","x":60,"y":468,"w":260,"h":68,"tooltip":"The deterministic status gate. Verification against V2's authority_grader.py (_MUST_NOT_CITE = {untrusted, superseded}) proved that superseded is non-citable exactly like untrusted — correcting an error in the original DDD model. Retrieved content may never alter its own authority.","source":"docs/adr/ADR-003-evidence-authority-deterministic-gate.md"},{"id":"AUD","view":"interim","kind":"store","status":"info","label":"Audit / Evidence Log Store","badge":"minimal, but present","x":760,"y":468,"w":240,"h":68,"tooltip":"Owned, and deliberately separate from LangSmith — compliance retention requirements may differ from trace retention, and this store must survive a degraded hosted-observability integration. ADR-006 says it must not be an afterthought.","source":"docs/adr/ADR-006-audit-store-separate-from-langsmith.md"},{"id":"LS","view":"interim","kind":"external","status":"neutral","label":"LangSmith — tracing","x":760,"y":248,"w":240,"h":56,"tooltip":"Tracing from the start, so there is trace data to reason about when the seven assumptions are tested. Additive observability, not a hard dependency: if LangSmith is unreachable the request must still succeed.","source":"docs/architecture/c4/boundary_and_degraded_mode.md"},{"id":"SRC","view":"interim","kind":"external","status":"neutral","label":"Manufacturing · Lab · Quality","badge":"READ-ONLY","x":60,"y":568,"w":260,"h":60,"tooltip":"Brownfield source systems. Every arrow in is read-only evidence flow; there is no arrow out. No container in this system has outbound write capability to any of them.","source":"docs/architecture/c4/c4_context.md"},{"id":"NOCACHE","view":"interim","kind":"excluded","status":"danger","label":"Redis cache","badge":"DELIBERATELY EXCLUDED","x":760,"y":568,"w":240,"h":60,"tooltip":"Caching adds stale-authority correctness risk on top of agent-correctness risk. Introducing both at once makes failures ambiguous. Cache lands only after the uncached path is proven correct.","source":"docs/product/state/interim/interim_state.md §2"},{"id":"A1","view":"interim","cluster":"i_assume","kind":"assumption","status":"danger","label":"1 · Prohibited action fails at SCHEMA layer","badge":"stop-the-line","x":60,"y":716,"w":210,"h":66,"tooltip":"Pass condition: a red-team attempt to produce a batch release/reject recommendation fails at the schema layer, not merely by model refusal. If this fails the design itself is invalid, not just incomplete.","source":"docs/product/state/interim/interim_state.md §3"},{"id":"A2","view":"interim","cluster":"i_assume","kind":"assumption","status":"danger","label":"2 · untrusted/superseded never cited","badge":"stop-the-line","x":290,"y":716,"w":210,"h":66,"tooltip":"Pass condition: zero citations of untrusted or superseded documents, and an embedded instruction inside a retrieved document does not change agent behaviour.","source":"docs/product/state/interim/interim_state.md §3"},{"id":"A3","view":"interim","cluster":"i_assume","kind":"assumption","status":"info","label":"3 · HITL routing + default-safe timeout","x":520,"y":716,"w":210,"h":66,"tooltip":"Pass condition: escalation fires as designed, and a timed-out approval results in no action — never auto-proceed.","source":"docs/product/state/interim/interim_state.md §3"},{"id":"A4","view":"interim","cluster":"i_assume","kind":"assumption","status":"info","label":"4 · Degraded mode safe","x":750,"y":716,"w":210,"h":66,"tooltip":"Pass condition: with the LLM provider disabled the deterministic path still runs and the system abstains rather than guessing; with LangSmith disabled requests still succeed and audit records still write.","source":"docs/adr/ADR-007-degraded-mode-safe-not-offline-capable.md"},{"id":"A5","view":"interim","cluster":"i_assume","kind":"assumption","status":"info","label":"5 · Policy Engine fails CLOSED","x":60,"y":806,"w":210,"h":66,"tooltip":"Pass condition: with the Policy Engine unreachable, requests are refused — not passed through.","source":"docs/adr/ADR-005-governance-as-separate-container.md"},{"id":"A7","view":"interim","cluster":"i_assume","kind":"assumption","status":"info","label":"7 · Hop count ≈ 7","x":290,"y":806,"w":210,"h":66,"tooltip":"Pass condition: the measured path matches the 7 container/component boundary crossings counted in the C4 DMAIC lens, or there is a documented reason why not. Any design change raising this count needs explicit justification.","source":"docs/architecture/c4/dmaic_lens.md"},{"id":"A6","view":"interim","cluster":"i_assume","kind":"assumption","status":"warn","label":"6 · Token / cost per run","badge":"first real measurement","x":520,"y":806,"w":210,"h":66,"tooltip":"Carries disproportionate weight: it is the first point in the entire programme where a real cost number exists. Every token/cost decision so far has been explicitly marked Unknown. If it lands far off expectation, the final state's topology changes before it is built three times over.","source":"docs/product/state/interim/interim_state.md §3"},{"id":"GATE","view":"interim","cluster":"i_assume","kind":"gate","status":"ok","label":"Proceed to final state?","x":750,"y":806,"w":210,"h":66,"tooltip":"The interim state's exit criteria. All seven assumptions must pass before the pattern is replicated across three workflows.","source":"docs/product/state/interim/interim_state.md §3"},{"id":"QA","view":"final","kind":"actor","status":"ok","label":"EU Qualified Person","badge":"Batch Review approver","x":190,"y":38,"w":190,"h":60,"tooltip":"Primary approver for Batch Review; also the Quality co-approver for Supply Planning options that touch quality status. Escalation: Chief Quality Officer. Explicitly not an approver: Manufacturing VP — 'never independent batch release'.","source":"docs/governance/hitl_control_model.md §2"},{"id":"PVP","view":"final","kind":"actor","status":"ok","label":"Global Head of PV","badge":"PV Intake approver","x":410,"y":38,"w":190,"h":60,"tooltip":"Approves 100% of causality, seriousness and reportability determinations — the agent structurally cannot make them. Medical escalation: Chief Medical Officer. Advisory veto: Patient Safety Representative.","source":"docs/governance/hitl_control_model.md §2"},{"id":"SC","view":"final","kind":"actor","status":"ok","label":"Supply Chain VP","badge":"+ Quality co-approver","x":630,"y":38,"w":190,"h":60,"tooltip":"Dual approval. The stakeholder pack limits the VP to planning and states that regulated execution needs approvals — so any option touching quality status, cold-chain excursion disposition or release needs Quality sign-off in addition.","source":"docs/governance/hitl_control_model.md §2"},{"id":"ADM","view":"final","kind":"app","status":"info","label":"Admin — run inspector, eval dashboards","x":930,"y":38,"w":230,"h":60,"tooltip":"Operator surface over traces, evals and cost/latency dashboards. Reads observability rather than driving workflows.","source":"docs/architecture/c4/c4_containers.md"},{"id":"WEB","view":"final","kind":"app","status":"info","label":"Web App","x":410,"y":138,"w":230,"h":60,"tooltip":"Human-facing views for all three workflows: workflow input, decision-support output, and the HITL approval queue. A presentation layer over the three core contexts — it owns no decisions.","source":"docs/architecture/c4/c4_containers.md"},{"id":"FA1","view":"final","cluster":"f_g1","kind":"agent","status":"info","label":"Batch-Review Agent","x":74,"y":298,"w":200,"h":56,"tooltip":"Proposes evidence reconciliation and flags deviations/gaps. Escalates on any conflict it cannot resolve deterministically, or any output that would resemble a release/reject signal even implicitly.","source":"docs/architecture/ddd/domain_model.md §10"},{"id":"FC1","view":"final","cluster":"f_g1","kind":"critic","status":"info","label":"Critic","x":74,"y":368,"w":200,"h":56,"tooltip":"The Critic/Verifier pattern applied within Graph A. Interacts through the common DecisionSupportOutput contract, so it never absorbs batch-review-specific vocabulary — that contract is the anti-corruption layer.","source":"docs/architecture/ddd/context_map.md"},{"id":"FA2","view":"final","cluster":"f_g2","kind":"agent","status":"info","label":"PV-Intake Agent","x":322,"y":298,"w":200,"h":56,"tooltip":"Triages and prioritises signals and suggests terminology normalisation. Causality, seriousness, expectedness and reportability fields do not exist in this agent's output schema at all.","source":"docs/architecture/ddd/domain_model.md §10"},{"id":"FC2","view":"final","cluster":"f_g2","kind":"critic","status":"info","label":"Critic","x":322,"y":368,"w":200,"h":56,"tooltip":"The Critic/Verifier pattern applied within Graph B, checking prohibited-action adjacency and evidence-citation completeness before anything reaches the Global Head of PV.","source":"docs/architecture/c4/c4_components.md"},{"id":"FA3","view":"final","cluster":"f_g3","kind":"agent","status":"info","label":"Supply-Planning Agent","x":570,"y":298,"w":200,"h":56,"tooltip":"Generates ranked, non-executing options. Escalates on any request that would require writing an allocation or reservation — and has no tool capable of that write, by design.","source":"docs/architecture/ddd/domain_model.md §10"},{"id":"FC3","view":"final","cluster":"f_g3","kind":"critic","status":"info","label":"Critic","x":570,"y":368,"w":200,"h":56,"tooltip":"The Critic/Verifier pattern applied within Graph C. ShortageOption value objects are checked for any allocated_quantity-shaped field, which must never appear.","source":"docs/architecture/ddd/domain_model.md §13"},{"id":"FT1","view":"final","cluster":"f_tools","kind":"tool","status":"info","label":"Evidence Retrieval","badge":"shared, context-scoped","x":60,"y":530,"w":250,"h":66,"tooltip":"The one shared tool — but scoped per bounded context, so a Batch Review agent can never retrieve PV or Supply knowledge. Filters untrusted and superseded at the retrieval boundary.","source":"docs/architecture/c4/c4_components.md"},{"id":"FT2","view":"final","cluster":"f_tools","kind":"tool","status":"info","label":"Reconciliation","badge":"Batch Review only","x":340,"y":530,"w":250,"h":66,"tooltip":"Structured evidence-completeness and conflict check. Read-only, bound to one workflow.","source":"docs/architecture/c4/c4_components.md"},{"id":"FT3","view":"final","cluster":"f_tools","kind":"tool","status":"info","label":"Duplicate-Check","badge":"PV Intake only","x":620,"y":530,"w":250,"h":66,"tooltip":"Case-duplicate detection. The PVCase aggregate's invariant requires the duplicate evaluation to complete before SignalTriaged can fire.","source":"docs/architecture/ddd/domain_model.md §7"},{"id":"FT4","view":"final","cluster":"f_tools","kind":"tool","status":"warn","label":"Option-Generation","badge":"no allocate method","x":900,"y":530,"w":250,"h":66,"tooltip":"Constraint-filtered candidate option generation, and structurally has no allocation or reservation write method at all. A tool-capability constraint, not a permission the agent chooses not to use.","source":"docs/architecture/c4/c4_components.md"},{"id":"GOV","view":"final","kind":"policy","status":"warn","label":"Governance / Policy Engine","badge":"fails CLOSED (ADR-005)","x":880,"y":226,"w":280,"h":66,"tooltip":"Prohibited-Action Guard, HITL Router and Policy Register loader. A separate container so the policy contract is versioned and deployed independently and cannot be silently weakened by a core context's local needs. Fans out to four consumers.","source":"docs/adr/ADR-005-governance-as-separate-container.md"},{"id":"CACHE","view":"final","kind":"store","status":"info","label":"Redis — tiered TTL","badge":"status-aware keys","x":880,"y":310,"w":280,"h":66,"tooltip":"Tiered TTL by workflow risk, with cache-correctness evals. If Redis is unreachable the system falls back to no-cache — never serving a response as-if-cached. Correctness over performance, always.","source":"docs/architecture/c4/boundary_and_degraded_mode.md"},{"id":"FAUD","view":"final","kind":"store","status":"info","label":"Audit Store — owned","badge":"ADR-006","x":880,"y":394,"w":280,"h":66,"tooltip":"Durable AgentRun records, separate from LangSmith because compliance retention requirements may differ from trace retention and this store must survive a degraded hosted integration. Azure realization: Blob Storage with WORM immutability.","source":"docs/adr/ADR-006-audit-store-separate-from-langsmith.md"},{"id":"FLS","view":"final","kind":"external","status":"neutral","label":"LangSmith — traces, evals, dashboards","x":880,"y":138,"w":280,"h":60,"tooltip":"Hosted observability. OpenTelemetry stays the instrumentation layer so the trace backend remains swappable. Traces must pass through redaction before storage — PII/PHI never leaves the Orchestrator API boundary unredacted.","source":"docs/architecture/c4/boundary_and_degraded_mode.md"},{"id":"FEP","view":"final","kind":"store","status":"warn","label":"Evidence & Provenance","badge":"+ semantic layer / KG","x":60,"y":656,"w":280,"h":70,"tooltip":"The shared evidence-authority model — one EvidenceItem contract all three core contexts conform to. Translates each source system's local representation before any core context sees it; core contexts may never reach past it to a raw source.","source":"docs/architecture/ddd/context_map.md"},{"id":"FSRC","view":"final","kind":"external","status":"neutral","label":"Brownfield systems","badge":"READ-ONLY, zero writes","x":60,"y":766,"w":280,"h":64,"tooltip":"Manufacturing, Laboratory, Quality, Safety and Supply estates. Zero write integrations — permanently, not 'phase 2'. Enforced twice over: at the architecture level here, and at the schema level in the domain model.","source":"docs/architecture/c4/c4_context.md"},{"id":"G1","view":"final","cluster":"f_gates","kind":"gate","status":"neutral","label":"1 · All 7 interim assumptions passed","x":60,"y":902,"w":180,"h":66,"tooltip":"Open. Cannot be closed by design work — requires the system to actually run.","source":"docs/product/state/final/final_state.md §5"},{"id":"G2","view":"final","cluster":"f_gates","kind":"gate","status":"ok","label":"2 · EAB-3 closed — named approvers ✓","x":255,"y":902,"w":180,"h":66,"tooltip":"Satisfied. Required a human answer rather than engineering work, and it was given: approvers named from V2's stakeholder pack.","source":"docs/governance/hitl_control_model.md"},{"id":"G3","view":"final","cluster":"f_gates","kind":"gate","status":"ok","label":"3 · EAB-2 resolved — cloud-connected ✓","x":450,"y":902,"w":180,"h":66,"tooltip":"Satisfied. Sponsor confirmed cloud-connected operation; the air-gapped variant is recorded as a known limitation rather than silently dropped.","source":"docs/adr/ADR-007-degraded-mode-safe-not-offline-capable.md"},{"id":"G4","view":"final","cluster":"f_gates","kind":"gate","status":"ok","label":"4 · DDD + C4 → stable ✓","x":645,"y":902,"w":180,"h":66,"tooltip":"Satisfied. Both artifacts were upgraded when their blocking evidence items closed.","source":"docs/architecture/"},{"id":"G5","view":"final","cluster":"f_gates","kind":"gate","status":"ok","label":"5 · all 8 ADRs ratified ✓","x":840,"y":902,"w":180,"h":66,"tooltip":"Satisfied. No ADR now rests on an unconfirmed assumption. (ADR-009 was added subsequently as a sponsor directive, with one open sub-decision on the model-hosting route.)","source":"docs/adr/decision_index.md"},{"id":"G6","view":"final","cluster":"f_gates","kind":"gate","status":"neutral","label":"6 · Zero prohibited-action findings","x":60,"y":996,"w":180,"h":66,"tooltip":"Open. Across evals (Stage 14) and red-team (Stage 18). Cannot be closed by design work.","source":"docs/product/state/final/final_state.md §5"},{"id":"G7","view":"final","cluster":"f_gates","kind":"gate","status":"neutral","label":"7 · Compliance evidence from real runs","x":255,"y":996,"w":180,"h":66,"tooltip":"Open. EU AI Act and ISO 42001 evidence produced from actual operation — not documented intent. Cannot be closed by design work.","source":"docs/product/state/final/final_state.md §5"},{"id":"DONE","view":"final","cluster":"f_gates","kind":"gate","status":"info","label":"FINAL STATE COMPLETE","x":480,"y":996,"w":250,"h":66,"tooltip":"Four of seven gates are satisfied. The three remaining ones require the system to run — no amount of further design work can close them.","source":"docs/product/state/final/final_state.md §5"},{"id":"I1","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"1 workflow","x":74,"y":1206,"w":148,"h":52,"tooltip":"Interim: Batch Review only.","source":"docs/product/state/final/final_state.md §4"},{"id":"I2","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"2 MCP tools","x":234,"y":1206,"w":148,"h":52,"tooltip":"Interim: Evidence Retrieval + Reconciliation.","source":"docs/product/state/final/final_state.md §4"},{"id":"I3","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"no cache","x":394,"y":1206,"w":148,"h":52,"tooltip":"Interim: deliberately excluded, to keep failures unambiguous.","source":"docs/product/state/final/final_state.md §4"},{"id":"I4","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"1 approver (QP)","x":74,"y":1274,"w":148,"h":52,"tooltip":"Interim: proves the HITL mechanism with one named role.","source":"docs/product/state/final/final_state.md §4"},{"id":"I5","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"tracing only","x":234,"y":1274,"w":148,"h":52,"tooltip":"Interim: enough trace data to answer the seven assumption questions.","source":"docs/product/state/final/final_state.md §4"},{"id":"I6","view":"final","cluster":"f_di","kind":"delta","status":"neutral","label":"no compliance evidence","x":394,"y":1274,"w":148,"h":52,"tooltip":"Interim: compliance evidence requires a system that has actually run.","source":"docs/product/state/final/final_state.md §4"},{"id":"F1","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"3 workflows","x":664,"y":1206,"w":148,"h":52,"tooltip":"Batch Review, PV Intake, Supply Planning — as three separate graphs in one deployment.","source":"docs/product/state/final/final_state.md §4"},{"id":"F2","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"4 MCP tools","x":824,"y":1206,"w":148,"h":52,"tooltip":"Shared Evidence Retrieval plus three workflow-bound tools, none carrying a write capability.","source":"docs/product/state/final/final_state.md §4"},{"id":"F3","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"Redis + correctness evals","x":984,"y":1206,"w":148,"h":52,"tooltip":"Cache lands only after the uncached path is proven correct, so cache-correctness is a separately-tested risk rather than a confound.","source":"docs/product/state/final/final_state.md §4"},{"id":"F4","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"all 3 approvers incl. Supply dual-approval","x":664,"y":1274,"w":148,"h":52,"tooltip":"EAB-3 closed. Supply Planning requires dual approval because the stakeholder pack limits the VP to planning — a real constraint the pack encodes, not an added formality.","source":"docs/governance/hitl_control_model.md §2"},{"id":"F5","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"dashboards · alerts · SLOs","x":824,"y":1274,"w":148,"h":52,"tooltip":"Stage 17 observability, beyond the interim state's tracing-only scope.","source":"docs/product/state/final/final_state.md §4"},{"id":"F6","view":"final","cluster":"f_df","kind":"delta","status":"ok","label":"EU AI Act + ISO 42001 evidence","x":984,"y":1274,"w":148,"h":52,"tooltip":"Stage 19: risk classification, control mapping and an evidence index produced from real runs.","source":"docs/product/state/final/final_state.md §4"}],"edges":[{"id":"e_c1","view":"current","from":"S1","to":"S2","kind":"solid"},{"id":"e_c2","view":"current","from":"S2","to":"S3","kind":"solid"},{"id":"e_c3","view":"current","from":"S3","to":"S4","kind":"solid"},{"id":"e_c4","view":"current","from":"S4","to":"S5","kind":"solid"},{"id":"e_c5","view":"current","from":"S5","to":"P1","kind":"dashed","label":"next","tooltip":"Design is complete through Stage 05; everything below is scaffold."},{"id":"e_c6","view":"current","from":"B1","to":"P4","kind":"dashed","label":"unblocked","tooltip":"Cloud-connected operation confirmed, so implementation is no longer gated on the air-gap question."},{"id":"e_c7","view":"current","from":"B2","to":"P3","kind":"dashed","label":"unblocked","tooltip":"Named accountable approvers are a precondition for the governance, security and compliance stages."},{"id":"e_c8","view":"current","from":"R4","to":"P3","kind":"dashed","label":"should feed (NAB-4)","tooltip":"Stages 14/15/17 should consume the existing eval, caching and OpenTelemetry runbooks rather than derive equivalents."},{"id":"e_i1","view":"interim","from":"USER","to":"UI","kind":"solid"},{"id":"e_i2","view":"interim","from":"UI","to":"BA","kind":"solid"},{"id":"e_i3","view":"interim","from":"BA","to":"IT1","kind":"bidirectional","label":"retrieve"},{"id":"e_i4","view":"interim","from":"BA","to":"IT2","kind":"bidirectional","label":"reconcile"},{"id":"e_i5","view":"interim","from":"IT1","to":"EP","kind":"solid"},{"id":"e_i6","view":"interim","from":"EP","to":"SRC","kind":"solid","label":"read-only"},{"id":"e_i7","view":"interim","from":"BA","to":"CV","kind":"solid","label":"proposed output"},{"id":"e_i8","view":"interim","from":"CV","to":"HITL","kind":"solid"},{"id":"e_i9","view":"interim","from":"CV","to":"PAG","kind":"dashed","label":"checks"},{"id":"e_i10","view":"interim","from":"HITL","to":"USER","kind":"solid","label":"approve / reject"},{"id":"e_i11","view":"interim","from":"cluster:i_orch","to":"LS","kind":"dashed","label":"traces"},{"id":"e_i12","view":"interim","from":"cluster:i_orch","to":"AUD","kind":"solid","label":"audit records"},{"id":"e_i13","view":"interim","from":"cluster:i_orch","to":"NOCACHE","kind":"dashed","label":"excluded"},{"id":"e_i14","view":"interim","from":"A1","to":"GATE","kind":"solid"},{"id":"e_i15","view":"interim","from":"A2","to":"GATE","kind":"solid"},{"id":"e_i16","view":"interim","from":"A3","to":"GATE","kind":"solid"},{"id":"e_i17","view":"interim","from":"A4","to":"GATE","kind":"solid"},{"id":"e_i18","view":"interim","from":"A5","to":"GATE","kind":"solid"},{"id":"e_i19","view":"interim","from":"A6","to":"GATE","kind":"solid"},{"id":"e_i20","view":"interim","from":"A7","to":"GATE","kind":"solid"},{"id":"e_f1","view":"final","from":"QA","to":"WEB","kind":"solid"},{"id":"e_f2","view":"final","from":"PVP","to":"WEB","kind":"solid"},{"id":"e_f3","view":"final","from":"SC","to":"WEB","kind":"solid"},{"id":"e_f4","view":"final","from":"ADM","to":"FLS","kind":"solid"},{"id":"e_f5","view":"final","from":"WEB","to":"cluster:f_orch","kind":"solid"},{"id":"e_f6","view":"final","from":"FA1","to":"FC1","kind":"solid"},{"id":"e_f7","view":"final","from":"FA2","to":"FC2","kind":"solid"},{"id":"e_f8","view":"final","from":"FA3","to":"FC3","kind":"solid"},{"id":"e_f9","view":"final","from":"FA1","to":"FT1","kind":"bidirectional"},{"id":"e_f10","view":"final","from":"FA1","to":"FT2","kind":"bidirectional"},{"id":"e_f11","view":"final","from":"FA2","to":"FT1","kind":"bidirectional"},{"id":"e_f12","view":"final","from":"FA2","to":"FT3","kind":"bidirectional"},{"id":"e_f13","view":"final","from":"FA3","to":"FT1","kind":"bidirectional"},{"id":"e_f14","view":"final","from":"FA3","to":"FT4","kind":"bidirectional"},{"id":"e_f15","view":"final","from":"FT1","to":"FEP","kind":"solid"},{"id":"e_f16","view":"final","from":"FEP","to":"FSRC","kind":"solid","label":"read-only"},{"id":"e_f17","view":"final","from":"cluster:f_orch","to":"CACHE","kind":"bidirectional"},{"id":"e_f18","view":"final","from":"cluster:f_orch","to":"GOV","kind":"dashed","label":"every output"},{"id":"e_f19","view":"final","from":"cluster:f_orch","to":"FAUD","kind":"solid"},{"id":"e_f20","view":"final","from":"cluster:f_orch","to":"FLS","kind":"dashed","label":"traces"},{"id":"e_f21","view":"final","from":"FC1","to":"QA","kind":"solid","label":"for review"},{"id":"e_f22","view":"final","from":"FC2","to":"PVP","kind":"solid","label":"for review"},{"id":"e_f23","view":"final","from":"FC3","to":"SC","kind":"solid","label":"for review"},{"id":"e_f24","view":"final","from":"G2","to":"G4","kind":"solid"},{"id":"e_f25","view":"final","from":"G3","to":"G4","kind":"solid"},{"id":"e_f26","view":"final","from":"G4","to":"G5","kind":"solid"},{"id":"e_f27","view":"final","from":"G5","to":"DONE","kind":"solid"},{"id":"e_f28","view":"final","from":"G1","to":"DONE","kind":"solid"},{"id":"e_f29","view":"final","from":"G6","to":"DONE","kind":"solid"},{"id":"e_f30","view":"final","from":"G7","to":"DONE","kind":"solid"},{"id":"e_f31","view":"final","from":"I1","to":"F1","kind":"solid"},{"id":"e_f32","view":"final","from":"I2","to":"F2","kind":"solid"},{"id":"e_f33","view":"final","from":"I3","to":"F3","kind":"solid"},{"id":"e_f34","view":"final","from":"I4","to":"F4","kind":"solid"},{"id":"e_f35","view":"final","from":"I5","to":"F5","kind":"solid"},{"id":"e_f36","view":"final","from":"I6","to":"F6","kind":"solid"}],"flows":[{"id":"cur.pipeline","view":"current","kind":"path","label":"Completed design pipeline (Stages 01→05)","summary":"Five stages of design artefacts, each building on the last, ending at the current-state measurement that everything below is scaffold.","steps":[{"node":"S1","note":"Discovery and SCQA frame the problem and raise the evidence-acquisition backlog."},{"node":"S2","note":"DDD defines bounded contexts, agents, and the schema-level prohibitions."},{"node":"S3","note":"C4 turns those contexts into nine containers with named repo homes."},{"node":"S4","note":"Eight ADRs ratify the contested choices; ADR-003 corrects a DDD error."},{"node":"S5","note":"Current state re-measured in its post-ADR position: zero implementation."},{"node":"P1","note":"Everything from Stage 06 onward was scaffold at the time of measurement."}]},{"id":"cur.eab2","view":"current","kind":"path","label":"EAB-2 closure unblocks implementation","summary":"The air-gap question was blocking every hosted dependency, and therefore the implementation stages.","steps":[{"node":"B1","note":"Sponsor confirmed cloud-connected operation is acceptable."},{"node":"P4","note":"Implementation and documentation are no longer gated on an unresolved deployment constraint."}]},{"id":"cur.eab3","view":"current","kind":"path","label":"EAB-3 closure unblocks the assurance stages","summary":"Named accountable approvers are a precondition for governance, security and compliance work.","steps":[{"node":"B2","note":"Roles taken verbatim from V2's stakeholder pack — not invented."},{"node":"P3","note":"Governance, observability, security and compliance stages can now proceed."}]},{"id":"cur.nab4","view":"current","kind":"path","label":"Unconsumed asset — eval-ai-cache should feed Stages 14/15/17","summary":"The amber box: 29 files of directly-applicable reference material that no stage has drawn on yet.","steps":[{"node":"R4","note":"A 24-file brownfield-evals runbook, a Redis caching runbook, an OpenTelemetry runbook."},{"node":"P3","note":"Consume these rather than deriving equivalents (NAB-4)."}]},{"id":"cur.invariant","view":"current","kind":"invariant","label":"Invariant — there is no system yet","summary":"Every architectural claim made so far is unvalidated by execution. That is correct and intentional (Stage 20 is deliberately last), not an oversight. The empty evidence/ tree is the honest signal.","steps":[{"node":"T1c","note":"Zero implementation across apps, services, packages and tests."},{"node":"T2c","note":"Operational scaffolding awaiting Stages 15–19."},{"node":"T3c","note":"Zero evidence records — correct, because nothing has run."},{"node":"T4c","note":"Ten blank templates ready for use."}]},{"id":"int.happy","view":"interim","kind":"path","label":"Batch Review — the governed happy path","summary":"The minimum governed workflow, and the seven-boundary-crossing baseline the C4 DMAIC lens counted. Any design change that raises this hop count needs an explicit justification.","steps":[{"node":"USER","note":"The EU Qualified Person opens a batch for review."},{"node":"UI","note":"Hop 1 — Web App to Orchestrator API."},{"node":"BA","note":"Hop 2 — the Batch-Review Agent node takes its reasoning turn."},{"node":"IT1","note":"Hop 3 — scoped evidence retrieval via MCP."},{"node":"EP","note":"Hop 4 — the Evidence & Provenance store resolves authority deterministically."},{"node":"SRC","note":"Read-only access to Manufacturing, Lab and Quality systems. No arrow points back out."},{"node":"BA","note":"Return — the agent reasons over retrieved, status-gated evidence."},{"node":"CV","note":"Hop 5 — the Critic/Verifier checks prohibited-action adjacency and citation completeness."},{"node":"PAG","note":"Hop 6 — the Prohibited-Action Guard runs on every output."},{"node":"HITL","note":"Hop 7 — the interrupt handler routes to the named approver."},{"node":"USER","note":"The human decides. The system never certifies."}]},{"id":"int.a1","view":"interim","kind":"path","label":"Assumption 1 — prohibited action fails at the schema layer","summary":"Stop-the-line. A red-team attempt to produce a release/reject recommendation must fail structurally, not merely by model refusal. If this fails, the design itself is invalid.","steps":[{"node":"BA","note":"The Batch aggregate cannot carry a release_recommended or reject_recommended field at all."},{"node":"CV","note":"The Critic checks the proposed output against the prohibited-action contract."},{"node":"PAG","note":"The guard is a hook, present from day one — ADR-004 holds that it cannot be retrofitted safely."},{"node":"A1","note":"Pass condition: the attempt fails at the schema layer."}]},{"id":"int.a2","view":"interim","kind":"path","label":"Assumption 2 — evidence authority gate (ADR-003)","summary":"Stop-the-line. untrusted and superseded documents are both non-citable, and both must be filtered at the retrieval boundary so they never enter the agent's context window.","steps":[{"node":"SRC","note":"Brownfield sources carry documents in mixed authority states."},{"node":"EP","note":"The deterministic status gate. Verified against V2's authority_grader.py, which corrected an error in the original DDD model."},{"node":"IT1","note":"Filtering happens at retrieval, not by asking the model to recognise untrustworthiness."},{"node":"BA","note":"The agent never sees a non-citable document. Retrieved content can never alter its own authority."},{"node":"A2","note":"Pass condition: zero citations of untrusted or superseded, and embedded instructions change nothing."}]},{"id":"int.a3","view":"interim","kind":"path","label":"Assumption 3 — HITL routing and default-safe timeout","summary":"Silence from a human reviewer must never be treated as approval. A timed-out approval results in no action.","steps":[{"node":"CV","note":"The Critic approves the output for human review."},{"node":"HITL","note":"Execution pauses; the named approver role is notified."},{"node":"USER","note":"If the EU Qualified Person does not respond, escalation routes to the Chief Quality Officer."},{"node":"AUD","note":"Every HITL decision — approve, reject, or timeout — is recorded."},{"node":"A3","note":"Pass condition: escalation fires as designed and timeout means no action."}]},{"id":"int.a4","view":"interim","kind":"path","label":"Assumption 4 — degraded mode is safe (ADR-007)","summary":"V3 is not offline-capable the way V2's static app was; it is degraded-mode-safe. Every hosted dependency has a defined fallback that preserves correctness even where it sacrifices capability.","steps":[{"node":"BA","note":"With the LLM provider unreachable, the deterministic path still runs and the system abstains rather than guessing."},{"node":"LS","note":"With LangSmith unreachable, the request must not block — trace locally and sync later."},{"node":"AUD","note":"This is why the audit store is a separate container: it keeps writing when hosted observability is down."},{"node":"A4","note":"Pass condition: requests still succeed and audit records still write."}]},{"id":"int.a5","view":"interim","kind":"path","label":"Assumption 5 — the Policy Engine fails closed","summary":"With the Policy Engine unreachable, requests are refused rather than passed through. The failure direction is the whole point of making governance a separate container.","steps":[{"node":"CV","note":"The Critic cannot reach the guard."},{"node":"PAG","note":"Unreachable — and therefore blocking, not bypassed."},{"node":"HITL","note":"The request is refused. No output proceeds to a human as if it had been checked."},{"node":"A5","note":"Pass condition: refusal, not pass-through."}]},{"id":"int.nocache","view":"interim","kind":"invariant","label":"Invariant — the cache is deliberately absent","summary":"Introducing stale-authority risk alongside agent-correctness risk makes failures ambiguous. The cache lands only after the uncached path is proven correct, so cache-correctness becomes a separately-tested risk rather than a confound.","steps":[{"node":"NOCACHE","note":"Excluded on purpose — this absence is the design decision."},{"node":"A6","note":"The first real token/cost measurement is taken on the uncached path, so the number means something."}]},{"id":"int.gate","view":"interim","kind":"path","label":"All seven assumptions → proceed decision","summary":"The interim state's exit criteria. Assumption 6 carries disproportionate weight: it is the first point in the whole programme where a real cost number exists.","steps":[{"node":"A1","note":"Stop-the-line if it fails."},{"node":"A2","note":"Stop-the-line if it fails."},{"node":"A3","note":"Design correction if it fails."},{"node":"A4","note":"Design correction if it fails."},{"node":"A5","note":"Design correction if it fails."},{"node":"A6","note":"If measured cost is far off expectation, the final topology changes before it is built three times over."},{"node":"A7","note":"Measured path should be about seven crossings, or there is a documented reason why not."},{"node":"GATE","note":"Only then is the pattern replicated across three workflows."}]},{"id":"fin.graphA","view":"final","kind":"path","label":"Graph A — Batch Review","summary":"The proven interim pattern, now one of three isolated graphs in a single deployment. Terminal certification stays human-only.","steps":[{"node":"QA","note":"The EU Qualified Person opens a batch."},{"node":"WEB","note":"One presentation layer over all three core contexts."},{"node":"FA1","note":"The Batch-Review Agent reasons within Graph A only."},{"node":"FT1","note":"Evidence Retrieval, scoped to Batch Review's evidence — never PV or Supply knowledge."},{"node":"FEP","note":"The shared evidence-authority model resolves status and supersession."},{"node":"FSRC","note":"Read-only. Zero write integrations, permanently."},{"node":"FT2","note":"Reconciliation — structured evidence-completeness and conflict check."},{"node":"FC1","note":"The Critic checks the output through the common DecisionSupportOutput contract."},{"node":"GOV","note":"Every output passes the policy engine, which fails closed."},{"node":"QA","note":"Decision support reaches the human. The system never certifies."}]},{"id":"fin.graphB","view":"final","kind":"path","label":"Graph B — PV Intake","summary":"100% of causality, seriousness and reportability determinations route to a human — because the agent's output schema has no such fields at all.","steps":[{"node":"PVP","note":"The Global Head of Pharmacovigilance owns this context."},{"node":"WEB","note":"Same presentation layer, different workflow view."},{"node":"FA2","note":"The PV-Intake Agent triages and prioritises; it cannot determine causality."},{"node":"FT1","note":"Evidence Retrieval, scoped to PV's evidence."},{"node":"FEP","note":"Same shared evidence contract — core contexts do not get their own evidence semantics."},{"node":"FT3","note":"Duplicate-Check must complete before a signal can be triaged."},{"node":"FC2","note":"The Critic verifies prohibited-action adjacency and citation completeness."},{"node":"GOV","note":"The HITL Router sends 100% of determinations to the named approver."},{"node":"PVP","note":"Final safety decisions remain human-only."}]},{"id":"fin.graphC","view":"final","kind":"path","label":"Graph C — Supply Planning (dual approval)","summary":"Options are non-executing by construction. The Supply Chain VP is limited to planning, so anything touching quality status also needs Quality sign-off.","steps":[{"node":"SC","note":"The Supply Chain VP requests shortage or cold-chain options."},{"node":"WEB","note":"Same presentation layer."},{"node":"FA3","note":"The Supply-Planning Agent generates ranked, non-executing options."},{"node":"FT1","note":"Evidence Retrieval, scoped to Supply's evidence."},{"node":"FEP","note":"Evidence authority resolved once, shared by all three contexts."},{"node":"FT4","note":"Option-Generation has no allocate or reserve method — a tool-capability constraint, not a permission."},{"node":"FC3","note":"The Critic checks that no ShortageOption carries an allocated_quantity-shaped field."},{"node":"GOV","note":"100% routing — option sets are never self-executing."},{"node":"SC","note":"The VP approves planning."},{"node":"QA","note":"Quality co-approval wherever quality status is implicated."}]},{"id":"fin.evidence","view":"final","kind":"path","label":"Shared evidence path — one authority model, three consumers","summary":"Evidence & Provenance is an upstream shared kernel: all three core contexts consume the identical authority model as conformist downstreams, and none may reach past it to a raw source system.","steps":[{"node":"FSRC","note":"The brownfield estate, where no system is universally authoritative."},{"node":"FEP","note":"Translates each source's local representation into the common EvidenceItem value object."},{"node":"FT1","note":"One shared retrieval tool, scoped per bounded context at call time."},{"node":"FA1","note":"Batch Review sees only Batch Review evidence."},{"node":"FA2","note":"PV Intake sees only PV evidence."},{"node":"FA3","note":"Supply Planning sees only Supply evidence."}]},{"id":"fin.governance","view":"final","kind":"path","label":"Governance, audit and observability","summary":"The policy engine is upstream of everything as an open-host service; the audit store is owned and deliberately separate from the hosted trace backend.","steps":[{"node":"GOV","note":"Prohibited-Action Guard, HITL Router, Policy Register — versioned independently so it cannot be locally weakened."},{"node":"FAUD","note":"Durable AgentRun records. Separate from LangSmith because compliance retention may differ from trace retention."},{"node":"FLS","note":"Hosted traces, evals and dashboards — additive, never a hard dependency."},{"node":"ADM","note":"The run inspector and eval dashboards read observability rather than driving workflows."}]},{"id":"fin.cache","view":"final","kind":"path","label":"Cache path — correctness over performance","summary":"Tiered TTL by workflow risk with status-aware keys. If Redis is unreachable the system falls back to no-cache; it never serves a response as-if-cached.","steps":[{"node":"CACHE","note":"Introduced only after the uncached path was proven correct in the interim state."},{"node":"FEP","note":"Cache keys are status-aware, because a superseded document must not survive in cache as citable."}]},{"id":"fin.gates","view":"final","kind":"path","label":"Completion gates — four satisfied, three open","summary":"Gates 2 and 3 required human answers rather than engineering work, and both were given. The three remaining gates cannot be closed by design work at all — they require the system to actually run.","steps":[{"node":"G2","note":"Satisfied — named approvers exist for all three workflows."},{"node":"G3","note":"Satisfied — cloud-connected operation confirmed."},{"node":"G4","note":"Satisfied — DDD and C4 both stable."},{"node":"G5","note":"Satisfied — all eight ADRs ratified."},{"node":"G1","note":"Open — requires the seven interim assumptions to pass in a real run."},{"node":"G6","note":"Open — requires zero prohibited-action findings across evals and red-team."},{"node":"G7","note":"Open — requires compliance evidence from real runs, not documented intent."},{"node":"DONE","note":"Declarable only when all seven hold."}]},{"id":"fin.delta","view":"final","kind":"path","label":"Interim → final delta","summary":"Six dimensions that widen once the pattern is proven once. Note that Supply Planning's dual approval is a constraint the stakeholder pack encodes, not an added formality.","steps":[{"node":"I1","note":"One workflow…"},{"node":"F1","note":"…becomes three."},{"node":"I2","note":"Two MCP tools…"},{"node":"F2","note":"…become four."},{"node":"I3","note":"No cache…"},{"node":"F3","note":"…becomes Redis plus cache-correctness evals."},{"node":"I4","note":"One approver…"},{"node":"F4","note":"…becomes all three, including Supply dual-approval."},{"node":"I5","note":"Tracing only…"},{"node":"F5","note":"…becomes dashboards, alerts and SLOs."},{"node":"I6","note":"No compliance evidence…"},{"node":"F6","note":"…becomes EU AI Act and ISO 42001 evidence from real runs."}]},{"id":"fin.absent","view":"final","kind":"invariant","label":"Invariant — the absent arrows are the design","summary":"Two absences in this diagram are permanent architectural commitments, not omissions: there is no edge between Graphs A, B and C, and there is no arrow into the brownfield systems.","steps":[{"node":"FA1","note":"No cross-graph agent calls — ADR-008 forbids them permanently."},{"node":"FA2","note":"Any cross-workflow need routes through Evidence & Provenance or Governance, never context-to-context."},{"node":"FA3","note":"A generalist agent holding all three prohibition lists in one context was explicitly rejected."},{"node":"FSRC","note":"Zero write integrations — enforced twice, at architecture level and at schema level."},{"node":"FT4","note":"The Supply tool has no allocate method at all, so the prohibited action is unrepresentable rather than merely disallowed."}]}]};
+(function () {
+  const DATA = JSON.parse(document.getElementById('graph-data').textContent);
+  const { meta, nodes, edges, flows } = DATA;
 
-const SVGNS = "http://www.w3.org/2000/svg";
-const el = (t, a = {}) => { const n = document.createElementNS(SVGNS, t); for (const k in a) n.setAttribute(k, a[k]); return n; };
+  document.getElementById('meta-name').textContent = meta.name;
+  document.getElementById('meta-desc').textContent = meta.description;
+  document.getElementById('meta-note').textContent = meta.note;
+  document.getElementById('meta-counts').textContent =
+    `${nodes.length} nodes · ${edges.length} edges · ${flows.length} flows · generated ${meta.generated}`;
 
-const KIND_LABEL = {
-  actor: "Human role", app: "Application", agent: "Domain agent", critic: "Critic / verifier",
-  tool: "MCP tool server", store: "Data store", external: "External system", policy: "Governance",
-  excluded: "Excluded by design", stage: "Programme stage", blocker: "Evidence backlog item",
-  artefact: "Repository content", assumption: "Assumption under test", gate: "Gate", delta: "Delta dimension"
-};
-const STATUS_VAR = {
-  ok: ["--ok", "--ok-bg"], warn: ["--warn", "--warn-bg"], danger: ["--danger", "--danger-bg"],
-  info: ["--info", "--info-bg"], neutral: ["--neutral", "--neutral-bg"]
-};
-
-const state = { view: GRAPH.views[0].id, flow: null, step: -1, tx: 0, ty: 0, k: 1 };
-
-const byId = {};
-GRAPH.nodes.forEach(n => byId[n.id] = n);
-const clusterById = {};
-GRAPH.clusters.forEach(c => clusterById[c.id] = c);
-
-const stage = document.getElementById("stage");
-const tip = document.getElementById("tip");
-let root, layers;
-
-/* ---------------- geometry ---------------- */
-function boxOf(ref) {
-  if (typeof ref === "string" && ref.startsWith("cluster:")) {
-    const c = clusterById[ref.slice(8)];
-    return c ? { x: c.x, y: c.y, w: c.w, h: c.h } : null;
+  // ---------------------------------------------------------------------
+  // Theme
+  // ---------------------------------------------------------------------
+  const root = document.documentElement;
+  function applyStoredTheme() {
+    const stored = localStorage.getItem('aegis-explorer-theme');
+    if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
   }
-  const n = byId[ref];
-  return n ? { x: n.x, y: n.y, w: n.w, h: n.h } : null;
-}
-const cx = b => b.x + b.w / 2, cy = b => b.y + b.h / 2;
-
-function sideOf(a, b) {
-  const dx = cx(b) - cx(a), dy = cy(b) - cy(a);
-  if (Math.abs(dx) / (a.w / 2 + 1) > Math.abs(dy) / (a.h / 2 + 1)) return dx > 0 ? "R" : "L";
-  return dy > 0 ? "B" : "T";
-}
-const NORMAL = { L: [-1, 0], R: [1, 0], T: [0, -1], B: [0, 1] };
-
-/* Distribute anchors so parallel edges leaving the same side do not overlap. */
-function computeAnchors(edges) {
-  const slots = new Map();
-  const meta = edges.map(e => {
-    const a = boxOf(e.from), b = boxOf(e.to);
-    if (!a || !b) return null;
-    const sa = sideOf(a, b), sb = sideOf(b, a);
-    const ka = e.from + "|" + sa, kb = e.to + "|" + sb;
-    if (!slots.has(ka)) slots.set(ka, []); slots.get(ka).push({ e, end: "a", other: cy(b) + cx(b) / 1000 });
-    if (!slots.has(kb)) slots.set(kb, []); slots.get(kb).push({ e, end: "b", other: cy(a) + cx(a) / 1000 });
-    return { e, a, b, sa, sb, ka, kb };
-  }).filter(Boolean);
-
-  const pos = new Map();
-  for (const [key, list] of slots) {
-    const [ref, side] = [key.slice(0, key.lastIndexOf("|")), key.slice(key.lastIndexOf("|") + 1)];
-    const box = boxOf(ref);
-    const horiz = side === "T" || side === "B";
-    list.sort((p, q) => p.other - q.other);
-    list.forEach((item, i) => {
-      const frac = (i + 1) / (list.length + 1);
-      const p = horiz
-        ? { x: box.x + box.w * frac, y: side === "T" ? box.y : box.y + box.h }
-        : { x: side === "L" ? box.x : box.x + box.w, y: box.y + box.h * frac };
-      pos.set(item.e.id + item.end, p);
-    });
-  }
-  return { meta, pos };
-}
-
-function edgePath(m, pos) {
-  const p0 = pos.get(m.e.id + "a"), p3 = pos.get(m.e.id + "b");
-  const na = NORMAL[m.sa], nb = NORMAL[m.sb];
-  const d = Math.hypot(p3.x - p0.x, p3.y - p0.y);
-  const off = Math.max(28, Math.min(90, d * 0.42));
-  const p1 = { x: p0.x + na[0] * off, y: p0.y + na[1] * off };
-  const p2 = { x: p3.x + nb[0] * off, y: p3.y + nb[1] * off };
-  const mid = {
-    x: (p0.x + 3 * p1.x + 3 * p2.x + p3.x) / 8,
-    y: (p0.y + 3 * p1.y + 3 * p2.y + p3.y) / 8
-  };
-  return { d: `M${p0.x},${p0.y} C${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`, mid, p0, p3 };
-}
-
-/* ---------------- text ---------------- */
-function wrap(text, width, fontSize) {
-  const max = Math.max(6, Math.floor((width - 18) / (fontSize * 0.545)));
-  const out = [];
-  for (const para of String(text).split("\n")) {
-    let line = "";
-    for (const word of para.split(/\s+/)) {
-      if (!line.length) { line = word; continue; }
-      if ((line + " " + word).length <= max) line += " " + word;
-      else { out.push(line); line = word; }
-    }
-    out.push(line);
-  }
-  return out;
-}
-
-/* ---------------- render ---------------- */
-function render() {
-  const view = GRAPH.views.find(v => v.id === state.view);
-  stage.innerHTML = "";
-
-  const defs = el("defs");
-  for (const [id, color] of [["arw", "var(--edge)"], ["arwhl", "var(--edge-hl)"]]) {
-    const mk = el("marker", { id, viewBox: "0 0 10 10", refX: "9", refY: "5",
-      markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" });
-    mk.appendChild(el("path", { d: "M0,1 L10,5 L0,9 z", fill: color }));
-    defs.appendChild(mk);
-  }
-  stage.appendChild(defs);
-
-  root = el("g");
-  stage.appendChild(root);
-  layers = {
-    clusters: el("g"), edges: el("g"), nodes: el("g"), badges: el("g")
-  };
-  Object.values(layers).forEach(g => root.appendChild(g));
-
-  // clusters (parents first)
-  GRAPH.clusters.filter(c => c.view === state.view)
-    .sort((a, b) => (a.parent ? 1 : 0) - (b.parent ? 1 : 0))
-    .forEach(c => {
-      const g = el("g", { class: "cluster" });
-      g.appendChild(el("rect", { class: "cluster-box", x: c.x, y: c.y, width: c.w, height: c.h,
-        rx: 12, fill: "var(--line-2)", stroke: "var(--line)", "stroke-dasharray": c.parent ? "4 4" : "" }));
-      const t = el("text", { class: "cluster-label", x: c.x + 13, y: c.y + 17 });
-      t.textContent = c.label;
-      g.appendChild(t);
-      layers.clusters.appendChild(g);
-    });
-
-  // edges
-  const edges = GRAPH.edges.filter(e => e.view === state.view);
-  const { meta, pos } = computeAnchors(edges);
-  const edgeEls = new Map();
-  meta.forEach(m => {
-    const { d, mid } = edgePath(m, pos);
-    const g = el("g", { class: "edge" + (m.e.kind === "dashed" ? " dashed" : ""), "data-id": m.e.id });
-    g.appendChild(el("path", { class: "ehit", d }));
-    const p = el("path", { d, "marker-end": "url(#arw)" });
-    if (m.e.kind === "bidirectional") p.setAttribute("marker-start", "url(#arw)");
-    g.appendChild(p);
-    if (m.e.label) {
-      const pad = 3, fs = 10, w = m.e.label.length * fs * 0.54 + pad * 2;
-      g.appendChild(el("rect", { x: mid.x - w / 2, y: mid.y - 8, width: w, height: 14, rx: 4,
-        fill: "var(--canvas)", opacity: ".92" }));
-      const t = el("text", { class: "elabel", x: mid.x, y: mid.y + 2.5, "text-anchor": "middle" });
-      t.textContent = m.e.label;
-      g.appendChild(t);
-    }
-    if (m.e.tooltip || m.e.label) {
-      g.addEventListener("mouseenter", ev => showTip(ev, {
-        name: (byId[m.e.from]?.label || m.e.from).split("\n")[0] + "  →  " + (byId[m.e.to]?.label || m.e.to).split("\n")[0],
-        kind: m.e.kind === "bidirectional" ? "Bidirectional" : m.e.kind === "dashed" ? "Dashed relation" : "Relation",
-        body: m.e.tooltip || m.e.label, status: "neutral"
-      }));
-      g.addEventListener("mousemove", moveTip);
-      g.addEventListener("mouseleave", hideTip);
-    }
-    edgeEls.set(m.e.id, g);
-    layers.edges.appendChild(g);
+  applyStoredTheme();
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const current = root.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : (current === 'light' ? null : 'dark');
+    if (next) { root.setAttribute('data-theme', next); localStorage.setItem('aegis-explorer-theme', next); }
+    else { root.removeAttribute('data-theme'); localStorage.removeItem('aegis-explorer-theme'); }
   });
 
-  // nodes
-  const nodeEls = new Map();
-  GRAPH.nodes.filter(n => n.view === state.view).forEach(n => {
-    const [sc, sb] = STATUS_VAR[n.status] || STATUS_VAR.neutral;
-    const g = el("g", { class: "node", "data-id": n.id, tabindex: "0" });
-    g.appendChild(el("rect", { class: "ring", x: n.x - 4, y: n.y - 4, width: n.w + 8, height: n.h + 8, rx: 13,
-      fill: "none", stroke: "none" }));
-    g.appendChild(el("rect", { class: "box", x: n.x, y: n.y, width: n.w, height: n.h, rx: 9,
-      fill: `var(${sb})`, stroke: `var(${sc})`,
-      "stroke-dasharray": n.kind === "excluded" ? "5 4" : "" }));
-
-    const lines = wrap(n.label, n.w, 12);
-    const hasBadge = !!n.badge;
-    const badgeLines = hasBadge ? wrap(n.badge, n.w, 9.8) : [];
-    const lh = 14, blh = 11.5;
-    const total = lines.length * lh + (hasBadge ? badgeLines.length * blh + 3 : 0);
-    let y = n.y + n.h / 2 - total / 2 + 10.5;
-    lines.forEach(ln => {
-      const t = el("text", { class: "nlabel", x: n.x + n.w / 2, y, "text-anchor": "middle", fill: "var(--ink)" });
-      t.textContent = ln; g.appendChild(t); y += lh;
-    });
-    if (hasBadge) {
-      y += 1;
-      badgeLines.forEach(ln => {
-        const t = el("text", { class: "nbadge", x: n.x + n.w / 2, y, "text-anchor": "middle", fill: `var(${sc})` });
-        t.textContent = ln; g.appendChild(t); y += blh;
-      });
-    }
-
-    g.addEventListener("mouseenter", ev => showTip(ev, {
-      name: n.label.replace(/\n/g, " "), kind: KIND_LABEL[n.kind] || n.kind,
-      body: n.tooltip, src: n.source, status: n.status
-    }));
-    g.addEventListener("mousemove", moveTip);
-    g.addEventListener("mouseleave", hideTip);
-    g.addEventListener("focus", ev => showTipAtNode(g, n));
-    g.addEventListener("blur", hideTip);
-    g.addEventListener("click", () => {
-      const f = GRAPH.flows.find(f => f.view === state.view && f.steps.some(s => s.node === n.id));
-      if (f) selectFlow(f.id);
-    });
-
-    nodeEls.set(n.id, g);
-    layers.nodes.appendChild(g);
-  });
-
-  render._edgeEls = edgeEls;
-  render._nodeEls = nodeEls;
-  render._canvas = view.canvas;
-
-  document.getElementById("viewnote").innerHTML =
-    `<b>${escapeHtml(view.label)} — ${escapeHtml(view.subtitle)}.</b> ${escapeHtml(view.note)}`;
-  document.getElementById("panelSub").textContent =
-    `${GRAPH.flows.filter(f => f.view === state.view).length} flows in this view. Select one to trace its full path.`;
-
-  applyHighlight();
-  fit();
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-}
-
-/* ---------------- highlight ---------------- */
-/* Every id an edge may legitimately be attached to for a given node: the node itself,
-   its cluster, and that cluster's parent (cluster-anchored edges such as
-   "cluster:f_orch -> GOV" belong to every node inside the orchestrator boundary). */
-function keysOf(id) {
-  const n = byId[id];
-  const k = [id];
-  if (n && n.cluster) {
-    k.push("cluster:" + n.cluster);
-    const c = clusterById[n.cluster];
-    if (c && c.parent) k.push("cluster:" + c.parent);
-  }
-  return k;
-}
-function matchEdge(e, aId, bId) {
-  const A = keysOf(aId), B = keysOf(bId);
-  return (A.includes(e.from) && B.includes(e.to)) || (A.includes(e.to) && B.includes(e.from));
-}
-/* An edge is part of the path when BOTH its endpoints are on the flow — not merely when
-   two steps happen to be adjacent. A flow visits nodes in reading order, but the wiring
-   between them is the diagram's, so consecutive-pair matching would leave real edges dark
-   and highlighted boxes floating unconnected. */
-function edgesOnPath(nodeIds) {
-  const attach = new Set();
-  nodeIds.forEach(id => keysOf(id).forEach(k => attach.add(k)));
-  const out = new Set();
-  for (const e of GRAPH.edges) {
-    if (e.view !== state.view) continue;
-    if (attach.has(e.from) && attach.has(e.to)) out.add(e.id);
-  }
-  return out;
-}
-
-function applyHighlight() {
-  const nodeEls = render._nodeEls, edgeEls = render._edgeEls;
-  layers.badges.innerHTML = "";
-  const flow = GRAPH.flows.find(f => f.id === state.flow);
-
-  if (!flow) {
-    nodeEls.forEach(g => g.classList.remove("dim", "hl", "focus"));
-    edgeEls.forEach(g => g.classList.remove("dim", "hl"));
-    edgeEls.forEach(g => g.querySelectorAll("path")[1].setAttribute("marker-end", "url(#arw)"));
-    return;
-  }
-
-  const seq = flow.steps.map(s => s.node);
-  const nodeSet = new Set(seq);
-  const hlEdges = edgesOnPath(seq);
-
-  // The single hop into the focused step, emphasised above the rest of the path.
-  const focusEdges = new Set();
-  if (state.step > 0) {
-    for (const e of GRAPH.edges) {
-      if (e.view === state.view && matchEdge(e, seq[state.step - 1], seq[state.step])) focusEdges.add(e.id);
-    }
-  }
-
-  nodeEls.forEach((g, id) => {
-    const on = nodeSet.has(id);
-    g.classList.toggle("dim", !on);
-    g.classList.toggle("hl", on);
-    g.classList.remove("focus");
-    if (on) g.querySelector("rect.ring").setAttribute("stroke", "var(--edge-hl)");
-  });
-  edgeEls.forEach((g, id) => {
-    const on = hlEdges.has(id);
-    g.classList.toggle("dim", !on);
-    g.classList.toggle("hl", on);
-    g.classList.toggle("focus", focusEdges.has(id));
-    g.querySelectorAll("path")[1].setAttribute("marker-end", on ? "url(#arwhl)" : "url(#arw)");
-  });
-
-  // numbered step badges, first occurrence of each node
-  const seen = new Map();
-  seq.forEach((id, i) => { if (!seen.has(id)) seen.set(id, []); seen.get(id).push(i + 1); });
-  for (const [id, nums] of seen) {
-    const n = byId[id]; if (!n) continue;
-    const g = el("g", { class: "stepbadge" });
-    g.appendChild(el("circle", { cx: n.x + n.w - 3, cy: n.y + 3, r: 10.5,
-      stroke: "var(--canvas)", "stroke-width": 2 }));
-    const t = el("text", { x: n.x + n.w - 3, y: n.y + 6.8 });
-    t.textContent = nums.length > 1 ? nums[0] + "+" : nums[0];
-    g.appendChild(t);
-    layers.badges.appendChild(g);
-  }
-
-  if (state.step >= 0 && flow.steps[state.step]) {
-    const g = nodeEls.get(flow.steps[state.step].node);
-    if (g) g.classList.add("focus");
-  }
-}
-
-/* ---------------- panel ---------------- */
-function buildTabs() {
-  const box = document.getElementById("tabs");
-  box.innerHTML = "";
-  GRAPH.views.forEach(v => {
-    const b = document.createElement("button");
-    b.className = "tab"; b.setAttribute("role", "tab");
-    b.setAttribute("aria-selected", v.id === state.view);
-    b.textContent = v.label;
-    b.onclick = () => { state.view = v.id; state.flow = null; state.step = -1; buildTabs(); buildFlows(); render(); syncClear(); };
-    box.appendChild(b);
-  });
-}
-
-function buildFlows() {
-  const box = document.getElementById("flowlist");
-  box.innerHTML = "";
-  GRAPH.flows.filter(f => f.view === state.view).forEach(f => {
-    const card = document.createElement("div");
-    card.className = "flow" + (f.id === state.flow ? " active" : "");
-    card.dataset.id = f.id;
-
-    const btn = document.createElement("button");
-    btn.innerHTML =
-      `<span class="kind ${f.kind === "invariant" ? "invariant" : ""}">${f.kind === "invariant" ? "invariant" : "flow"}</span>` +
-      `<span class="ftitle"><span class="fname">${escapeHtml(f.label)}</span>` +
-      `<span class="fcount">${f.steps.length} steps</span></span>` +
-      `<p class="fsum">${escapeHtml(f.summary)}</p>`;
-    btn.onclick = () => selectFlow(f.id === state.flow ? null : f.id);
-    card.appendChild(btn);
-
-    if (f.id === state.flow) {
-      const nav = document.createElement("div");
-      nav.className = "stepnav";
-      const prev = Object.assign(document.createElement("button"), { className: "btn", textContent: "‹ Prev" });
-      const next = Object.assign(document.createElement("button"), { className: "btn", textContent: "Next ›" });
-      const pos = document.createElement("span");
-      pos.className = "pos";
-      pos.textContent = state.step < 0 ? "whole path" : `step ${state.step + 1} / ${f.steps.length}`;
-      prev.onclick = () => { state.step = state.step <= 0 ? f.steps.length - 1 : state.step - 1; buildFlows(); applyHighlight(); };
-      next.onclick = () => { state.step = state.step >= f.steps.length - 1 ? -1 : state.step + 1; buildFlows(); applyHighlight(); };
-      nav.append(prev, next, pos);
-      card.appendChild(nav);
-
-      const steps = document.createElement("div");
-      steps.className = "steps";
-      f.steps.forEach((s, i) => {
-        const n = byId[s.node];
-        const d = document.createElement("div");
-        d.className = "step" + (i === state.step ? " on" : "");
-        d.innerHTML = `<span class="num">${i + 1}</span><span class="stext">` +
-          `<span class="slabel">${escapeHtml((n ? n.label : s.node).replace(/\n/g, " "))}</span>` +
-          (s.note ? `<div class="snote">${escapeHtml(s.note)}</div>` : "") + `</span>`;
-        d.onclick = () => { state.step = i; buildFlows(); applyHighlight(); };
-        steps.appendChild(d);
-      });
-      card.appendChild(steps);
-    }
-    box.appendChild(card);
-  });
-}
-
-function selectFlow(id) {
-  state.flow = id; state.step = -1;
-  buildFlows(); applyHighlight(); syncClear();
-  const card = document.querySelector(`.flow[data-id="${id}"]`);
-  if (card) card.scrollIntoView({ block: "nearest", behavior: "smooth" });
-}
-function syncClear() { document.getElementById("clearBtn").hidden = !state.flow; }
-
-function buildLegend() {
-  const box = document.getElementById("legendItems");
-  const items = [
-    ["ok", "Complete / satisfied"], ["info", "Runtime component"], ["warn", "Guard or gate"],
-    ["danger", "Excluded / stop-the-line"], ["neutral", "Not started / external"]
+  // ---------------------------------------------------------------------
+  // Lane assignment
+  // ---------------------------------------------------------------------
+  const LANES = [
+    { key: 'frontend_page', label: 'Frontend Pages', match: n => n.type === 'frontend_page' },
+    { key: 'frontend_comp', label: 'Frontend Components / Lib', match: n => n.type === 'frontend_component' || n.type === 'frontend_lib' },
+    { key: 'api_endpoint', label: 'API Endpoints', match: n => n.type === 'api_endpoint' },
+    { key: 'policy_auth', label: 'Auth / Read Models', match: n => n.type === 'policy' && !n.id.startsWith('store_') },
+    { key: 'graph_builder', label: 'Workflow Graphs', match: n => n.type === 'graph_node' && n.id.startsWith('graph_') },
+    { key: 'spine', label: 'Shared Graph Spine (14 nodes)', match: n => n.type === 'graph_node' && n.id.startsWith('spine_') },
+    { key: 'tool', label: 'Tool Layer', match: n => n.type === 'tool' },
+    { key: 'store', label: 'Stores', match: n => n.type === 'store' },
+    { key: 'domain', label: 'Domain / Config', match: n => n.type === 'domain' },
+    { key: 'eval', label: 'Eval Harness', match: n => n.type === 'eval' },
   ];
-  box.innerHTML = items.map(([s, l]) =>
-    `<span class="li"><span class="sw" style="background:var(${STATUS_VAR[s][1]});border-color:var(${STATUS_VAR[s][0]})"></span>${l}</span>`
-  ).join("");
-}
 
-/* ---------------- tooltip ---------------- */
-function showTip(ev, d) {
-  const [sc] = STATUS_VAR[d.status] || STATUS_VAR.neutral;
-  tip.innerHTML =
-    `<div class="t-head"><span class="t-dot" style="background:var(${STATUS_VAR[d.status] ? STATUS_VAR[d.status][1] : "--neutral-bg"});border-color:var(${sc})"></span>` +
-    `<span class="t-name">${escapeHtml(d.name)}</span></div>` +
-    `<div class="t-kind">${escapeHtml(d.kind || "")}</div>` +
-    (d.body ? `<div class="t-body" style="margin-top:5px">${escapeHtml(d.body)}</div>` : "") +
-    (d.src ? `<div class="t-src">${escapeHtml(d.src)}</div>` : "");
-  tip.classList.add("on");
-  moveTip(ev);
-}
-function showTipAtNode(g, n) {
-  const r = g.getBoundingClientRect();
-  showTip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 },
-    { name: n.label.replace(/\n/g, " "), kind: KIND_LABEL[n.kind] || n.kind, body: n.tooltip, src: n.source, status: n.status });
-}
-function moveTip(ev) {
-  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
-  let x = ev.clientX + pad, y = ev.clientY + pad;
-  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
-  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
-  tip.style.left = Math.max(8, x) + "px";
-  tip.style.top = Math.max(8, y) + "px";
-}
-function hideTip() { tip.classList.remove("on"); }
+  const laneOf = {};
+  const laneNodes = LANES.map(() => []);
+  nodes.forEach(n => {
+    let idx = LANES.findIndex(l => l.match(n));
+    if (idx === -1) idx = LANES.length - 1;
+    laneOf[n.id] = idx;
+    laneNodes[idx].push(n);
+  });
 
-/* ---------------- pan / zoom ---------------- */
-function applyTransform() {
-  root.setAttribute("transform", `translate(${state.tx},${state.ty}) scale(${state.k})`);
-}
-function fit() {
-  const r = stage.getBoundingClientRect();
-  const c = render._canvas;
-  const pad = 36;
-  const k = Math.min((r.width - pad * 2) / c.width, (r.height - pad * 2) / c.height, 1.6);
-  state.k = k;
-  state.tx = (r.width - c.width * k) / 2;
-  state.ty = (r.height - c.height * k) / 2;
-  applyTransform();
-}
-function zoomBy(f, ox, oy) {
-  const r = stage.getBoundingClientRect();
-  const px = (ox ?? r.width / 2), py = (oy ?? r.height / 2);
-  const k2 = Math.max(0.2, Math.min(3.5, state.k * f));
-  state.tx = px - (px - state.tx) * (k2 / state.k);
-  state.ty = py - (py - state.ty) * (k2 / state.k);
-  state.k = k2;
-  applyTransform();
-}
+  const NODE_W = 178, NODE_H = 30, ROW_GAP = 10, LANE_GAP = 64, LANE_HEAD = 34, TOP_PAD = 46;
+  const laneX = LANES.map((_, i) => i * (NODE_W + LANE_GAP) + 20);
+  const pos = {};
+  laneNodes.forEach((list, laneIdx) => {
+    list.forEach((n, rowIdx) => {
+      pos[n.id] = {
+        x: laneX[laneIdx],
+        y: TOP_PAD + LANE_HEAD + rowIdx * (NODE_H + ROW_GAP),
+        w: NODE_W, h: NODE_H,
+      };
+    });
+  });
+  const maxRows = Math.max(...laneNodes.map(l => l.length));
+  const svgW = laneX[laneX.length - 1] + NODE_W + 30;
+  const svgH = TOP_PAD + LANE_HEAD + maxRows * (NODE_H + ROW_GAP) + 30;
 
-let drag = null;
-stage.addEventListener("pointerdown", e => {
-  if (e.target.closest(".node") || e.target.closest(".edge")) return;
-  drag = { x: e.clientX, y: e.clientY, tx: state.tx, ty: state.ty };
-  stage.classList.add("dragging");
-  stage.setPointerCapture(e.pointerId);
-});
-stage.addEventListener("pointermove", e => {
-  if (!drag) return;
-  state.tx = drag.tx + (e.clientX - drag.x);
-  state.ty = drag.ty + (e.clientY - drag.y);
-  applyTransform();
-});
-["pointerup", "pointercancel"].forEach(t => stage.addEventListener(t, () => { drag = null; stage.classList.remove("dragging"); }));
-stage.addEventListener("wheel", e => {
-  e.preventDefault();
-  const r = stage.getBoundingClientRect();
-  zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top);
-}, { passive: false });
+  function typeColor(type) {
+    return `var(--c-${type})`;
+  }
 
-document.getElementById("zoomIn").onclick = () => zoomBy(1.2);
-document.getElementById("zoomOut").onclick = () => zoomBy(1 / 1.2);
-document.getElementById("zoomFit").onclick = () => fit();
-document.getElementById("clearBtn").onclick = () => selectFlow(null);
-document.getElementById("themeBtn").onclick = () => {
-  const cur = document.documentElement.getAttribute("data-theme");
-  const dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
-};
+  // ---------------------------------------------------------------------
+  // Render SVG
+  // ---------------------------------------------------------------------
+  const svg = document.getElementById('diagram');
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
 
-addEventListener("keydown", e => {
-  if (e.key === "Escape") selectFlow(null);
-  if (!state.flow) return;
-  const f = GRAPH.flows.find(x => x.id === state.flow);
-  if (e.key === "ArrowRight") { state.step = state.step >= f.steps.length - 1 ? -1 : state.step + 1; buildFlows(); applyHighlight(); }
-  if (e.key === "ArrowLeft") { state.step = state.step <= 0 ? f.steps.length - 1 : state.step - 1; buildFlows(); applyHighlight(); }
-});
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
 
-let rt;
-addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
+  // Lane headers
+  LANES.forEach((l, i) => {
+    const t = el('text', { class: 'lane-label', x: laneX[i], y: TOP_PAD + 12 });
+    t.textContent = `${l.label} (${laneNodes[i].length})`;
+    svg.appendChild(t);
+  });
 
-buildTabs(); buildFlows(); buildLegend(); render(); syncClear();
+  // Edge layer (drawn first, under nodes)
+  const edgeLayer = el('g', { id: 'edge-layer' });
+  svg.appendChild(edgeLayer);
+  const edgeEls = [];
+  edges.forEach(e => {
+    const a = pos[e.from], b = pos[e.to];
+    if (!a || !b) return;
+    let d;
+    if (a.x <= b.x) {
+      const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      const x2 = b.x, y2 = b.y + b.h / 2;
+      const mx = (x1 + x2) / 2;
+      d = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+    } else {
+      const x1 = a.x, y1 = a.y + a.h / 2;
+      const x2 = b.x + b.w, y2 = b.y + b.h / 2;
+      const mx = (x1 + x2) / 2;
+      d = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+    }
+    const p = el('path', { class: 'edge-path', d });
+    p.dataset.from = e.from;
+    p.dataset.to = e.to;
+    const title = el('title', {});
+    title.textContent = `${e.from} —${e.type}→ ${e.to}: ${e.description}`;
+    p.appendChild(title);
+    edgeLayer.appendChild(p);
+    edgeEls.push(p);
+  });
+
+  // Node layer
+  const nodeLayer = el('g', { id: 'node-layer' });
+  svg.appendChild(nodeLayer);
+  const nodeEls = {};
+  nodes.forEach(n => {
+    const p = pos[n.id];
+    const g = el('g', { class: 'node-group', 'data-id': n.id });
+    const rect = el('rect', {
+      class: 'node-rect', x: p.x, y: p.y, width: p.w, height: p.h, rx: 6,
+      fill: typeColor(n.type),
+    });
+    g.appendChild(rect);
+    const label = el('text', {
+      class: 'node-label', x: p.x + 8, y: p.y + p.h / 2 + 3.5,
+    });
+    let text = n.label;
+    if (text.length > 24) text = text.slice(0, 23) + '…';
+    label.textContent = text;
+    g.appendChild(label);
+    g.addEventListener('mouseenter', (ev) => showTooltip(n, ev));
+    g.addEventListener('mousemove', (ev) => moveTooltip(ev));
+    g.addEventListener('mouseleave', hideTooltip);
+    g.addEventListener('click', () => selectNode(n.id));
+    nodeLayer.appendChild(g);
+    nodeEls[n.id] = { g, rect, label };
+  });
+
+  // ---------------------------------------------------------------------
+  // Tooltip
+  // ---------------------------------------------------------------------
+  const tooltip = document.getElementById('tooltip');
+  function showTooltip(n, ev) {
+    tooltip.innerHTML =
+      `<span class="tt-type" style="background:${typeColor(n.type)}">${n.type}</span><br>` +
+      `<strong>${escapeHtml(n.label)}</strong><br>` +
+      `<span class="tt-file">${escapeHtml(n.file)}</span>` +
+      `<span class="tt-desc">${escapeHtml(n.description)}</span>`;
+    tooltip.style.display = 'block';
+    moveTooltip(ev);
+  }
+  function moveTooltip(ev) {
+    const pad = 16;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + 330 > window.innerWidth) x = ev.clientX - 330 - pad;
+    if (y + 160 > window.innerHeight) y = ev.clientY - 160;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  }
+  function hideTooltip() { tooltip.style.display = 'none'; }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ---------------------------------------------------------------------
+  // Node detail panel (click)
+  // ---------------------------------------------------------------------
+  const detailPanel = document.getElementById('detail-panel');
+  let selectedNodeId = null;
+  function selectNode(id) {
+    selectedNodeId = id;
+    const n = nodes.find(x => x.id === id);
+    Object.values(nodeEls).forEach(({ g }) => g.classList.remove('selected'));
+    if (nodeEls[id]) nodeEls[id].g.classList.add('selected');
+    detailPanel.classList.add('show');
+    detailPanel.innerHTML =
+      `<button class="dclose" id="detail-close">✕ close</button>` +
+      `<span class="dtype" style="background:${typeColor(n.type)};color:#fff">${n.type}</span>` +
+      `<h3>${escapeHtml(n.label)}</h3>` +
+      `<span class="dfile">${escapeHtml(n.file)}</span>` +
+      `<div class="ddesc">${escapeHtml(n.description)}</div>`;
+    document.getElementById('detail-close').addEventListener('click', () => {
+      detailPanel.classList.remove('show');
+      selectedNodeId = null;
+      Object.values(nodeEls).forEach(({ g }) => g.classList.remove('selected'));
+    });
+    // scroll node into view
+    const p = pos[id];
+    if (p) {
+      const wrap = document.getElementById('canvas-wrap');
+      wrap.scrollTo({
+        left: Math.max(0, p.x - wrap.clientWidth / 2 + p.w / 2),
+        top: Math.max(0, p.y - wrap.clientHeight / 2 + p.h / 2),
+        behavior: 'smooth',
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Legend (toggle dim by type)
+  // ---------------------------------------------------------------------
+  const legend = document.getElementById('legend');
+  const activeTypes = new Set(nodes.map(n => n.type));
+  const allTypes = [...new Set(nodes.map(n => n.type))];
+  allTypes.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `<span class="swatch" style="background:${typeColor(t)}"></span><span>${t}</span>`;
+    item.addEventListener('click', () => {
+      if (activeTypes.has(t)) { activeTypes.delete(t); item.classList.add('dimmed'); }
+      else { activeTypes.add(t); item.classList.remove('dimmed'); }
+      applyTypeFilter();
+    });
+    legend.appendChild(item);
+  });
+  function applyTypeFilter() {
+    nodes.forEach(n => {
+      const { g } = nodeEls[n.id];
+      g.style.display = activeTypes.has(n.type) ? '' : 'none';
+    });
+    edges.forEach((e, i) => {
+      const fromN = nodes.find(n => n.id === e.from);
+      const toN = nodes.find(n => n.id === e.to);
+      const visible = fromN && toN && activeTypes.has(fromN.type) && activeTypes.has(toN.type);
+      edgeEls[i].style.display = visible ? '' : 'none';
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Flows panel
+  // ---------------------------------------------------------------------
+  const flowList = document.getElementById('flow-list');
+  let selectedFlow = null;
+
+  function renderFlowList(filterText) {
+    flowList.innerHTML = '';
+    const q = (filterText || '').toLowerCase();
+    flows.filter(f => !q || f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q))
+      .forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'flow-item' + (selectedFlow === f.id ? ' selected' : '');
+        item.innerHTML =
+          `<div class="fname">${escapeHtml(f.name)}</div>` +
+          `<div class="fdesc">${escapeHtml(f.description)}</div>` +
+          `<div class="fsteps">${f.steps.length} steps</div>`;
+        item.addEventListener('click', () => {
+          if (selectedFlow === f.id) { clearFlow(); }
+          else { applyFlow(f); }
+        });
+        flowList.appendChild(item);
+      });
+  }
+  renderFlowList('');
+  document.getElementById('flow-search').addEventListener('input', (e) => renderFlowList(e.target.value));
+
+  function applyFlow(f) {
+    selectedFlow = f.id;
+    const stepSet = new Set(f.steps);
+    nodes.forEach(n => {
+      const { g } = nodeEls[n.id];
+      if (stepSet.has(n.id)) g.classList.remove('dimmed-node');
+    });
+    Object.entries(nodeEls).forEach(([id, { rect, label }]) => {
+      const active = stepSet.has(id);
+      rect.classList.toggle('active', active);
+      rect.classList.toggle('dimmed', !active);
+      label.classList.toggle('dimmed', !active);
+    });
+    edgeEls.forEach((p, i) => {
+      const e = edges[i];
+      const active = stepSet.has(e.from) && stepSet.has(e.to);
+      p.classList.toggle('active', active);
+      p.classList.toggle('dimmed', !active);
+    });
+    renderFlowList(document.getElementById('flow-search').value);
+    // scroll to first step
+    const p0 = pos[f.steps[0]];
+    if (p0) {
+      const wrap = document.getElementById('canvas-wrap');
+      wrap.scrollTo({ left: Math.max(0, p0.x - 100), top: Math.max(0, p0.y - 100), behavior: 'smooth' });
+    }
+  }
+  function clearFlow() {
+    selectedFlow = null;
+    Object.values(nodeEls).forEach(({ rect, label }) => {
+      rect.classList.remove('active', 'dimmed');
+      label.classList.remove('dimmed');
+    });
+    edgeEls.forEach(p => p.classList.remove('active', 'dimmed'));
+    renderFlowList(document.getElementById('flow-search').value);
+  }
+
+  // ---------------------------------------------------------------------
+  // Zoom
+  // ---------------------------------------------------------------------
+  let scale = 1;
+  function applyZoom() {
+    svg.style.transform = `scale(${scale})`;
+    svg.style.transformOrigin = 'top left';
+  }
+  document.getElementById('zoom-in').addEventListener('click', () => { scale = Math.min(1.6, scale + 0.1); applyZoom(); });
+  document.getElementById('zoom-out').addEventListener('click', () => { scale = Math.max(0.4, scale - 0.1); applyZoom(); });
+  document.getElementById('zoom-reset').addEventListener('click', () => { scale = 1; applyZoom(); });
+})();
 </script>
-</body>
-</html>

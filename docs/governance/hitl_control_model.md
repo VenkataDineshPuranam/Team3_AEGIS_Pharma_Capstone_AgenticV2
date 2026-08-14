@@ -127,3 +127,45 @@ organization, every role in §2 and every duration in this section must be re-co
 an actual named Entra-group assignment and an actual approver's stated availability — this is
 a design-time consistency check, not operational confirmation, and must not be mistaken for
 one at Stage 20.
+
+## 8. Stage 22 addition — severity/timer display, and what it deliberately is not
+
+Two things were added to the AEGIS Control Center UI: a live "how overdue is this"
+severity badge (1–4, colour-coded) on every pending run, and this document's own §7
+ladder durations wired to actually compute it — both `services/integration/hitl_timer.py`
+(read-time, recomputed on every request) and `hitl_route.py` (Batch Review's own state
+machine, referenced but still not called by anything live — see below).
+
+**What this closes.** Before this stage, §7's per-workflow ladder durations existed only
+as design intent — no running code read them. `hitl_timer.py` now applies the *correct*
+per-workflow ladder (Batch Review 8h/16h/24h, PV Intake's deliberately shorter 4h/8h/24h,
+Supply Planning 8h/16h/24h) to every pending run's actual elapsed wait time, surfaced as a
+badge in the Decision Queue and on the Decision Detail page. An earlier draft of this
+feature used Batch Review's numbers for all six workflows before this section was
+consulted — caught and fixed before merge, not caught after; recorded here so the
+mistake and its correction are both on the record, not just the fix.
+
+**What this does NOT close, stated plainly:**
+- **No live scheduler.** `hitl_route.resolve_tier` (§7's actual escalation-ladder state
+  machine, widening approver eligibility at T2) is still called nowhere outside its own
+  test file. `hitl_timer.py` is a read-time, display-only computation — reaching severity
+  4 changes a badge's colour, not who is authorized to decide the run.
+  `user_store.approver_string_for` is completely unaffected.
+- **No notification channel.** No email, Slack, webhook, or push exists in this build.
+  Severity is only visible to someone who opens the app and looks.
+- **The three Stage 21 workflows have no documented ladder.** `research_review`,
+  `clinical_integrity`, and `regulatory_completeness` postdate this document; `hitl_timer.py`
+  falls back to the Batch Review numbers for them as the closest analog, stated as an
+  explicit assumption in its own module docstring, not a value derived from a stakeholder
+  consultation the way §7's three original rows were.
+- **Dev-only backdating aid.** `services/api/pending_queue.py::debug_backdate`, exposed
+  only via `POST /api/debug/backdate/{run_id}` and only when
+  `AEGIS_ENABLE_DEBUG_ENDPOINTS=1` is set, rewrites a real pending run's `created_at` so
+  the severity tiers can be exercised without waiting real hours. It touches only that
+  timestamp — never the run's findings, evidence, or audit trail — and is unreachable from
+  any UI control or default configuration.
+
+**Revisit trigger, extended:** the same T-11 trigger above applies to actually wiring
+`resolve_tier` (or an equivalent) to a live clock, and to researching real ladder
+durations for the three Stage 21 workflows, when this system next operates against a real
+organization.

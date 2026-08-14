@@ -26,6 +26,19 @@ export type RunStatus =
 export type DecisionAction = "approved" | "rejected" | "veto" | "timed_out";
 export type SupplyLeg = "planning" | "quality";
 
+export interface SessionInfo {
+  token: string;
+  user_id: string;
+  display_name: string;
+  role: string;
+  expires_at: string;
+}
+
+export interface RoleCatalogEntry {
+  product_use: string;
+  must_never: string;
+}
+
 export interface DraftClaim {
   text: string;
   cites: string[];
@@ -137,6 +150,18 @@ export type DomainPayload =
   | ClinicalPayload
   | RegulatoryPayload;
 
+/** services/integration/hitl_timer.py's tier -- display only, recomputed on every poll. */
+export type HitlTier = "T0" | "T1" | "T2" | "T3";
+
+export interface HitlTimerInfo {
+  tier: HitlTier;
+  label: string;
+  /** 1 (lowest) .. 4 (highest / red). */
+  severity: number;
+  hours_elapsed: number;
+  hours_to_next_tier: number | null;
+}
+
 export interface QueueEntry {
   run_id: string;
   workflow: Workflow;
@@ -151,6 +176,7 @@ export interface QueueEntry {
   evidence: EvidenceRef[];
   domain_payload: DomainPayload | null;
   evidence_accounting: Record<string, unknown> | null;
+  hitl_timer: HitlTimerInfo;
 }
 
 export interface RunResult {

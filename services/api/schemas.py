@@ -20,6 +20,19 @@ Workflow = Literal[
 MIN_JUSTIFICATION_CHARS = 12
 
 
+class LoginRequest(BaseModel):
+    user_id: str
+    password: str
+
+
+class SessionInfo(BaseModel):
+    token: str
+    user_id: str
+    display_name: str
+    role: str
+    expires_at: str
+
+
 class SubmitRunRequest(BaseModel):
     workflow: Workflow
     subject_id: str  # batch_id / case_id / product_id
@@ -33,10 +46,12 @@ class DecideRequest(BaseModel):
     real audit record (human_override_recorded.justification) by the graph's own
     hitl_interrupt node -- not held in the API, and not held in React state.
 
-    `claimed_identity` is exactly what its name says: an unverified assertion. No
-    authentication exists in this build, so it is recorded as context, never consulted to
-    decide whether the action is permitted. The graph writes the governance layer's own
-    approver role into the audit record regardless of this field.
+    Identity now comes from the authenticated session (services/api/auth.py's
+    `require_user`, resolved from the request's Authorization header) -- NOT from this
+    body. `claimed_identity` remains here only so `hitl_decision.decode`'s dict shape
+    stays backward-compatible with the tests that resume graphs directly; the HTTP layer
+    always overwrites it with the authenticated user's display name before it reaches the
+    graph, in `main.decide_run`.
     """
 
     workflow: Workflow
@@ -98,6 +113,17 @@ class RunResult(BaseModel):
     veto_recorded: bool = False
 
 
+class HitlTimerInfo(BaseModel):
+    """services/integration/hitl_timer.py's severity/timer computation -- display only,
+    recomputed fresh on every request. Does not affect who is authorized to decide."""
+
+    tier: str
+    label: str
+    severity: int  # 1 (lowest) .. 4 (highest / red)
+    hours_elapsed: float
+    hours_to_next_tier: float | None
+
+
 class QueueEntry(BaseModel):
     run_id: str
     workflow: Workflow
@@ -115,6 +141,7 @@ class QueueEntry(BaseModel):
     evidence: list[EvidenceRef] = []
     domain_payload: dict[str, Any] | None = None
     evidence_accounting: dict[str, Any] | None = None
+    hitl_timer: HitlTimerInfo
 
 
 class AuditEvent(BaseModel):

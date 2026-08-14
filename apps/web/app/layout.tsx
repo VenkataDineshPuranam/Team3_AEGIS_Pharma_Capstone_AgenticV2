@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/AppShell";
-import { OperatorProvider } from "@/components/layout/OperatorContext";
+import { AuthProvider } from "@/components/layout/AuthContext";
+import { RequireAuth } from "@/components/layout/RequireAuth";
 
 // Inter for UI (excellent at small sizes, real tabular figures), JetBrains Mono for
 // identifiers -- run ids, evidence ids and hashes are compared character by character, so
@@ -29,9 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <body className="min-h-dvh">
-        <OperatorProvider>
-          <AppShell>{children}</AppShell>
-        </OperatorProvider>
+        <AuthProvider>
+          <RequireAuth>{children}</RequireAuth>
+        </AuthProvider>
       </body>
     </html>
   );

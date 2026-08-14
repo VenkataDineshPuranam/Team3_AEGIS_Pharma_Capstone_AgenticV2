@@ -15,7 +15,14 @@
  * every governance decision; nothing here decides whether an action is permitted.
  */
 
+import { clearSessionOnUnauthorized, currentToken } from "@/lib/auth/session";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function authHeader(): Record<string, string> {
+  const token = currentToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 /** Reads that are safe to retry, and how many times. Idempotent GETs only. */
 const READ_RETRIES = 2;
@@ -76,10 +83,11 @@ export async function read<T>(path: string, signal?: AbortSignal): Promise<T> {
     try {
       const res = await fetch(`${API_BASE}${path}`, {
         signal,
-        headers: { Accept: "application/json" },
+        headers: { Accept: "application/json", ...authHeader() },
         cache: "no-store",
       });
       if (res.ok) return (await res.json()) as T;
+      if (res.status === 401) clearSessionOnUnauthorized();
 
       const error = await parseError(res);
       // A 4xx is a definitive answer. Retrying it just delays showing the user the truth.
@@ -114,7 +122,7 @@ export async function mutate<T>(path: string, body: unknown, signal?: AbortSigna
     res = await fetch(`${API_BASE}${path}`, {
       method: "POST",
       signal,
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...authHeader() },
       body: JSON.stringify(body),
       cache: "no-store",
     });
@@ -129,6 +137,30 @@ export async function mutate<T>(path: string, body: unknown, signal?: AbortSigna
     );
   }
 
+  if (!res.ok) {
+    // A 401 here means the session lapsed between opening the form and submitting it --
+    // NOT that the human action itself was ambiguous. Safe to clear locally; the mutate
+    // itself was never sent by the server as recorded (FastAPI's dependency rejects the
+    // request before the endpoint body runs), so there is no "did this record?" question.
+    if (res.status === 401) clearSessionOnUnauthorized();
+    throw await parseError(res);
+  }
+  return (await res.json()) as T;
+}
+
+/** POST that must succeed WITHOUT an existing session -- login itself. */
+export async function mutatePublic<T>(path: string, body: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError("Could not reach the Orchestrator API.", 0);
+  }
   if (!res.ok) throw await parseError(res);
   return (await res.json()) as T;
 }

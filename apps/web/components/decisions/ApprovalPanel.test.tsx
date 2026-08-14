@@ -1,9 +1,18 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { OperatorProvider } from "@/components/layout/OperatorContext";
+import { AuthProvider } from "@/components/layout/AuthContext";
+import { setSession } from "@/lib/auth/session";
 import type { QueueEntry } from "@/lib/api";
 import { ApprovalPanel } from "./ApprovalPanel";
+
+setSession({
+  token: "test-token",
+  user_id: "test_qp",
+  display_name: "Test QP",
+  role: "EU Qualified Person",
+  expires_at: new Date(Date.now() + 3600_000).toISOString(),
+});
 
 const decideRunMock = vi.fn();
 
@@ -27,6 +36,7 @@ function batchEntry(overrides: Partial<QueueEntry> = {}): QueueEntry {
     evidence: [],
     domain_payload: null,
     evidence_accounting: null,
+    hitl_timer: { tier: "T0", label: "On time", severity: 1, hours_elapsed: 0.1, hours_to_next_tier: 7.9 },
     ...overrides,
   };
 }
@@ -47,9 +57,9 @@ function supplyEntry(approved: string[] = []): QueueEntry {
 
 function renderPanel(entry: QueueEntry, onDecided = vi.fn()) {
   return render(
-    <OperatorProvider>
+    <AuthProvider>
       <ApprovalPanel entry={entry} onDecided={onDecided} />
-    </OperatorProvider>,
+    </AuthProvider>,
   );
 }
 

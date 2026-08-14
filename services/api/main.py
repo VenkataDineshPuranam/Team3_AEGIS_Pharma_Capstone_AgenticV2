@@ -29,13 +29,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.types import Command
 
 from packages.config.llm_client import get_llm
 from packages.domain.state import new_state
 from services.api import eval_dashboard, governance_view, health_probe, pending_queue
+from services.api.auth import require_user
 from services.api.graph import build_graph
 from services.api.pv_graph import build_pv_graph
 from services.api.research_graph import build_research_graph
@@ -50,15 +51,18 @@ from services.api.schemas import (
     EvidenceCatalogItem,
     GovernanceSnapshot,
     HealthDetail,
+    HitlTimerInfo,
     InjectCoverage,
+    LoginRequest,
     QueueEntry,
     RunDetail,
     RunHistoryPage,
     RunResult,
+    SessionInfo,
     SubmitRunRequest,
 )
 from services.api.supply_graph import PLANNING_LEG, QUALITY_LEG, build_supply_graph
-from services.integration import audit_store, evidence_catalog
+from services.integration import audit_store, evidence_catalog, hitl_timer, user_store
 
 app = FastAPI(title="AEGIS Pharma AI -- Orchestrator API")
 
@@ -144,17 +148,70 @@ def _status_for(state: dict) -> str:
 
 
 def _queue_entry(e: pending_queue.PendingEntry) -> QueueEntry:
+    timer = hitl_timer.compute(e.created_at, e.workflow)
     return QueueEntry(
         run_id=e.run_id, workflow=e.workflow, subject_id=e.subject_id,
         requester_role=e.requester_role, approver_roles=e.approver_roles,
         required_legs=e.required_legs, approved_legs=e.approved_legs,
         draft_summary=e.draft_summary, draft_claims=e.draft_claims, created_at=e.created_at,
         evidence=e.evidence, domain_payload=e.domain_payload,
+        hitl_timer=HitlTimerInfo(
+            tier=timer.tier, label=timer.label, severity=timer.severity,
+            hours_elapsed=timer.hours_elapsed, hours_to_next_tier=timer.hours_to_next_tier,
+        ),
     )
 
 
+# ---------------------------------------------------------------------------
+# Auth (Stage 22)
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/auth/login", response_model=SessionInfo)
+def login(req: LoginRequest):
+    conn = user_store.get_connection()
+    try:
+        session = user_store.login(conn, req.user_id, req.password)
+    except user_store.InvalidCredentials as exc:
+        raise HTTPException(401, str(exc)) from exc
+    finally:
+        conn.close()
+    return SessionInfo(
+        token=session.token, user_id=session.user_id, display_name=session.display_name,
+        role=session.role, expires_at=session.expires_at,
+    )
+
+
+@app.post("/api/auth/logout")
+def logout(session: user_store.Session = Depends(require_user)):
+    conn = user_store.get_connection()
+    try:
+        user_store.logout(conn, session.token)
+    finally:
+        conn.close()
+    return {"status": "logged_out"}
+
+
+@app.get("/api/auth/me", response_model=SessionInfo)
+def me(session: user_store.Session = Depends(require_user)):
+    return SessionInfo(
+        token=session.token, user_id=session.user_id, display_name=session.display_name,
+        role=session.role, expires_at=session.expires_at,
+    )
+
+
+@app.get("/api/auth/roles")
+def role_catalog():
+    """The role/boundary table itself -- what each role uses the product for and must
+    never do -- so the frontend can render it without hardcoding a second copy."""
+    return {
+        role: {"product_use": info["product_use"], "must_never": info["must_never"]}
+        for role, info in user_store.ROLE_CATALOG.items()
+    }
+
+
 @app.post("/api/runs", response_model=RunResult)
-def submit_run(req: SubmitRunRequest):
+def submit_run(req: SubmitRunRequest, session: user_store.Session = Depends(require_user)):
     graph = _get_graph(req.workflow, req.subject_id)
     run_id = f"R-web-{uuid.uuid4().hex[:8]}"
     config = {"configurable": {"thread_id": run_id}}
@@ -186,15 +243,18 @@ def get_queue(workflow: str | None = None):
 
 
 @app.post("/api/runs/{run_id}/decide", response_model=RunResult)
-def decide_run(run_id: str, req: DecideRequest):
+def decide_run(run_id: str, req: DecideRequest, session: user_store.Session = Depends(require_user)):
     """Resume a paused run with a human's decision.
 
     This endpoint is never retried automatically by any client, and must not be: it
     records an irreversible human action in an append-only store. The API layer enforces
-    only shape here (a justification of real length, a leg where the workflow needs one);
-    every governance consequence -- whether a veto stands, whether one leg is enough, what
-    a timeout means -- is decided inside the graph, unchanged from before this endpoint
-    existed.
+    shape (a justification of real length, a leg where the workflow needs one) AND, as of
+    Stage 22, authorization: `require_user` establishes who is calling, and
+    `user_store.approver_string_for` checks whether THIS role may decide THIS
+    (workflow, leg) at all before the request reaches the graph -- a 403 here means the
+    logged-in role was never eligible, not a governance verdict the graph itself renders.
+    Every governance consequence beyond that -- whether a veto stands, whether one leg is
+    enough, what a timeout means -- is still decided inside the graph, unchanged.
     """
     entry = pending_queue.get(run_id)
     if entry is None:
@@ -205,6 +265,18 @@ def decide_run(run_id: str, req: DecideRequest):
         # the paused run, something is out of sync -- resolving it by trusting either side
         # would resume the wrong graph, so refuse instead.
         raise HTTPException(409, "Workflow does not match the pending run.")
+
+    if req.action == "veto":
+        if not user_store.can_veto(session.role, req.workflow):
+            raise HTTPException(403, f"Role {session.role!r} may not register a veto for {req.workflow!r}.")
+    elif req.action != "timed_out":
+        required_role = user_store.approver_string_for(session.role, req.workflow, req.leg)
+        if required_role is None:
+            raise HTTPException(
+                403,
+                f"Role {session.role!r} is not an eligible approver for "
+                f"{req.workflow!r}" + (f" ({req.leg} leg)" if req.leg else "") + ".",
+            )
 
     graph = _get_graph(req.workflow, entry.subject_id)
     config = {"configurable": {"thread_id": run_id}}
@@ -222,7 +294,7 @@ def decide_run(run_id: str, req: DecideRequest):
     resume_value = {
         "action": req.action,
         "justification": req.justification,
-        "claimed_identity": req.claimed_identity,
+        "claimed_identity": f"{session.display_name} ({session.role})",
         "leg": req.leg,
     }
     if req.action == "timed_out":
@@ -427,3 +499,24 @@ def health_detail():
         audit_store=stats,
         checked_at=datetime.now(UTC).isoformat(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Debug aid (Stage 22) -- NOT part of the governed product surface.
+#
+# Reaching HITL severity T2/T3 for real takes 16/24 real elapsed hours (hitl_timer.py).
+# This lets a developer backdate an already-real pending run's created_at to see the
+# severity badge render at every tier without waiting. It touches ONLY the timestamp the
+# badge reads -- the run's findings, evidence, and audit trail are completely untouched,
+# and this cannot be reached from any UI control. Off by default; only mounted if
+# AEGIS_ENABLE_DEBUG_ENDPOINTS=1 is set, so it never accidentally ships live.
+# ---------------------------------------------------------------------------
+
+if os.environ.get("AEGIS_ENABLE_DEBUG_ENDPOINTS") == "1":
+
+    @app.post("/api/debug/backdate/{run_id}")
+    def debug_backdate(run_id: str, hours_ago: float = Query(..., ge=0, le=1000)):
+        entry = pending_queue.debug_backdate(run_id, hours_ago)
+        if entry is None:
+            raise HTTPException(404, f"No pending run {run_id!r} to backdate.")
+        return _queue_entry(entry)

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Textarea } from "@/components/ui/Form";
 import { ErrorState, Notice } from "@/components/ui/States";
-import { useOperator } from "@/components/layout/OperatorContext";
+import { useAuth } from "@/components/layout/AuthContext";
+import { HitlTimerBadge } from "@/components/decisions/HitlTimerBadge";
 import { ApiError, decideRun, type DecisionAction, type QueueEntry, type SupplyLeg } from "@/lib/api";
 import { WORKFLOW_BOUNDARY } from "@/lib/format";
 
@@ -38,7 +39,9 @@ export function ApprovalPanel({
   entry: QueueEntry;
   onDecided: () => void;
 }) {
-  const { role, identity } = useOperator();
+  const { session } = useAuth();
+  const role = session?.role ?? "";
+  const identity = session?.display_name ?? "";
   const [pending, setPending] = useState<PendingDecision | null>(null);
   const [justification, setJustification] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -110,6 +113,13 @@ export function ApprovalPanel({
   return (
     <>
       <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Approval status
+          </p>
+          <HitlTimerBadge timer={entry.hitl_timer} />
+        </div>
+
         {/* Who is accountable, and for what. Phase 12's questions, answered in order. */}
         <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-sunken)] px-3.5 py-3">
           <dl className="space-y-2 text-[13px]">
@@ -120,12 +130,9 @@ export function ApprovalPanel({
               </dd>
             </div>
             <div className="flex flex-wrap gap-x-2">
-              <dt className="text-[var(--text-tertiary)]">You are acting as:</dt>
+              <dt className="text-[var(--text-tertiary)]">You are signed in as:</dt>
               <dd className="font-medium text-[var(--text-primary)]">
-                {role}
-                <span className="ml-1.5 text-[11px] font-normal text-[var(--status-pending-fg)]">
-                  (unverified — no sign-in)
-                </span>
+                {identity} <span className="font-normal text-[var(--text-tertiary)]">({role})</span>
               </dd>
             </div>
             <div className="flex flex-wrap gap-x-2">

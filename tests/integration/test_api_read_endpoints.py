@@ -23,6 +23,25 @@ client = TestClient(app)
 _NEO4J = bool(os.environ.get("NEO4J_PASSWORD")) and "xxxxxxxx" not in os.environ.get("NEO4J_URI", "")
 needs_kg = pytest.mark.skipif(not _NEO4J, reason="BLOCKED_BY_ENVIRONMENT: Neo4j not configured")
 
+# Stage 22: /api/runs/*/decide now requires an authenticated session (services/api/auth.py).
+# Logs in as the real seeded EU Qualified Person account (services/integration/seed_users.py)
+# against the same audit_store DB every other test in this file already reads from -- not a
+# mock, the same "real store, not assumed away" posture the module docstring states.
+from services.integration import user_store as _user_store  # noqa: E402
+
+
+def _auth_headers() -> dict:
+    conn = _user_store.get_connection()
+    try:
+        _user_store.create_user(conn, "test_qp", "Test QP", "EU Qualified Person", "test-qp-password")
+        session = _user_store.login(conn, "test_qp", "test-qp-password")
+    finally:
+        conn.close()
+    return {"Authorization": f"Bearer {session.token}"}
+
+
+AUTH = _auth_headers()
+
 
 # --- decide: the justification contract (G-10) ------------------------------------
 
@@ -30,7 +49,7 @@ needs_kg = pytest.mark.skipif(not _NEO4J, reason="BLOCKED_BY_ENVIRONMENT: Neo4j 
 def test_decide_rejects_a_missing_justification():
     """The justification is not optional. A client that omits it is refused at the
     boundary with a 422, before any graph is resumed."""
-    r = client.post("/api/runs/R-nonexistent/decide", json={"workflow": "batch_review", "action": "approved"})
+    r = client.post("/api/runs/R-nonexistent/decide", json={"workflow": "batch_review", "action": "approved"}, headers=AUTH)
     assert r.status_code == 422
 
 
@@ -38,6 +57,7 @@ def test_decide_rejects_a_token_justification():
     r = client.post(
         "/api/runs/R-nonexistent/decide",
         json={"workflow": "batch_review", "action": "approved", "justification": "ok"},
+        headers=AUTH,
     )
     assert r.status_code == 422
     assert MIN_JUSTIFICATION_CHARS > 1
@@ -50,6 +70,7 @@ def test_decide_on_an_unknown_run_is_404_not_a_silent_success():
             "workflow": "batch_review", "action": "approved",
             "justification": "A justification long enough to pass validation.",
         },
+        headers=AUTH,
     )
     assert r.status_code == 404
 
@@ -64,6 +85,7 @@ def test_veto_is_rejected_for_workflows_that_have_no_veto():
                 "workflow": workflow, "action": "veto",
                 "justification": "A justification long enough to pass validation.",
             },
+            headers=AUTH,
         )
         assert r.status_code in (400, 404), workflow
 

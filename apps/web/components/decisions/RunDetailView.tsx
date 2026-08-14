@@ -14,10 +14,11 @@ import { ApprovalPanel } from "@/components/decisions/ApprovalPanel";
 import { DecisionSupport } from "@/components/decisions/DecisionSupport";
 import { DomainFindings } from "@/components/decisions/DomainFindings";
 import { GovernanceChecks } from "@/components/decisions/GovernanceChecks";
+import { HitlTimerBadge } from "@/components/decisions/HitlTimerBadge";
 import { Identifier, WorkflowChip } from "@/components/domain/Chips";
 import { useApiResource } from "@/hooks/useApiResource";
 import { getRun, type Workflow } from "@/lib/api";
-import { WORKFLOW_LABELS, WORKFLOW_SUBJECT_LABEL, formatAge, formatDateTime } from "@/lib/format";
+import { WORKFLOW_LABELS, WORKFLOW_SUBJECT_LABEL, formatDateTime } from "@/lib/format";
 
 type Tab = "support" | "findings" | "governance" | "audit";
 
@@ -108,11 +109,7 @@ export function RunDetailView({
             {workflow && <WorkflowChip workflow={workflow} />}
             {workflow && <span>{WORKFLOW_LABELS[workflow]}</span>}
             <Identifier value={detail.run_id} />
-            {entry && (
-              <span className="text-[var(--status-pending-fg)]">
-                Waiting {formatAge(entry.created_at)}
-              </span>
-            )}
+            {entry && <HitlTimerBadge timer={entry.hitl_timer} />}
           </span>
         }
         actions={
