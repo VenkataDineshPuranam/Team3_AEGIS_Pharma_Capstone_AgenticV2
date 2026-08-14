@@ -61,6 +61,13 @@ a run, approving a decision, a prohibited-action guard blocking a draft, dual-ap
 and more). The same data is available as machine-readable JSON at
 [`architecture_graph.json`](./docs/architecture/graphical/architecture_graph.json).
 
+A second, independently generated repo graph — same source-grounded approach, different
+visual layout (grouped by layer: client → API → orchestration → governed tools → domain
+packages → stores/providers) — is at
+[`docs/architecture/repo-graph/architecture.html`](./docs/architecture/repo-graph/architecture.html)
+(86 components, 129 relationships, 14 flows), with its own JSON at
+[`architecture.json`](./docs/architecture/repo-graph/architecture.json).
+
 **Coverage:** every one of the V2 predecessor's 84 tabletop-exercise "inject" scenarios
 is mapped to a real, citable V3 artifact (test, fixture, structural guard, or governance
 document) — see the in-app Evaluation & Security dashboard (`/coverage`) or

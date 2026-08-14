@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AEGIS-PHARMA V3 — Architecture Map</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfbfd; --ink:#12151b; --ink-2:#525a6b; --ink-3:#8b94a7;
+  --line:#e3e6ec; --line-2:#cfd4de; --accent:#4f46e5; --accent-soft:#eef0fe;
+  --edge:#c3c9d6; --edge-hi:#4f46e5; --shadow:0 1px 2px rgba(16,20,30,.06),0 8px 24px rgba(16,20,30,.06);
+  --node-bg:#ffffff; --dim:.14;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1014; --panel:#161920; --panel-2:#1b1f28; --ink:#eef1f6; --ink-2:#a7b0c0; --ink-3:#6f7889;
+    --line:#252a34; --line-2:#333a47; --accent:#8b87ff; --accent-soft:#242244;
+    --edge:#39404e; --edge-hi:#8b87ff; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35);
+    --node-bg:#1b1f28; --dim:.1;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1014; --panel:#161920; --panel-2:#1b1f28; --ink:#eef1f6; --ink-2:#a7b0c0; --ink-3:#6f7889;
+  --line:#252a34; --line-2:#333a47; --accent:#8b87ff; --accent-soft:#242244;
+  --edge:#39404e; --edge-hi:#8b87ff; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35);
+  --node-bg:#1b1f28; --dim:.1;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ---------- header ---------- */
+header{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line);z-index:5;
+}
+.brand{display:flex;flex-direction:column;gap:1px;margin-right:4px}
+.brand h1{margin:0;font-size:15px;font-weight:650;letter-spacing:-.01em}
+.brand span{font-size:11.5px;color:var(--ink-3)}
+.stats{display:flex;gap:14px;margin-left:2px}
+.stat{display:flex;flex-direction:column;line-height:1.15}
+.stat b{font-size:14px;font-variant-numeric:tabular-nums}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3)}
+.spacer{flex:1}
+.search{position:relative}
+.search input{
+  width:210px;padding:7px 11px 7px 30px;border:1px solid var(--line-2);border-radius:8px;
+  background:var(--panel-2);color:var(--ink);font-size:13px;outline:none;
+}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+.btn{
+  padding:7px 11px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel-2);
+  color:var(--ink-2);font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- layout ---------- */
+.main{flex:1;display:flex;min-height:0}
+.canvas-wrap{flex:1;position:relative;min-width:0;overflow:hidden;background:
+  radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 0) 0 0/22px 22px;}
+svg#diagram{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+svg#diagram.grabbing{cursor:grabbing}
+
+.zoombar{position:absolute;left:14px;bottom:14px;display:flex;gap:6px;background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;padding:5px;box-shadow:var(--shadow)}
+.zoombar button{width:30px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--ink-2);
+  font-size:15px;cursor:pointer;line-height:1}
+.zoombar button:hover{background:var(--accent-soft);color:var(--accent)}
+.zoombar button.wide{width:auto;padding:0 10px;font-size:11.5px;font-weight:600}
+
+.legend{position:absolute;right:14px;bottom:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;box-shadow:var(--shadow);max-width:252px;overflow:hidden}
+.legend summary{list-style:none;cursor:pointer;padding:8px 12px;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.legend summary::-webkit-details-marker{display:none}
+.legend summary::after{content:'▸';font-size:10px;transition:transform .15s}
+.legend[open] summary::after{transform:rotate(90deg)}
+.legend summary:hover{color:var(--accent)}
+.legend ul{list-style:none;margin:0;padding:0 12px 10px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.legend li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)}
+.legend i{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* ---------- flows panel ---------- */
+aside{
+  width:352px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0;
+}
+.aside-head{padding:13px 16px 11px;border-bottom:1px solid var(--line)}
+.aside-head h2{margin:0 0 2px;font-size:13px;font-weight:650}
+.aside-head p{margin:0;font-size:11.5px;color:var(--ink-3)}
+.aside-body{flex:1;overflow-y:auto;padding:10px 12px 20px}
+.cat{margin:12px 2px 6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cat:first-child{margin-top:2px}
+.flow{
+  border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;
+  background:var(--panel-2);transition:border-color .12s,background .12s;
+}
+.flow:hover{border-color:var(--line-2)}
+.flow.active{border-color:var(--accent);background:var(--accent-soft)}
+.flow h3{margin:0;font-size:12.8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.flow .count{font-size:10px;font-weight:600;color:var(--ink-3);background:var(--bg);border:1px solid var(--line);
+  border-radius:20px;padding:1px 6px;flex:none}
+.flow.active .count{color:var(--accent);border-color:var(--accent)}
+.flow p{margin:5px 0 0;font-size:11.5px;line-height:1.45;color:var(--ink-2)}
+.steps{margin:9px 0 2px;padding:0;list-style:none;border-top:1px dashed var(--line-2);padding-top:8px}
+.steps li{display:flex;gap:8px;padding:3px 0;font-size:11.5px;line-height:1.4}
+.steps .n{flex:none;width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:9.5px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.steps .sl{color:var(--ink)}
+.steps .sn{color:var(--ink-3);display:block;font-size:11px}
+
+/* ---------- detail / tooltip ---------- */
+#tip{
+  position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;
+  max-width:310px;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;
+  padding:10px 12px;box-shadow:var(--shadow);
+}
+#tip.on{opacity:1}
+#tip .t-h{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+#tip .t-dot{width:8px;height:8px;border-radius:2px;flex:none}
+#tip .t-n{font-size:12.5px;font-weight:650}
+#tip .t-g{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px}
+#tip .t-p{font-size:10.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--accent);
+  word-break:break-all;margin-bottom:6px}
+#tip .t-d{font-size:11.5px;line-height:1.5;color:var(--ink-2)}
+
+/* ---------- svg node/edge states ---------- */
+.edge{fill:none;stroke:var(--edge);stroke-width:1.2;opacity:.75}
+.edge.hi{stroke:var(--edge-hi);stroke-width:2;opacity:1}
+.node rect.box{fill:var(--node-bg);stroke:var(--line-2);stroke-width:1.2}
+.node rect.accent{stroke:none}
+.node text{font-size:11.5px;font-weight:530;fill:var(--ink);pointer-events:none;dominant-baseline:middle}
+.node{cursor:pointer}
+.node:hover rect.box{stroke:var(--accent)}
+.node.sel rect.box{stroke:var(--accent);stroke-width:2}
+svg.filtering .node:not(.match),svg.filtering .edge{opacity:var(--dim)}
+svg.flowing .node:not(.instep),svg.flowing .edge:not(.hi){opacity:var(--dim)}
+.badge circle{fill:var(--accent)}
+.badge text{font-size:9px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.flowpath{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;
+  stroke-dasharray:7 6;animation:march 1s linear infinite;opacity:.95}
+@keyframes march{to{stroke-dashoffset:-13}}
+.band text{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;fill:var(--ink-3)}
+.band line{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+
+@media (max-width:1080px){
+  .main{flex-direction:column}
+  aside{width:auto;border-left:0;border-top:1px solid var(--line);height:46vh}
+  .canvas-wrap{min-height:46vh}
+  .stats{display:none}
+}
+@media (max-width:640px){
+  .search input{width:130px}
+  .brand span{display:none}
+  .legend{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>AEGIS-PHARMA V3 — Architecture Map</h1>
+      <span>Governed agentic AI decision support · read from source, not documentation</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="s-n">0</b><span>components</span></div>
+      <div class="stat"><b id="s-e">0</b><span>relationships</span></div>
+      <div class="stat"><b id="s-f">0</b><span>flows</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search components…" autocomplete="off">
+    </div>
+    <button class="btn" id="theme">Theme</button>
+  </header>
+
+  <div class="main">
+    <div class="canvas-wrap">
+      <svg id="diagram"></svg>
+      <div class="zoombar">
+        <button id="zin" title="Zoom in">+</button>
+        <button id="zout" title="Zoom out">−</button>
+        <button id="zfit" class="wide" title="Fit to screen">FIT</button>
+      </div>
+      <details class="legend"><summary>Layers</summary><ul id="legend"></ul></details>
+    </div>
+
+    <aside>
+      <div class="aside-head">
+        <h2>End-to-end flows</h2>
+        <p>Select a flow to trace its complete path through the diagram.</p>
+      </div>
+      <div class="aside-body" id="flows"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="tip"></div>
+
+<script type="application/json" id="graph-data">{"schema_version":"1.0","generated_for":"Project AEGIS-PHARMA V3 — governed agentic AI decision support","generated_at":"2026-08-14","source_branch":"stage-21-aegis-control-center","description":"Machine-readable architecture graph of the repository: nodes (components), edges (real call/data relationships read from source), and flows (ordered end-to-end paths through the system). Built by reading the code, not from documentation.","canvas":{"width":1540,"height":1190},"groups":[{"id":"client","label":"Approver Dashboard (Next.js)","color":"#6366f1"},{"id":"api","label":"Orchestrator API (FastAPI)","color":"#0ea5e9"},{"id":"graph","label":"Workflow Graphs (LangGraph)","color":"#8b5cf6"},{"id":"orchestration","label":"Graph Nodes","color":"#a855f7"},{"id":"terminal","label":"Terminal States","color":"#ef4444"},{"id":"tool","label":"Governed Tools","color":"#14b8a6"},{"id":"package","label":"Domain Packages","color":"#f59e0b"},{"id":"contract","label":"Contracts & Policy","color":"#eab308"},{"id":"store","label":"Data Stores","color":"#64748b"},{"id":"llm","label":"LLM Providers","color":"#ec4899"},{"id":"quality","label":"Eval & Quality","color":"#22c55e"},{"id":"security","label":"Security","color":"#f43f5e"}],"nodes":[{"id":"ui.login","label":"Login","group":"client","path":"apps/web/app/login/page.tsx","tooltip":"Session entry point. AuthContext + RequireAuth wrap every other page; the operator's role is established here and carried as requester_role on every run."},{"id":"ui.overview","label":"Overview","group":"client","path":"apps/web/app/page.tsx","tooltip":"The ten-second read: pending queue, dependency health, recent runs. Every number comes from /api/dashboard or /api/queue — any metric the backend cannot supply renders 'Not available' rather than zero."},{"id":"ui.decisions","label":"Decisions","group":"client","path":"apps/web/app/decisions/page.tsx","tooltip":"The approver's work queue. Opening an item shows DecisionSupport, DomainFindings, GovernanceChecks and the ApprovalPanel where the human decision is actually taken."},{"id":"ui.runs","label":"Run History","group":"client","path":"apps/web/app/runs/page.tsx","tooltip":"Filterable history of every agent run with its terminal state, token cost and audit timeline. Backed entirely by the SQLite audit store."},{"id":"ui.evidence","label":"Evidence Explorer","group":"client","path":"apps/web/app/evidence/page.tsx","tooltip":"Answers 'what does the corpus contain, and what may I rely on?' — deliberately shows untrusted and superseded documents that evidence.retrieve filters out, because hiding them would defeat the page's purpose."},{"id":"ui.governance","label":"Governance","group":"client","path":"apps/web/app/governance/page.tsx","tooltip":"Live view of the policy register: 13 registered policies (P-01…P-13), their bound ADR/BC/hook, and which have an executable eval behind them."},{"id":"ui.coverage","label":"Inject Coverage","group":"client","path":"apps/web/app/coverage/page.tsx","tooltip":"Maps each challenge inject (INJ-xxx) to the test or grader that covers it, and shows honestly which are uncovered."},{"id":"ui.health","label":"Health","group":"client","path":"apps/web/app/health/page.tsx","tooltip":"Per-dependency health: Neo4j, Redis, audit store, LLM provider. Degraded and unavailable are distinct states — degraded mode is safe, not offline-capable (ADR-007)."},{"id":"ui.workflows","label":"Workflows","group":"client","path":"apps/web/app/workflows/page.tsx","tooltip":"Catalogue of the six governed workflows with their prohibitions stated verbatim — what each may do and what it may never do."},{"id":"ui.apiclient","label":"API Client","group":"client","path":"apps/web/lib/api/client.ts","tooltip":"Single typed fetch layer for the whole dashboard. Every page goes through it; nothing calls the API directly."},{"id":"api.submit_run","label":"POST /api/runs","group":"api","path":"services/api/main.py:156","tooltip":"The only way to start a governed run. Selects the workflow graph, mints a run_id, and executes the pipeline to its first interrupt or terminal state."},{"id":"api.decide","label":"POST /api/runs/{id}/decide","group":"api","path":"services/api/main.py:188","tooltip":"Records a human approve/reject/veto. This is where terminal authority actually lives — the graph can only ever propose."},{"id":"api.queue","label":"GET /api/queue","group":"api","path":"services/api/main.py:183","tooltip":"Runs currently interrupted and awaiting a named human approver."},{"id":"api.runs","label":"GET /api/runs","group":"api","path":"services/api/main.py:265","tooltip":"Paged run history, per-run detail, and filter facets — all read from the audit store, never recomputed."},{"id":"api.evidence","label":"GET /api/evidence","group":"api","path":"services/api/main.py:345","tooltip":"Read-only evidence catalogue for humans. Structurally separate from the governed retrieval tool so a non-citable document can never reach a run."},{"id":"api.governance","label":"GET /api/governance","group":"api","path":"services/api/main.py:364","tooltip":"Policy register snapshot: which policies are registered, traced, and executably tested."},{"id":"api.evals","label":"GET /api/evals/scorecard","group":"api","path":"services/api/main.py:369","tooltip":"Latest eval scorecard across the 15 scenario files — the release-gate signal."},{"id":"api.coverage","label":"GET /api/coverage/injects","group":"api","path":"services/api/main.py:378","tooltip":"Inject-to-test coverage map."},{"id":"api.dashboard","label":"GET /api/dashboard","group":"api","path":"services/api/main.py:388","tooltip":"Aggregated cost, guardrail-trip, terminal-state and cache-hit panels, computed from the audit store and Redis counters."},{"id":"api.health","label":"GET /api/health","group":"api","path":"services/api/main.py:406","tooltip":"Liveness plus per-dependency detail."},{"id":"graph.batch","label":"batch_review","group":"graph","path":"services/api/graph.py:32","tooltip":"GxP Batch Review. Reconciles genealogy, lab results, deviations, CAPA, validation state and release-packet completeness. Must NEVER release, reject, reprocess, relabel or recall a batch."},{"id":"graph.pv","label":"pv_intake","group":"graph","path":"services/api/pv_graph.py","tooltip":"PV Intake & Signal Support. Duplicate detection, terminology normalisation, reporting-clock reconstruction, listedness. Must NEVER make final seriousness, causality, expectedness, reportability or signal-confirmation decisions."},{"id":"graph.supply","label":"supply_planning","group":"graph","path":"services/api/supply_graph.py","tooltip":"Supply-Shortage & Cold-Chain Planning. Generates traceable, non-executing options. Must NEVER change inventory status, reserve, allocate, ship or initiate recall."},{"id":"graph.clinical","label":"clinical_integrity","group":"graph","path":"services/api/clinical_graph.py","tooltip":"Clinical trial data-integrity review. Added in Stage 21 following the identical governed pattern (ADR-008: one graph per workflow)."},{"id":"graph.regulatory","label":"regulatory_completeness","group":"graph","path":"services/api/regulatory_graph.py","tooltip":"Regulatory submission completeness review. Same governed skeleton, different domain node."},{"id":"graph.research","label":"research_review","group":"graph","path":"services/api/research_graph.py","tooltip":"Research reconciliation review. Structural completeness and conflict findings only."},{"id":"node.intake","label":"intake","group":"orchestration","path":"services/api/graph.py:37","tooltip":"Creates GovernedState: run_id, workflow, requester_role, authorization_checked_at. Every downstream node reads and writes only this single state object (BC-9)."},{"id":"node.policy_load","label":"policy_load","group":"orchestration","path":"services/api/graph.py:57","tooltip":"Loads the versioned policy contract. If it is unreachable the graph REFUSES — there is deliberately no cached-policy fallback (ADR-005, BC-3, P-05)."},{"id":"node.retrieve","label":"retrieve","group":"orchestration","path":"services/api/graph.py:64","tooltip":"Calls evidence.retrieve. At most one scope-preserving broadening per run (G3), enforced by a server-side counter rather than caller bookkeeping."},{"id":"node.evidence_gate","label":"evidence_gate","group":"orchestration","path":"services/api/graph.py:80","tooltip":"Decides sufficient / broaden / abstain / defect_halt. A non-citable item reaching this point is a defect_halt, not a filter miss."},{"id":"node.reconcile","label":"reconcile","group":"orchestration","path":"services/api/graph.py:90","tooltip":"Domain node for batch, clinical, regulatory and research workflows. Produces structural findings and gaps — never a disposition."},{"id":"node.duplicate_check","label":"duplicate_check","group":"orchestration","path":"services/api/pv_graph.py:251","tooltip":"PV-only. Surfaces duplicate candidates with matched_fields and reasons; an edge with a score but no reason fails its own contract."},{"id":"node.normalize_terminology","label":"normalize_terminology","group":"orchestration","path":"services/api/pv_graph.py:252","tooltip":"PV-only. Suggests controlled-vocabulary normalisations with the terminology source cited. Suggestions, never applied silently."},{"id":"node.generate_options","label":"generate_options","group":"orchestration","path":"services/api/supply_graph.py:237","tooltip":"Supply-only. Drafts shortage options carrying no_side_effects — options are proposals, and nothing downstream can execute them."},{"id":"node.synthesize","label":"synthesize","group":"orchestration","path":"services/api/graph.py:103","tooltip":"The only node that calls a model. Output is constrained to DecisionSupportOutput, whose extra='forbid' means a disposition field cannot be attached even by a malformed node (ADR-004 layer 1)."},{"id":"node.guard1","label":"guard1","group":"orchestration","path":"services/api/graph.py:127","tooltip":"Prohibited-action guard, first pass — before the critic sees the draft. ADR-004 layer 3."},{"id":"node.critic_verify","label":"critic_verify","group":"orchestration","path":"services/api/graph.py:153","tooltip":"Independent verification pass. Returns approve_for_human or reject with a closed-enum reason code; a retry is legitimate only if the code is retryable AND distinct from every prior code in the run."},{"id":"node.guard2","label":"guard2","group":"orchestration","path":"services/api/graph.py:140","tooltip":"Prohibited-action guard, second pass — after the critic, because the critic's own feedback could reintroduce a banned signal. Also the cache-write point."},{"id":"node.hitl_route","label":"hitl_route","group":"orchestration","path":"services/api/graph.py:168","tooltip":"Determines which named human roles must act, and how many legs of approval are required. Supply needs both legs — one leg is not approval."},{"id":"node.hitl_interrupt","label":"hitl_interrupt","group":"orchestration","path":"services/api/graph.py:176","tooltip":"LangGraph interrupt. The run stops here and waits for a real human; the checkpointer holds state until /decide resumes it."},{"id":"node.blocked_terminal","label":"blocked (prohibition)","group":"terminal","path":"services/api/graph.py:204","tooltip":"Terminal. Reached when the guard matches a prohibited signal. PROHIBITION_ADJACENT is the one reason code with no retry edge at all — retrying it would ask the model to rephrase a near-miss on the highest-severity control."},{"id":"node.abstain_cap","label":"abstained (cap)","group":"terminal","path":"services/api/graph.py:211","tooltip":"Terminal. Retry or budget ceiling exceeded — the run abstains rather than continuing to spend."},{"id":"node.finalize","label":"finalize","group":"orchestration","path":"services/api/graph.py:216","tooltip":"Writes the audit record and returns the contracted response. Every path — approved, blocked, abstained, refused — passes through here, so no run can complete unaudited."},{"id":"tool.evidence_retrieve","label":"evidence.retrieve","group":"tool","path":"services/integration/evidence_retrieve.py","tooltip":"Governed retrieval. Untrusted and superseded items are filtered inside the Cypher query itself — there is no code path that returns them and lets a caller decide. Currently matches terms against source_file and authority (no document body, no embeddings)."},{"id":"tool.batch_reconcile","label":"batch.reconcile","group":"tool","path":"services/integration/batch_reconcile.py","tooltip":"Reconciles batch evidence into findings and gaps. Rejects any evidence_id it cannot trace to this run's own retrieval."},{"id":"tool.pv_duplicate_check","label":"pv.duplicate_check","group":"tool","path":"services/integration/pv_duplicate_check.py","tooltip":"Duplicate candidate detection with mandatory matched_fields."},{"id":"tool.pv_normalize","label":"pv.normalize_terminology","group":"tool","path":"services/integration/pv_normalize_terminology.py","tooltip":"Controlled-vocabulary suggestions with cited terminology source and version."},{"id":"tool.supply_options","label":"supply.generate_options","group":"tool","path":"services/integration/supply_generate_options.py","tooltip":"Drafts non-executing supply options against a constraint set."},{"id":"tool.clinical_integrity","label":"clinical.integrity_check","group":"tool","path":"services/integration/clinical_integrity_check.py","tooltip":"Clinical data-integrity structural checks."},{"id":"tool.regulatory_check","label":"regulatory.completeness","group":"tool","path":"services/integration/regulatory_completeness_check.py","tooltip":"Submission completeness structural checks."},{"id":"tool.research_reconcile","label":"research.reconcile","group":"tool","path":"services/integration/research_reconcile.py","tooltip":"Research reconciliation structural checks."},{"id":"tool.policy_engine","label":"policy_engine","group":"tool","path":"services/integration/policy_engine.py","tooltip":"Loads and version-checks the policy contract. The one governance module every other module depends on — if it raises, the graph must refuse rather than proceed on a stale or default contract."},{"id":"tool.evidence_gate","label":"evidence_gate","group":"tool","path":"services/integration/evidence_gate.py","tooltip":"Sufficiency decision as a typed result, so an empty list can never be mistaken for 'sufficient'."},{"id":"tool.guard","label":"prohibited_action_guard","group":"tool","path":"services/integration/prohibited_action_guard.py","tooltip":"ADR-004 layer 3. Pattern-matches generated text against the workflow's banned terms and field names. Known residual risk: a model complying with an injection without using a listed term is not caught."},{"id":"tool.hitl_route","label":"hitl_route","group":"tool","path":"services/integration/hitl_route.py","tooltip":"Tier clock: T1 reminder at 8h, T2 escalation at 16h, T3 expiry at 24h. Recording an approval after T3 is structurally impossible, not merely discouraged."},{"id":"tool.audit_store","label":"audit_store","group":"tool","path":"services/integration/audit_store.py","tooltip":"Append-only SQLite ledger: agent_run, human_override_recorded, hitl_escalation, hitl_expired, prohibited_action_blocked. Note: records policy_contract_version but not the model or prompt that produced the run."},{"id":"tool.response_cache","label":"response_cache","group":"tool","path":"services/integration/response_cache.py","tooltip":"Redis cache keyed on subject_id + evidence_ids. A hit whose evidence has since become superseded is treated as a miss, not served — the exact ADR-003 guardrail scenario."},{"id":"tool.pending_queue","label":"pending_queue","group":"tool","path":"services/api/pending_queue.py","tooltip":"Holds interrupted runs awaiting their named human approver."},{"id":"tool.evidence_catalog","label":"evidence_catalog","group":"tool","path":"services/integration/evidence_catalog.py","tooltip":"Read-only human-facing catalogue. Deliberately returns untrusted and superseded items, and returns a different type than the governed path so a catalogue row cannot be passed off as retrieved evidence."},{"id":"tool.tool_manifest","label":"tool_manifest","group":"tool","path":"services/integration/tool_manifest.py","tooltip":"Declares which tools exist and what capabilities each may hold — ADR-004 layer 2, capability absence."},{"id":"pkg.state","label":"GovernedState","group":"package","path":"packages/domain/state.py","tooltip":"The single state object every node reads and writes. Also defines the closed ReasonCode enum and which codes permit a retry."},{"id":"pkg.payloads","label":"payloads","group":"package","path":"packages/domain/payloads.py","tooltip":"Per-workflow typed payloads with extra='forbid'. Layer 1 of the three-layer prohibition enforcement: a disposition field cannot be constructed at all."},{"id":"pkg.evidence","label":"EvidenceItem","group":"package","path":"packages/domain/evidence.py","tooltip":"Only 'approved' and 'draft' are citable statuses. A superseded or untrusted item has no representable value here — construction would raise."},{"id":"pkg.hitl_decision","label":"hitl_decision","group":"package","path":"packages/domain/hitl_decision.py","tooltip":"The human decision value object recorded against a run."},{"id":"pkg.kg_ingest","label":"kg.ingest","group":"package","path":"packages/domain/kg/ingest.py","tooltip":"Ingests knowledge_catalog.csv into Neo4j as EvidenceItem nodes plus supersedes edges. Idempotent (MERGE). Implements 1 of the 16 node types and 1 of the 13 edge types the KG schema specifies."},{"id":"pkg.kg_client","label":"kg.client","group":"package","path":"packages/domain/kg/client.py","tooltip":"Neo4j session management, with an explicit not-configured state so an unreachable graph surfaces as unavailable rather than an empty corpus."},{"id":"pkg.llm_client","label":"llm_client","group":"package","path":"packages/config/llm_client.py","tooltip":"Two providers behind one protocol, selected by LLM_PROVIDER. Both are prompted and parsed identically, so swapping providers is a constructor choice — not a prompt or parsing change."},{"id":"pkg.redis_client","label":"redis_client","group":"package","path":"packages/config/redis_client.py","tooltip":"Redis connection for the response cache."},{"id":"pkg.observability","label":"observability","group":"package","path":"packages/observability/dashboard_data.py","tooltip":"Computes the cost, guardrail-trip, terminal-state and cache panels from real audit rows and Redis counters."},{"id":"contract.tool_schemas","label":"tool contracts (8)","group":"contract","path":"packages/contracts/tool_contracts/","tooltip":"One JSON Schema per governed tool, defining input, output and the closed set of error codes. Contract tests assert the implementation matches."},{"id":"contract.policy","label":"policy_contract.v1","group":"contract","path":"security/policies/policy_contract.v1.json","tooltip":"Versioned prohibition contracts per workflow: banned terms and banned field names, injected at compile time and never agent-supplied."},{"id":"contract.policy_register","label":"policy register","group":"contract","path":"security/policies/policy_register.md","tooltip":"13 policies (P-01…P-13), each traced to an ADR, bounded context or hook. Three HITL policies are flagged as having no executable eval yet."},{"id":"store.neo4j","label":"Neo4j","group":"store","path":"packages/domain/kg/client.py","tooltip":"Knowledge graph. Currently holds 33 EvidenceItem nodes and their supersedes edges — a metadata catalogue, not yet the 16-type domain graph the schema specifies."},{"id":"store.redis","label":"Redis","group":"store","path":"packages/config/redis_client.py","tooltip":"Response cache with supersession-aware invalidation."},{"id":"store.sqlite","label":"Audit store","group":"store","path":"evidence/audit_store.sqlite3","tooltip":"The system of record for what happened: every run, every human override, every escalation, every prohibited-action block."},{"id":"store.catalog","label":"knowledge_catalog","group":"store","path":"knowledge/knowledge_catalog.csv","tooltip":"33 governed documents with authority, effective date, status, trust, jurisdiction, supersedes and SHA-256. Includes deliberately untrusted fixtures (K-998, K-999) that must never become instructions."},{"id":"llm.anthropic","label":"Anthropic","group":"llm","path":"packages/config/llm_client.py:237","tooltip":"Route A (ADR-009). The only provider whose output counts as real evidence for the measurement gate."},{"id":"llm.groq","label":"Groq","group":"llm","path":"packages/config/llm_client.py:271","tooltip":"Dev-only substitute. Output is explicitly provisional — Stage 20a/20b results were measured here and still owe a Route A re-run."},{"id":"eval.runner","label":"eval runner","group":"quality","path":"eval-ai-cache/graders/run_eval_dataset.py","tooltip":"Loads every scenario file, dispatches to its grader, compares actual against expected, emits a scorecard."},{"id":"eval.dataset","label":"15 scenario sets","group":"quality","path":"eval-ai-cache/eval_dataset/","tooltip":"63 scenarios across business outcome, evidence fidelity, GxP boundary, audit trail, injection, abstention, PV clocks, tool authorisation, privacy, subgroup, cost, model substitution and agent failure modes."},{"id":"eval.graders","label":"12 graders","group":"quality","path":"eval-ai-cache/graders/","tooltip":"One grader per concern — evidence authority, prohibited action, schema, audit trail, PV clocks, trajectory, security, privacy, subgroup, latency/cost, loop guard, cache correctness."},{"id":"quality.gates","label":"release gates","group":"quality","path":"quality/gates/","tooltip":"Ship / no-ship gate. Failed critical gates block release."},{"id":"test.suites","label":"test suites","group":"quality","path":"tests/","tooltip":"contract, integration, e2e, unit, security, performance, resilience — including the red-team suite that asserts document text is never transmitted to the model."},{"id":"sec.threat","label":"threat catalogue","group":"security","path":"security/threat-models/threat_catalogue.md","tooltip":"12 catalogued threats with controls mapping and a residual-risk register that records what is genuinely still open."},{"id":"sec.abuse","label":"abuse cases","group":"security","path":"security/abuse-cases/","tooltip":"T-01 indirect prompt injection, T-06 evidence-authority bypass, T-11 denial of wallet — all three actually attempted against the live system, not just described."},{"id":"sec.sbom","label":"SBOM","group":"security","path":"security/sbom/sbom.json","tooltip":"11 pinned runtime dependencies, verified against the installed environment by verify_sbom.py. Covers packages only — not models, prompts or tool contracts."}],"layout":{"ui.login":[90,64],"ui.overview":[255,64],"ui.decisions":[420,64],"ui.runs":[585,64],"ui.evidence":[750,64],"ui.governance":[915,64],"ui.coverage":[1080,64],"ui.health":[1245,64],"ui.workflows":[1410,64],"ui.apiclient":[750,142],"api.submit_run":[95,226],"api.decide":[245,226],"api.queue":[395,226],"api.runs":[545,226],"api.evidence":[695,226],"api.governance":[845,226],"api.evals":[995,226],"api.coverage":[1145,226],"api.dashboard":[1295,226],"api.health":[1445,226],"graph.batch":[200,312],"graph.pv":[420,312],"graph.supply":[640,312],"graph.clinical":[860,312],"graph.regulatory":[1090,312],"graph.research":[1320,312],"node.intake":[120,400],"node.policy_load":[285,400],"node.retrieve":[450,400],"node.evidence_gate":[615,400],"node.reconcile":[800,400],"node.duplicate_check":[965,400],"node.normalize_terminology":[1145,400],"node.generate_options":[1330,400],"node.synthesize":[120,492],"node.guard1":[285,492],"node.critic_verify":[450,492],"node.guard2":[615,492],"node.hitl_route":[800,492],"node.hitl_interrupt":[965,492],"node.finalize":[1145,492],"node.blocked_terminal":[285,578],"node.abstain_cap":[450,578],"tool.evidence_retrieve":[120,676],"tool.batch_reconcile":[290,676],"tool.pv_duplicate_check":[460,676],"tool.pv_normalize":[630,676],"tool.supply_options":[800,676],"tool.clinical_integrity":[970,676],"tool.regulatory_check":[1140,676],"tool.research_reconcile":[1330,676],"tool.policy_engine":[120,756],"tool.evidence_gate":[290,756],"tool.guard":[460,756],"tool.hitl_route":[630,756],"tool.audit_store":[800,756],"tool.response_cache":[970,756],"tool.pending_queue":[1140,756],"tool.evidence_catalog":[1330,756],"tool.tool_manifest":[1460,676],"pkg.state":[120,846],"pkg.payloads":[290,846],"pkg.evidence":[460,846],"pkg.hitl_decision":[630,846],"pkg.kg_ingest":[800,846],"pkg.kg_client":[970,846],"pkg.llm_client":[1140,846],"pkg.redis_client":[1300,846],"pkg.observability":[1450,846],"contract.tool_schemas":[290,930],"contract.policy":[460,930],"contract.policy_register":[630,930],"store.catalog":[800,930],"store.neo4j":[970,930],"store.redis":[1140,930],"store.sqlite":[1300,930],"llm.anthropic":[1140,1010],"llm.groq":[1300,1010],"eval.runner":[120,1090],"eval.dataset":[290,1090],"eval.graders":[460,1090],"quality.gates":[630,1090],"test.suites":[800,1090],"sec.threat":[970,1090],"sec.abuse":[1140,1090],"sec.sbom":[1300,1090]},"edges":[{"source":"ui.login","target":"ui.apiclient","kind":"calls"},{"source":"ui.overview","target":"ui.apiclient","kind":"calls"},{"source":"ui.decisions","target":"ui.apiclient","kind":"calls"},{"source":"ui.runs","target":"ui.apiclient","kind":"calls"},{"source":"ui.evidence","target":"ui.apiclient","kind":"calls"},{"source":"ui.governance","target":"ui.apiclient","kind":"calls"},{"source":"ui.coverage","target":"ui.apiclient","kind":"calls"},{"source":"ui.health","target":"ui.apiclient","kind":"calls"},{"source":"ui.workflows","target":"ui.apiclient","kind":"calls"},{"source":"ui.apiclient","target":"api.submit_run","kind":"calls"},{"source":"ui.apiclient","target":"api.decide","kind":"calls"},{"source":"ui.apiclient","target":"api.queue","kind":"calls"},{"source":"ui.apiclient","target":"api.runs","kind":"calls"},{"source":"ui.apiclient","target":"api.evidence","kind":"calls"},{"source":"ui.apiclient","target":"api.governance","kind":"calls"},{"source":"ui.apiclient","target":"api.evals","kind":"calls"},{"source":"ui.apiclient","target":"api.coverage","kind":"calls"},{"source":"ui.apiclient","target":"api.dashboard","kind":"calls"},{"source":"ui.apiclient","target":"api.health","kind":"calls"},{"source":"api.submit_run","target":"graph.batch","kind":"invokes"},{"source":"api.submit_run","target":"graph.pv","kind":"invokes"},{"source":"api.submit_run","target":"graph.supply","kind":"invokes"},{"source":"api.submit_run","target":"graph.clinical","kind":"invokes"},{"source":"api.submit_run","target":"graph.regulatory","kind":"invokes"},{"source":"api.submit_run","target":"graph.research","kind":"invokes"},{"source":"graph.batch","target":"node.intake","kind":"compiles"},{"source":"graph.pv","target":"node.intake","kind":"compiles"},{"source":"graph.supply","target":"node.intake","kind":"compiles"},{"source":"graph.clinical","target":"node.intake","kind":"compiles"},{"source":"graph.regulatory","target":"node.intake","kind":"compiles"},{"source":"graph.research","target":"node.intake","kind":"compiles"},{"source":"node.intake","target":"node.policy_load","kind":"flow"},{"source":"node.policy_load","target":"node.retrieve","kind":"flow"},{"source":"node.retrieve","target":"node.evidence_gate","kind":"flow"},{"source":"node.evidence_gate","target":"node.retrieve","kind":"flow","label":"broaden (max 1)"},{"source":"node.evidence_gate","target":"node.finalize","kind":"flow","label":"abstain"},{"source":"node.evidence_gate","target":"node.reconcile","kind":"flow"},{"source":"node.evidence_gate","target":"node.duplicate_check","kind":"flow"},{"source":"node.evidence_gate","target":"node.generate_options","kind":"flow"},{"source":"node.duplicate_check","target":"node.normalize_terminology","kind":"flow"},{"source":"node.reconcile","target":"node.synthesize","kind":"flow"},{"source":"node.normalize_terminology","target":"node.synthesize","kind":"flow"},{"source":"node.generate_options","target":"node.synthesize","kind":"flow"},{"source":"node.synthesize","target":"node.guard1","kind":"flow"},{"source":"node.guard1","target":"node.critic_verify","kind":"flow","label":"clear"},{"source":"node.guard1","target":"node.blocked_terminal","kind":"flow","label":"blocked"},{"source":"node.critic_verify","target":"node.guard2","kind":"flow","label":"approve_for_human"},{"source":"node.critic_verify","target":"node.synthesize","kind":"flow","label":"retry (new reason code)"},{"source":"node.critic_verify","target":"node.abstain_cap","kind":"flow","label":"cap exceeded"},{"source":"node.guard2","target":"node.hitl_route","kind":"flow","label":"clear"},{"source":"node.guard2","target":"node.blocked_terminal","kind":"flow","label":"blocked"},{"source":"node.hitl_route","target":"node.hitl_interrupt","kind":"flow"},{"source":"node.hitl_interrupt","target":"node.finalize","kind":"flow"},{"source":"node.blocked_terminal","target":"node.finalize","kind":"flow"},{"source":"node.abstain_cap","target":"node.finalize","kind":"flow"},{"source":"node.policy_load","target":"tool.policy_engine","kind":"calls"},{"source":"node.retrieve","target":"tool.evidence_retrieve","kind":"calls"},{"source":"node.evidence_gate","target":"tool.evidence_gate","kind":"calls"},{"source":"node.reconcile","target":"tool.batch_reconcile","kind":"calls"},{"source":"node.reconcile","target":"tool.clinical_integrity","kind":"calls"},{"source":"node.reconcile","target":"tool.regulatory_check","kind":"calls"},{"source":"node.reconcile","target":"tool.research_reconcile","kind":"calls"},{"source":"node.duplicate_check","target":"tool.pv_duplicate_check","kind":"calls"},{"source":"node.normalize_terminology","target":"tool.pv_normalize","kind":"calls"},{"source":"node.generate_options","target":"tool.supply_options","kind":"calls"},{"source":"node.synthesize","target":"pkg.llm_client","kind":"calls"},{"source":"node.critic_verify","target":"pkg.llm_client","kind":"calls"},{"source":"node.guard1","target":"tool.guard","kind":"calls"},{"source":"node.guard2","target":"tool.guard","kind":"calls"},{"source":"node.guard2","target":"tool.response_cache","kind":"writes"},{"source":"node.retrieve","target":"tool.response_cache","kind":"reads"},{"source":"node.hitl_route","target":"tool.hitl_route","kind":"calls"},{"source":"node.hitl_interrupt","target":"tool.pending_queue","kind":"writes"},{"source":"node.finalize","target":"tool.audit_store","kind":"writes"},{"source":"node.blocked_terminal","target":"tool.audit_store","kind":"writes"},{"source":"tool.evidence_retrieve","target":"pkg.kg_client","kind":"calls"},{"source":"tool.evidence_retrieve","target":"pkg.evidence","kind":"constructs"},{"source":"tool.evidence_catalog","target":"pkg.kg_client","kind":"calls"},{"source":"pkg.kg_client","target":"store.neo4j","kind":"reads"},{"source":"pkg.kg_ingest","target":"store.neo4j","kind":"writes"},{"source":"pkg.kg_ingest","target":"store.catalog","kind":"reads"},{"source":"tool.response_cache","target":"pkg.redis_client","kind":"calls"},{"source":"tool.response_cache","target":"pkg.kg_client","kind":"reads","label":"supersession recheck"},{"source":"pkg.redis_client","target":"store.redis","kind":"reads"},{"source":"tool.audit_store","target":"store.sqlite","kind":"writes"},{"source":"pkg.llm_client","target":"llm.anthropic","kind":"calls"},{"source":"pkg.llm_client","target":"llm.groq","kind":"calls"},{"source":"tool.policy_engine","target":"contract.policy","kind":"validates"},{"source":"tool.policy_engine","target":"pkg.state","kind":"constructs"},{"source":"tool.guard","target":"pkg.state","kind":"reads"},{"source":"tool.guard","target":"pkg.payloads","kind":"reads"},{"source":"tool.evidence_retrieve","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.batch_reconcile","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.pv_duplicate_check","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.pv_normalize","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.supply_options","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.clinical_integrity","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.regulatory_check","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.research_reconcile","target":"contract.tool_schemas","kind":"validates"},{"source":"tool.tool_manifest","target":"contract.tool_schemas","kind":"declares"},{"source":"tool.hitl_route","target":"pkg.hitl_decision","kind":"constructs"},{"source":"node.intake","target":"pkg.state","kind":"constructs"},{"source":"node.reconcile","target":"pkg.payloads","kind":"constructs"},{"source":"api.decide","target":"node.hitl_interrupt","kind":"resumes","label":"resume from checkpoint"},{"source":"api.decide","target":"tool.audit_store","kind":"writes"},{"source":"api.decide","target":"tool.hitl_route","kind":"calls"},{"source":"api.decide","target":"tool.pending_queue","kind":"writes"},{"source":"api.decide","target":"pkg.hitl_decision","kind":"constructs"},{"source":"api.queue","target":"tool.pending_queue","kind":"reads"},{"source":"api.runs","target":"tool.audit_store","kind":"reads"},{"source":"api.evidence","target":"tool.evidence_catalog","kind":"calls"},{"source":"api.governance","target":"contract.policy_register","kind":"reads"},{"source":"api.evals","target":"eval.runner","kind":"reads"},{"source":"api.coverage","target":"test.suites","kind":"reads"},{"source":"api.dashboard","target":"pkg.observability","kind":"calls"},{"source":"api.health","target":"pkg.kg_client","kind":"reads"},{"source":"api.health","target":"pkg.redis_client","kind":"reads"},{"source":"pkg.observability","target":"tool.audit_store","kind":"reads"},{"source":"pkg.observability","target":"tool.response_cache","kind":"reads"},{"source":"eval.runner","target":"eval.dataset","kind":"reads"},{"source":"eval.runner","target":"eval.graders","kind":"calls"},{"source":"eval.runner","target":"quality.gates","kind":"writes"},{"source":"eval.graders","target":"contract.tool_schemas","kind":"validates"},{"source":"test.suites","target":"contract.tool_schemas","kind":"validates"},{"source":"test.suites","target":"tool.guard","kind":"validates"},{"source":"sec.abuse","target":"sec.threat","kind":"reads"},{"source":"sec.abuse","target":"tool.guard","kind":"attacks"},{"source":"sec.abuse","target":"tool.evidence_retrieve","kind":"attacks"},{"source":"sec.sbom","target":"pkg.llm_client","kind":"records"}],"flows":[{"id":"flow.batch_happy","name":"Batch Review — approved by human","category":"Workflow","summary":"The full governed path for a GxP batch review that reaches a human approver and is approved. Note the terminal decision is taken at /decide by a named person — the graph only ever proposes.","steps":[{"node":"ui.decisions","note":"Approver opens the dashboard"},{"node":"ui.apiclient","note":"Typed fetch layer"},{"node":"api.submit_run","note":"POST /api/runs mints a run_id"},{"node":"graph.batch","note":"batch_review graph selected"},{"node":"node.intake","note":"GovernedState created"},{"node":"node.policy_load","note":"Versioned policy contract loaded, or refuse"},{"node":"node.retrieve","note":"evidence.retrieve, untrusted filtered in-query"},{"node":"node.evidence_gate","note":"Verdict: sufficient"},{"node":"node.reconcile","note":"Findings and gaps, never a disposition"},{"node":"node.synthesize","note":"The only model call"},{"node":"node.guard1","note":"Prohibited-action guard, pass 1"},{"node":"node.critic_verify","note":"approve_for_human"},{"node":"node.guard2","note":"Guard pass 2 + cache write"},{"node":"node.hitl_route","note":"Named approver roles resolved"},{"node":"node.hitl_interrupt","note":"Run stops and waits for a human"},{"node":"api.decide","note":"Human approves — terminal authority"},{"node":"node.finalize","note":"Audit record written"},{"node":"tool.audit_store","note":"agent_run + human_override_recorded"},{"node":"store.sqlite","note":"System of record"}]},{"id":"flow.prohibited","name":"Prohibited action blocked","category":"Safety","summary":"A draft containing a banned signal (e.g. recommending batch release) is caught by the guard and terminates. PROHIBITION_ADJACENT has no retry edge at all — the system will not ask the model to rephrase a near-miss on its highest-severity control.","steps":[{"node":"api.submit_run","note":"Run starts"},{"node":"node.intake","note":"State created"},{"node":"node.policy_load","note":"Prohibition contract for this workflow"},{"node":"node.retrieve","note":"Evidence gathered"},{"node":"node.evidence_gate","note":"Sufficient"},{"node":"node.reconcile","note":"Domain findings"},{"node":"node.synthesize","note":"Model produces a draft"},{"node":"node.guard1","note":"Banned term matched"},{"node":"tool.guard","note":"ADR-004 layer 3 fires"},{"node":"node.blocked_terminal","note":"Terminal — no retry edge"},{"node":"node.finalize","note":"Blocked outcome still audited"},{"node":"tool.audit_store","note":"prohibited_action_blocked row"},{"node":"store.sqlite","note":"Attempt preserved as evidence"}]},{"id":"flow.abstain","name":"Insufficient evidence → abstain","category":"Safety","summary":"When evidence cannot support a finding, the system abstains rather than guessing. One scope-preserving broadening is permitted first, enforced server-side.","steps":[{"node":"api.submit_run","note":"Run starts"},{"node":"node.intake","note":"State created"},{"node":"node.policy_load","note":"Policy loaded"},{"node":"node.retrieve","note":"First retrieval — thin result"},{"node":"node.evidence_gate","note":"Verdict: broaden"},{"node":"tool.evidence_gate","note":"Typed result, not a bare bool"},{"node":"node.retrieve","note":"Broadening #1 — the only one allowed (G3)"},{"node":"node.evidence_gate","note":"Still insufficient → abstain"},{"node":"node.finalize","note":"Terminal state: abstained"},{"node":"tool.audit_store","note":"abstention_reason recorded"}]},{"id":"flow.critic_retry","name":"Critic rejects → bounded retry","category":"Safety","summary":"The critic can send a draft back to synthesize, but only with a reason code that is retryable AND distinct from every prior code in the run. Exhausting the budget abstains rather than looping.","steps":[{"node":"node.synthesize","note":"Draft v1"},{"node":"node.guard1","note":"Clear"},{"node":"node.critic_verify","note":"reject — MISSING_CITATION"},{"node":"node.synthesize","note":"Draft v2, new attempt"},{"node":"node.guard1","note":"Clear"},{"node":"node.critic_verify","note":"Budget or distinct-code rule exhausted"},{"node":"node.abstain_cap","note":"Terminal — abstained, not looped"},{"node":"node.finalize","note":"Audited"}]},{"id":"flow.cache","name":"Cache hit with supersession recheck","category":"Performance","summary":"The ADR-003 guardrail scenario. A cached answer whose underlying evidence has since become superseded is treated as a miss, not served — verified against live Redis and live Neo4j.","steps":[{"node":"node.retrieve","note":"Cache consulted before work"},{"node":"tool.response_cache","note":"Key = subject_id + evidence_ids"},{"node":"pkg.redis_client","note":"Lookup"},{"node":"store.redis","note":"Entry found"},{"node":"pkg.kg_client","note":"Re-check evidence status now"},{"node":"store.neo4j","note":"One id is now superseded"},{"node":"node.evidence_gate","note":"Stale entry counts as a miss"},{"node":"node.reconcile","note":"Work redone against current evidence"}]},{"id":"flow.pv","name":"PV Intake — duplicates, terminology, veto","category":"Workflow","summary":"PV adds duplicate detection and terminology normalisation before synthesis. Its distinguishing property: a veto forces rejected and is never overridden, tested against the live graph.","steps":[{"node":"api.submit_run","note":"PV case submitted"},{"node":"graph.pv","note":"pv_intake graph"},{"node":"node.intake","note":"State created"},{"node":"node.policy_load","note":"PV prohibition contract"},{"node":"node.retrieve","note":"Evidence gathered"},{"node":"node.evidence_gate","note":"Sufficient"},{"node":"node.duplicate_check","note":"Candidates with mandatory matched_fields"},{"node":"tool.pv_duplicate_check","note":"Score without a reason fails its contract"},{"node":"node.normalize_terminology","note":"Suggestions with cited source"},{"node":"node.synthesize","note":"Draft — never a causality decision"},{"node":"node.guard1","note":"Guard"},{"node":"node.critic_verify","note":"Verified"},{"node":"node.guard2","note":"Guard"},{"node":"node.hitl_route","note":"Safety reviewer routed"},{"node":"api.decide","note":"Veto recorded — forces rejected"},{"node":"node.finalize","note":"Veto is never overridden"}]},{"id":"flow.supply","name":"Supply Planning — dual approval","category":"Workflow","summary":"Supply generates non-executing options and requires two independent approval legs. One leg is explicitly not approval — implemented and tested, not just documented.","steps":[{"node":"api.submit_run","note":"Shortage scenario submitted"},{"node":"graph.supply","note":"supply_planning graph"},{"node":"node.intake","note":"State created"},{"node":"node.policy_load","note":"Supply prohibition contract"},{"node":"node.retrieve","note":"Evidence gathered"},{"node":"node.evidence_gate","note":"Sufficient"},{"node":"node.generate_options","note":"Options carry no_side_effects"},{"node":"tool.supply_options","note":"Nothing downstream can execute them"},{"node":"node.synthesize","note":"Draft options summary"},{"node":"node.guard1","note":"Allocate / reserve / ship are banned signals"},{"node":"node.critic_verify","note":"Verified"},{"node":"node.guard2","note":"Guard"},{"node":"node.hitl_route","note":"Two legs required"},{"node":"node.hitl_interrupt","note":"Waits for both"},{"node":"api.decide","note":"Leg 1 — not yet approval"},{"node":"api.decide","note":"Leg 2 — now approved"},{"node":"node.finalize","note":"Audited with both roles"}]},{"id":"flow.hitl_timeout","name":"HITL escalation → T3 expiry","category":"Human oversight","summary":"The approval clock: reminder at 8h, escalation at 16h, expiry at 24h. Recording an approval after T3 raises rather than being quietly accepted — no action is the terminal state.","steps":[{"node":"node.hitl_interrupt","note":"Run waiting"},{"node":"tool.hitl_route","note":"T1 reminder at 8h"},{"node":"tool.pending_queue","note":"Still queued"},{"node":"tool.hitl_route","note":"T2 escalation at 16h"},{"node":"tool.hitl_route","note":"T3 expiry at 24h"},{"node":"tool.audit_store","note":"hitl_escalation + hitl_expired rows"},{"node":"node.finalize","note":"Terminal: timed_out, no action taken"}]},{"id":"flow.decision","name":"Human decision recorded","category":"Human oversight","summary":"Where terminal authority actually lives. The approver acts in the UI, the decision is written to the append-only ledger, and the run resumes from its checkpoint.","steps":[{"node":"ui.decisions","note":"Approver reviews evidence and findings"},{"node":"ui.apiclient","note":"Typed call"},{"node":"api.decide","note":"approve / reject / veto"},{"node":"pkg.hitl_decision","note":"Typed decision object"},{"node":"tool.hitl_route","note":"Legs and tier checked"},{"node":"tool.audit_store","note":"human_override_recorded"},{"node":"store.sqlite","note":"Append-only"},{"node":"node.finalize","note":"Run resumes and completes"},{"node":"ui.runs","note":"Visible in history and audit timeline"}]},{"id":"flow.ingest","name":"Knowledge ingest → graph","category":"Data","summary":"The 33-document governed corpus is loaded into Neo4j with authority, effective date, status and SHA-256. Only EvidenceItem nodes and supersedes edges are implemented — 15 further node types remain specified but unbuilt.","steps":[{"node":"store.catalog","note":"knowledge_catalog.csv, SHA-256 per row"},{"node":"pkg.kg_ingest","note":"Idempotent MERGE"},{"node":"store.neo4j","note":"33 EvidenceItem nodes + supersedes edges"},{"node":"pkg.kg_client","note":"Session layer"},{"node":"tool.evidence_retrieve","note":"Governed path — filters non-citable in-query"},{"node":"tool.evidence_catalog","note":"Human path — deliberately shows them"},{"node":"api.evidence","note":"Evidence Explorer endpoint"},{"node":"ui.evidence","note":"Investigator sees what is superseded"}]},{"id":"flow.eval","name":"Eval harness → release gate","category":"Quality","summary":"63 scenarios across 15 files, dispatched to 12 graders, producing a scorecard that gates release. Failed critical gates block ship.","steps":[{"node":"eval.dataset","note":"15 scenario files"},{"node":"eval.runner","note":"Dispatch each scenario to its grader"},{"node":"eval.graders","note":"12 graders, one per concern"},{"node":"contract.tool_schemas","note":"Schema conformance checked"},{"node":"quality.gates","note":"Scorecard — ship / no-ship"},{"node":"api.evals","note":"Exposed to the dashboard"},{"node":"ui.coverage","note":"Inject coverage rendered honestly"}]},{"id":"flow.security","name":"Adversarial red-team path","category":"Security","summary":"Three of the twelve catalogued threats were actually attempted against the running system. T-01 targets the guard and retrieval; the residual risk that the guard is evadable by paraphrase is recorded rather than papered over.","steps":[{"node":"sec.threat","note":"12 threats catalogued"},{"node":"sec.abuse","note":"T-01, T-06, T-11 attempted live"},{"node":"tool.evidence_retrieve","note":"T-06 evidence-authority bypass"},{"node":"tool.guard","note":"T-01 indirect prompt injection"},{"node":"test.suites","note":"Red-team suite asserts doc text never reaches the model"},{"node":"node.blocked_terminal","note":"Attack terminates the run"},{"node":"tool.audit_store","note":"Attempt preserved, not deleted"}]},{"id":"flow.observability","name":"Observability → Overview","category":"Operations","summary":"Every panel on the Overview page is computed from real audit rows and Redis counters. Any metric the backend cannot supply renders as 'Not available' rather than a misleading zero.","steps":[{"node":"store.sqlite","note":"Real run rows"},{"node":"tool.audit_store","note":"Query layer"},{"node":"pkg.observability","note":"Cost, guardrail-trip, terminal-state panels"},{"node":"tool.response_cache","note":"Cache hit-rate counters"},{"node":"api.dashboard","note":"Aggregated response"},{"node":"ui.apiclient","note":"Typed fetch"},{"node":"ui.overview","note":"The ten-second read"}]},{"id":"flow.degraded","name":"Policy unreachable → refuse","category":"Safety","summary":"There is deliberately no cached-policy fallback. If the policy contract cannot be loaded, the run refuses rather than proceeding on a stale or default contract (ADR-005, BC-3, P-05).","steps":[{"node":"api.submit_run","note":"Run starts"},{"node":"node.intake","note":"State created"},{"node":"node.policy_load","note":"Contract unreadable or version mismatch"},{"node":"tool.policy_engine","note":"PolicyEngineUnavailable raised"},{"node":"contract.policy","note":"No fallback exists by design"},{"node":"node.finalize","note":"Terminal state: refused"},{"node":"ui.health","note":"Dependency shown as unavailable, not degraded"}]}]}</script>
+<script>
+(function(){
+"use strict";
+const DATA = JSON.parse(document.getElementById('graph-data').textContent);
+const NW = 132, NH = 40;
+
+const byId = {};
+DATA.nodes.forEach(n => {
+  const p = DATA.layout[n.id] || [0,0];
+  n.x = p[0]; n.y = p[1];
+  byId[n.id] = n;
+});
+const groupColor = {};
+DATA.groups.forEach(g => groupColor[g.id] = g.color);
+
+document.getElementById('s-n').textContent = DATA.nodes.length;
+document.getElementById('s-e').textContent = DATA.edges.length;
+document.getElementById('s-f').textContent = DATA.flows.length;
+
+/* ---------------- legend ---------------- */
+document.getElementById('legend').innerHTML = DATA.groups.map(g =>
+  `<li><i style="background:${g.color}"></i>${esc(g.label)}</li>`).join('');
+
+/* ---------------- svg scaffolding ---------------- */
+const svg = document.getElementById('diagram');
+const NS = 'http://www.w3.org/2000/svg';
+const root = el('g');                 // pan/zoom transform target
+const gBands = el('g'), gEdges = el('g'), gFlow = el('g'), gNodes = el('g'), gBadge = el('g');
+root.append(gBands, gEdges, gFlow, gNodes, gBadge);
+svg.append(root);
+
+/* band separators, drawn from the distinct y rows of each group cluster */
+const bands = [
+  ['Client — Next.js dashboard', 30],
+  ['API — FastAPI orchestrator', 192],
+  ['Orchestration — LangGraph', 278],
+  ['Governed tools', 640],
+  ['Domain packages & contracts', 812],
+  ['Stores, providers, quality & security', 976]
+];
+bands.forEach(([label, y]) => {
+  const g = el('g', {class:'band'});
+  g.append(el('line', {x1:20, y1:y, x2:DATA.canvas.width - 20, y2:y}));
+  const t = el('text', {x:22, y:y - 6}); t.textContent = label;
+  g.append(t); gBands.append(g);
+});
+
+/* ---------------- edges ---------------- */
+function anchor(a, b){
+  // exit/enter on the nearer horizontal or vertical face of the node box
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const hx = NW/2, hy = NH/2;
+  if (Math.abs(dy) * hx > Math.abs(dx) * hy) return [a.x, a.y + Math.sign(dy)*hy];
+  return [a.x + Math.sign(dx)*hx, a.y];
+}
+function pathFor(a, b){
+  const [x1,y1] = anchor(a,b), [x2,y2] = anchor(b,a);
+  const dy = y2 - y1;
+  if (Math.abs(dy) < 6){
+    const mx = (x1+x2)/2, lift = Math.min(52, Math.abs(x2-x1)*0.32 + 14);
+    return `M${x1},${y1} Q${mx},${y1-lift} ${x2},${y2}`;
+  }
+  const c = Math.abs(dy) * 0.45;
+  return `M${x1},${y1} C${x1},${y1+Math.sign(dy)*c} ${x2},${y2-Math.sign(dy)*c} ${x2},${y2}`;
+}
+const edgeEls = [];
+DATA.edges.forEach(e => {
+  const a = byId[e.source], b = byId[e.target];
+  if (!a || !b) return;
+  const p = el('path', {class:'edge', d: pathFor(a,b)});
+  p.dataset.s = e.source; p.dataset.t = e.target;
+  gEdges.append(p);
+  edgeEls.push({el:p, s:e.source, t:e.target});
+});
+
+/* ---------------- nodes ---------------- */
+const nodeEls = {};
+DATA.nodes.forEach(n => {
+  const g = el('g', {class:'node', transform:`translate(${n.x - NW/2},${n.y - NH/2})`});
+  g.append(el('rect', {class:'box', width:NW, height:NH, rx:8}));
+  const acc = el('rect', {class:'accent', width:3.5, height:NH-14, x:0, y:7, rx:2});
+  acc.style.fill = groupColor[n.group] || '#888';   // inline style: CSS cannot override it
+  g.append(acc);
+  const t = el('text', {x:12, y:NH/2});
+  t.textContent = trunc(n.label, 17);
+  g.append(t);
+  g.addEventListener('mouseenter', ev => showTip(n, ev));
+  g.addEventListener('mousemove', moveTip);
+  g.addEventListener('mouseleave', hideTip);
+  g.addEventListener('click', ev => { ev.stopPropagation(); selectNode(n.id); });
+  gNodes.append(g);
+  nodeEls[n.id] = g;
+});
+
+/* ---------------- tooltip ---------------- */
+const tip = document.getElementById('tip');
+function showTip(n, ev){
+  const grp = DATA.groups.find(g => g.id === n.group);
+  tip.innerHTML =
+    `<div class="t-h"><span class="t-dot" style="background:${groupColor[n.group]}"></span>`+
+    `<span class="t-n">${esc(n.label)}</span></div>`+
+    `<div class="t-g">${esc(grp ? grp.label : n.group)}</div>`+
+    (n.path ? `<div class="t-p">${esc(n.path)}</div>` : '')+
+    `<div class="t-d">${esc(n.tooltip || '')}</div>`;
+  tip.classList.add('on');
+  moveTip(ev);
+}
+function moveTip(ev){
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tip.style.left = Math.max(8,x) + 'px';
+  tip.style.top  = Math.max(8,y) + 'px';
+}
+function hideTip(){ tip.classList.remove('on'); }
+
+/* ---------------- selection: node neighbourhood ---------------- */
+let selected = null;
+function selectNode(id){
+  if (selected === id){ clearAll(); return; }
+  clearFlow(); selected = id;
+  const keep = new Set([id]);
+  edgeEls.forEach(e => {
+    const on = e.s === id || e.t === id;
+    e.el.classList.toggle('hi', on);
+    if (on){ keep.add(e.s); keep.add(e.t); }
+  });
+  Object.entries(nodeEls).forEach(([k,g]) => {
+    g.classList.toggle('match', keep.has(k));
+    g.classList.toggle('sel', k === id);
+  });
+  svg.classList.add('filtering');
+}
+
+/* ---------------- flows ---------------- */
+const flowsBox = document.getElementById('flows');
+let activeFlow = null;
+const cats = [];
+DATA.flows.forEach(f => { if (!cats.includes(f.category)) cats.push(f.category); });
+flowsBox.innerHTML = cats.map(c =>
+  `<div class="cat">${esc(c)}</div>` +
+  DATA.flows.filter(f => f.category === c).map(f =>
+    `<div class="flow" data-id="${f.id}">
+       <h3>${esc(f.name)}<span class="count">${f.steps.length}</span></h3>
+       <p>${esc(f.summary)}</p>
+       <div class="detail"></div>
+     </div>`).join('')
+).join('');
+
+flowsBox.querySelectorAll('.flow').forEach(card => {
+  card.addEventListener('click', () => {
+    const f = DATA.flows.find(x => x.id === card.dataset.id);
+    if (activeFlow === f.id){ clearAll(); return; }
+    selectFlow(f, card);
+  });
+});
+
+function selectFlow(f, card){
+  clearAll(true);
+  activeFlow = f.id;
+  flowsBox.querySelectorAll('.flow').forEach(c => {
+    c.classList.toggle('active', c === card);
+    if (c !== card) c.querySelector('.detail').innerHTML = '';
+  });
+  card.querySelector('.detail').innerHTML =
+    '<ul class="steps">' + f.steps.map((s,i) => {
+      const n = byId[s.node];
+      return `<li><span class="n">${i+1}</span><span><span class="sl">${esc(n?n.label:s.node)}</span>`+
+             (s.note ? `<span class="sn">${esc(s.note)}</span>` : '') + `</span></li>`;
+    }).join('') + '</ul>';
+
+  // node highlight + step-number badges (a node can appear more than once)
+  const order = {};
+  f.steps.forEach((s,i) => { (order[s.node] = order[s.node] || []).push(i+1); });
+  Object.entries(nodeEls).forEach(([k,g]) => g.classList.toggle('instep', k in order));
+  Object.entries(order).forEach(([id, nums]) => {
+    const n = byId[id]; if (!n) return;
+    const b = el('g', {class:'badge'});
+    const label = nums.join(',');
+    const r = 9 + Math.max(0, label.length - 1) * 2.6;
+    b.append(el('circle', {cx:n.x - NW/2, cy:n.y - NH/2, r:r}));
+    const t = el('text', {x:n.x - NW/2, y:n.y - NH/2}); t.textContent = label;
+    b.append(t); gBadge.append(b);
+  });
+
+  // highlight real edges that the path traverses, and draw an overlay for every hop
+  const pairs = [];
+  for (let i=0;i<f.steps.length-1;i++) pairs.push([f.steps[i].node, f.steps[i+1].node]);
+  const pairSet = new Set(pairs.map(p => p[0]+'>'+p[1]).concat(pairs.map(p => p[1]+'>'+p[0])));
+  edgeEls.forEach(e => e.el.classList.toggle('hi', pairSet.has(e.s+'>'+e.t)));
+  pairs.forEach(([s,t]) => {
+    const a = byId[s], b = byId[t];
+    if (!a || !b || s === t) return;
+    gFlow.append(el('path', {class:'flowpath', d: pathFor(a,b)}));
+  });
+  svg.classList.add('flowing');
+}
+
+function clearFlow(){
+  activeFlow = null;
+  gFlow.innerHTML = ''; gBadge.innerHTML = '';
+  svg.classList.remove('flowing');
+  Object.values(nodeEls).forEach(g => g.classList.remove('instep'));
+  flowsBox.querySelectorAll('.flow').forEach(c => {
+    c.classList.remove('active'); c.querySelector('.detail').innerHTML = '';
+  });
+}
+function clearAll(keepFlowState){
+  if (!keepFlowState) clearFlow(); else { gFlow.innerHTML=''; gBadge.innerHTML=''; }
+  selected = null;
+  svg.classList.remove('filtering');
+  edgeEls.forEach(e => e.el.classList.remove('hi'));
+  Object.values(nodeEls).forEach(g => g.classList.remove('match','sel'));
+}
+svg.addEventListener('click', () => clearAll());
+
+/* ---------------- search ---------------- */
+document.getElementById('q').addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q){ clearAll(); return; }
+  clearFlow();
+  let hit = 0;
+  DATA.nodes.forEach(n => {
+    const m = (n.label+' '+n.id+' '+(n.path||'')+' '+(n.tooltip||'')).toLowerCase().includes(q);
+    nodeEls[n.id].classList.toggle('match', m);
+    if (m) hit++;
+  });
+  edgeEls.forEach(x => x.el.classList.remove('hi'));
+  svg.classList.toggle('filtering', hit > 0);
+});
+
+/* ---------------- pan & zoom ---------------- */
+let vt = {x:0, y:0, k:1};
+function apply(){ root.setAttribute('transform', `translate(${vt.x},${vt.y}) scale(${vt.k})`); }
+function fitView(){
+  const r = svg.getBoundingClientRect();
+  const pad = 34;
+  const k = Math.min((r.width - pad*2)/DATA.canvas.width, (r.height - pad*2)/DATA.canvas.height);
+  vt.k = Math.max(0.16, Math.min(k, 1.6));
+  vt.x = (r.width - DATA.canvas.width*vt.k)/2;
+  vt.y = (r.height - DATA.canvas.height*vt.k)/2;
+  apply();
+}
+function zoomAt(cx, cy, factor){
+  const k2 = Math.max(0.16, Math.min(3, vt.k * factor));
+  vt.x = cx - (cx - vt.x) * (k2/vt.k);
+  vt.y = cy - (cy - vt.y) * (k2/vt.k);
+  vt.k = k2; apply();
+}
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = svg.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1/1.12);
+}, {passive:false});
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  drag = {x:e.clientX, y:e.clientY, ox:vt.x, oy:vt.y};
+  svg.classList.add('grabbing'); svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  vt.x = drag.ox + (e.clientX - drag.x);
+  vt.y = drag.oy + (e.clientY - drag.y);
+  apply();
+});
+['pointerup','pointercancel'].forEach(t => svg.addEventListener(t, () => {
+  drag = null; svg.classList.remove('grabbing');
+}));
+document.getElementById('zin').onclick  = () => { const r=svg.getBoundingClientRect(); zoomAt(r.width/2, r.height/2, 1.25); };
+document.getElementById('zout').onclick = () => { const r=svg.getBoundingClientRect(); zoomAt(r.width/2, r.height/2, 0.8); };
+document.getElementById('zfit').onclick = fitView;
+addEventListener('resize', fitView);
+
+/* ---------------- theme ---------------- */
+document.getElementById('theme').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = cur ? cur === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+};
+
+/* ---------------- helpers ---------------- */
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function trunc(s, max){ return s.length > max ? s.slice(0, max-1) + '…' : s; }
+
+requestAnimationFrame(fitView);
+})();
+</script>
+</body>
+</html>
