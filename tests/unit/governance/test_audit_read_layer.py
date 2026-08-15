@@ -4,7 +4,6 @@ Readers were added so the audit trail can answer questions about a specific run 
 than only aggregate counts. The store's guarantee is that no function in the module can
 modify or remove a row; these tests assert that adding readers left it intact.
 """
-import json
 import sqlite3
 from datetime import UTC, datetime
 

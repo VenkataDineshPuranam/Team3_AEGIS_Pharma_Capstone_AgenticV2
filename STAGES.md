@@ -26,6 +26,7 @@ Status legend: `not started` · `spec drafted` · `in review` · `stable`
 | 19 | Compliance (EU AI Act, ISO 42001) | stage-19-compliance | not started |
 | 20 | **Repo implementation (app build — last)** | stage-20-repo-implementation | not started |
 | 21 | Documentation & final defense pack | stage-21-documentation | not started |
+| 23 | Record Assistant, PI/PG, AI-BOM, CI/CD | final_app | **stable** — chatbot over run records (deterministic facts + guarded model prose), prompt-injection input/output guard, CycloneDX AI-BOM with prompt-drift detection, GitHub Actions CI + Azure Container Apps CD |
 
 See `SPEC_DRIVEN_DEVELOPMENT.md` for the full method and DMAIC-Lean requirements per stage.
 

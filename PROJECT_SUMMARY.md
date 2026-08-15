@@ -589,6 +589,206 @@ push updates, no run-history view. `services/api/pending_queue.py` is explicitly
 single-process, same disclosed-simplification pattern as `denial_of_wallet_guardrail.py`'s own
 docstring — the audit trail itself is unaffected and remains the real record regardless.
 
+## 6n. Record Assistant, PI/PG and the AI-BOM (Stage 23, `services/api/record_chat.py`, `services/integration/prompt_guard.py`, `security/sbom/`)
+
+Three moonshot items, built together because each depends on the one before it.
+
+### Record Assistant — a chatbot that structurally cannot recommend
+
+`POST /api/runs/{run_id}/chat` answers "what is this record, and what happens next?" for
+one run.
+
+Reachable from **every signed-in page** via an "Ask about a record" launcher mounted in
+`AppShell` (`components/assistant/AssistantLauncher.tsx`), and additionally as an
+**Assistant** tab on the run detail page. Both render the same `RecordAssistant`
+component rather than duplicating it. The launcher opens straight onto the run when the
+route already identifies one (`/decisions/<id>`, `/runs/<id>`) and otherwise shows a
+picker, pending runs first — a pending run still holds its decision-support package in
+memory, so it yields the richer answer.
+
+**This placement was a correction, not the original design.** The assistant shipped as a
+run-detail tab only, which made it undiscoverable from the overview, the queue, and every
+other screen an operator actually starts from — defeating the point of building it. Found
+by running the app, not by any test.
+
+The design rule the whole feature is built around: **the model writes prose; it does not
+compute facts and it does not choose actions.**
+
+| Half | Source | Can it be wrong? |
+|---|---|---|
+| Record card (subject, approvers, evidence ids, HITL timer, terminal state, human actions) | `build_record_card()` — same two sources `/api/runs/{run_id}` reads | No — same data, different shape |
+| "What happens next" | `derive_next_steps()` — a **closed catalog** of procedural branches | No — no branch has a disposition to return |
+| Summary, answer, step paraphrase | The model | Yes — and the UI labels it as such |
+
+That split is what makes "what to do next" safe to offer. A free-form model asked "what
+should I do about this batch?" will eventually answer "release it"; the non-negotiable
+that no agent makes a terminal safety decision cannot survive that question being
+delegated — so it isn't. `test_next_steps_never_contain_a_disposition_for_any_role`
+asserts the generated steps against **every** banned term in the policy contract, for four
+different roles.
+
+Governance carried through, not re-derived: authentication via the same `require_user`
+dependency; segregation of duties enforced (`Unblinding authority` gets a 403 on a
+`supply_planning` record, not an empty answer); ADR-007 degraded mode (no model → the
+deterministic facts survive, `llm_available: false`); ADR-005 fail-closed (no policy
+contract → the prose is dropped rather than shown unchecked). Stateless by design — no
+conversation history, because history is a second injection surface and nothing in this
+use case needs it.
+
+**Not done:** chat interactions are not written to the append-only audit store. That store
+records agent runs and human overrides; a read-only reading aid is neither, and widening
+it would blur what an audit record means. Guard hits are logged and returned to the caller.
+
+### PI/PG — prompt-injection detection and prompt guarding
+
+`services/integration/prompt_guard.py` adds **layer 0** (input, before any prompt) and
+**layer 4** (output, before any human) around ADR-004's three structural layers. 13 input
+patterns and 3 output patterns plus system-prompt-marker and citation-fabrication checks.
+
+The framing matters and is stated in the module's own docstring: *layers 1–3 make a bad
+outcome impossible; layers 0 and 4 make a bad attempt visible.* A pattern matcher can
+always be paraphrased around, so a `clear` verdict is not a safety guarantee.
+
+- `high` → refused, nothing sent. `medium` → neutralized and recorded, request proceeds.
+- Neutralization names the *pattern*, never echoes the matched text — an earlier version
+  wrote `[NEUTRALIZED:<matched text>]`, which left the instruction in the prompt verbatim.
+  Caught during the build; `test_the_neutralized_text_never_echoes_the_payload_back` is the
+  regression guard.
+- False positives are treated as a real cost, not a safe default: a corpus of ordinary
+  pharmaceutical record text is asserted to scan `clear`, because a control that mangles
+  legitimate findings is a control that gets switched off.
+- `scan_output()` takes the **same** `ProhibitionContract` the graph guard uses, so the
+  assistant and the graph cannot disagree about what is prohibited.
+
+Full write-up, including the stated limits: `docs/security/prompt_injection_defense.md`.
+
+### AI-BOM — the supply chain that has no version numbers
+
+`security/sbom/ai_sbom.json` (CycloneDX 1.6 ML-BOM). The argument for a *second* SBOM:
+every component in `sbom.json` has a version an installer can check, which is what makes
+`verify_sbom.py` trustworthy. The things that actually determine this system's behaviour —
+the model endpoint, the system prompts, the prohibition contract, the guard's pattern set —
+have no version number at all. Change any of them and every governance property can change
+while `pip freeze` stays byte-identical.
+
+Everything recorded is **computed from the live repository**: prompts hashed from the
+actual module attributes, the guard ruleset hashed from the compiled patterns (including
+severities — a `high`→`medium` downgrade turns a refusal into a pass-through without
+touching a regex), policy contract and tool manifest hashed from disk.
+`verify_ai_sbom.py` recomputes all of it and exits non-zero on drift.
+
+**The practical effect: an edit that weakens a governance instruction in a system prompt
+fails CI.** `test_weakening_a_governance_prompt_fails_verification` proves it by making
+exactly that edit.
+
+Stated honestly: model identifiers are recorded as **mutable aliases** and flagged
+`aegis:identifier_is_mutable_alias: true`. A matching id proves nothing about the weights
+serving the request, so an id change is *reported* rather than failed (`--strict` opts
+into the stricter reading). ADR-009's revisit trigger applies and this file cannot detect it.
+
+**Gap closed along the way:** `openai` — the SDK `GroqLLM` actually imports — was absent
+from `sbom.json` while `groq` was recorded. An SDK on the live LLM call path was
+unrecorded, which is precisely INJ-070's blind spot. Both are now listed, with a note
+explaining which one the code imports.
+
+### CI/CD
+
+`.github/workflows/ci.yml` — governance gates first (both SBOMs, tool-manifest integrity,
+committed-secret check), then API lint/tests, web typecheck/lint/tests/build, and both
+container image builds. A single `ci-passed` job is the branch-protection target.
+
+`cd.yml` — build, push, and deploy to **Azure Container Apps** (ADR-009), with signed SLSA
+build provenance attached to both images, both SBOMs published as run artifacts, and a
+post-deploy smoke test that checks the deployed API both answers *and* returns 401 to an
+unauthenticated caller. A `preflight` job stops with a readable message when secrets are
+missing, and writes to the run summary which parts of ADR-009 this pipeline does **not**
+implement: secrets are GitHub Actions secrets rather than Key Vault, login is this repo's
+credential store rather than Entra ID, and the audit store is container-local rather than
+Blob WORM. Recording those gaps in the pipeline that ships the system is deliberate — a
+deploy workflow that implies its ADR is fully realized is how a documented control becomes
+an assumed one.
+
+`nightly-redteam.yml` — the live prompt-injection suite against a real model, nightly,
+opening an issue on failure with the two distinct causes spelled out (structural
+regression vs guard-coverage gap).
+
+**Supporting artifacts added:** `requirements.txt` / `requirements-dev.txt` (pinned, must
+agree with `sbom.json`), `deploy/containers/Dockerfile.api` and `.web`, `.dockerignore`,
+`ruff.toml`, and `pytest.ini` — the last because a bare `pytest` collected the gitignored
+V2 reference tree locally and failed, while CI (where that tree is absent) passed on the
+same commit.
+
+**Not verified here:** the container images have not been built — Docker was unavailable in
+the environment this stage was built in. CI's `containers` job is the first thing that will
+exercise them.
+
+### Live HITL escalation notifications (`services/integration/hitl_escalation_watch.py`, `services/integration/notifier.py`)
+
+Closes a gap `hitl_timer.py` and `docs/governance/hitl_control_model.md` §8 had stated
+plainly since Stage 22: severity was computed and displayed, but "only visible to someone
+who opens the app and looks" — no scheduler, no notification channel.
+
+**What was requested and what was actually possible.** The ask was "wire this to Gmail
+MCP." No Gmail MCP was reachable in this session (empty `mcp.json` at both project and
+user level, no matching tool via `ToolSearch`) — but the harder constraint surfaced first
+and would have applied even with one configured: an MCP tool is part of Claude's own
+tool-calling loop, reachable from an interactive session, **not** from a running FastAPI
+process making its own decisions between requests. "Live" ruled the approach out before
+"which mail API" was even a question. Surfaced to the user directly rather than building
+around it silently; the chosen alternative (real SMTP) was their explicit choice among
+three options offered.
+
+**Design.**
+- `services/integration/hitl_escalation_watch.py::scan_once()` — one pass over the
+  pending queue. For each entry, computes `hitl_timer.compute()` (unchanged, still
+  display-only) and, the first time a run crosses severity 3 (T2) or 4 (T3), writes an
+  audit record and attempts an email. Idempotency is keyed against the audit store itself
+  (`audit_store.has_hitl_escalation`, a new read helper) rather than an in-memory set, so
+  a run already notified at T2 stays notified across an API process restart — the same
+  posture `has_recorded_action`/`has_veto` already take toward "did this already happen."
+- **The audit write happens before the email attempt, and never depends on it
+  succeeding.** ADR-007's posture (`response_cache.py`'s Redis-absent handling) applied
+  to a new dependency: a run reaching severity 4 must be recorded and shown in the app
+  whether or not SMTP is configured or reachable right now.
+- `services/integration/notifier.py::send_email()` — one interface, same pattern as
+  `redis_client.py`/`llm_client.py`: raises `EmailNotConfigured` (never silently
+  swallowed) so the caller decides what "not configured yet" means for it. Gmail SMTP via
+  App Password (`SMTP_HOST=smtp.gmail.com:587`, STARTTLS; port 465/SMTP_SSL also
+  supported) — a regular account password does not work once 2-Step Verification is on,
+  a Google account-security requirement, not a choice made here.
+- **A real scheduler, added for the first time.** `services/api/main.py` gained a
+  `lifespan` context manager (this repo's first) running an `asyncio` background task on
+  a `HITL_NOTIFIER_POLL_SECONDS`-second interval (default 60), synchronous sqlite work
+  offloaded via `asyncio.to_thread` so it never blocks request handling. Confirmed a bare
+  `TestClient(app)` (the pattern every existing test file already uses) does **not**
+  trigger FastAPI lifespan in the installed Starlette version — verified empirically
+  before relying on it — so adding this touches zero existing tests.
+- `GET /api/notifications` — the bell's read source. `subject_id`/`approver_roles` are
+  best-effort, resolved from the in-memory pending queue at read time; `null` rather than
+  guessed for a run that has since been decided or that predates the current process,
+  same honesty pattern `RunDetail.decision_support_unavailable_reason` already uses.
+- **Web:** `NotificationBell` in `AppShell` (both the desktop sidebar and the mobile
+  header) — polls every 20s, badge count is "escalations newer than this browser last
+  opened the bell." Stated as an explicit, accepted simplification: there is no per-user
+  server-side read state (ten shared demo accounts, no user-scoped notification table),
+  so "unread" is necessarily browser-local (localStorage), the same category of
+  simplification `pending_queue.py`'s own docstring already accepts for its state.
+
+**What this does NOT close, restated the same way §8 states its own boundary:**
+`hitl_route.resolve_tier`'s approver-widening state machine is still unwired; crossing a
+notified threshold authorizes no one new. This module only makes an already-true fact
+(a run has been waiting a long time) visible to a human who was not already looking at
+the screen.
+
+**Verified live**, not only in tests: a real pending entry backdated past each
+workflow's ladder, scanned, confirmed to fire exactly once and never again on repeat
+scans, `GET /api/notifications` read back over HTTP with correct enrichment (and correct
+`null` enrichment once the pending entry was removed, simulating a decided run). 13 new
+backend tests for the watcher, 9 for the notifier (fake SMTP transport, no real network
+dependency), 4 for the endpoint, 9 for the bell (including a from-scratch jsdom
+`localStorage` polyfill, since this project's jsdom has none configured — discovered via
+a failing test, not assumed).
+
 ## 7. Tech stack (ADR-001 + ADR-009 Azure)
 
 | Concern | Choice |

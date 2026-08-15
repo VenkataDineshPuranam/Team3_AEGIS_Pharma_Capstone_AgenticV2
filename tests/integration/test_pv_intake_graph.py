@@ -13,7 +13,7 @@ from langgraph.types import Command
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 
 from packages.domain.state import new_state
-from services.api.pv_graph import PV_VETO_ROLE, build_pv_graph
+from services.api.pv_graph import build_pv_graph
 
 pytestmark = [
     pytest.mark.stub,

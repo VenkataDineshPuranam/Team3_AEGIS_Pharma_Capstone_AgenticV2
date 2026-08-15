@@ -206,16 +206,51 @@ def write_hitl_escalation(
     evaluated_at: str,
     conditions: dict[str, bool],
     outcome: str,
+    tier: str = "T2",
     skip_reason: str | None = None,
     escalation_role: str | None = None,
     policy_contract_version: str | None = None,
 ) -> None:
+    """Stage 23 -- `tier` was hardcoded to 'T2' here because nothing called this function
+    (hitl_timer.py's own docstring: "wired into nothing -- no scheduler advances it").
+    services/integration/hitl_escalation_watch.py is that scheduler now, and it fires at
+    both T2 (severity 3, "escalation due") and T3 (severity 4, "expired"/red) -- a fixed
+    literal would have silently mislabeled every T3 event as T2. Existing behavior for any
+    caller that omits the argument is unchanged."""
     conn.execute(
         "INSERT INTO hitl_escalation (run_id, workflow, tier, evaluated_at, conditions, outcome, skip_reason, escalation_role, policy_contract_version) "
-        "VALUES (?, ?, 'T2', ?, ?, ?, ?, ?, ?)",
-        (run_id, workflow, evaluated_at, json.dumps(conditions), outcome, skip_reason, escalation_role, policy_contract_version),
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (run_id, workflow, tier, evaluated_at, json.dumps(conditions), outcome, skip_reason, escalation_role, policy_contract_version),
     )
     conn.commit()
+
+
+def has_hitl_escalation(conn: sqlite3.Connection, run_id: str, tier: str) -> bool:
+    """Whether an escalation at this exact tier has already been recorded for this run --
+    the idempotency check hitl_escalation_watch.py uses so a run sitting at T2 across many
+    poll cycles fires exactly one notification, not one every cycle. Keyed on the
+    append-only audit store itself rather than an in-memory set, so it survives an API
+    process restart the same way every other "did this already happen" check in this
+    module does (has_recorded_action, has_veto)."""
+    row = conn.execute(
+        "SELECT 1 FROM hitl_escalation WHERE run_id = ? AND tier = ? LIMIT 1", (run_id, tier)
+    ).fetchone()
+    return row is not None
+
+
+def list_recent_hitl_escalations(conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
+    """Escalation events, newest first -- the Notification Bell's read source. Deliberately
+    the same table `run_timeline` already reads for a single run, exposed here across all
+    runs: one audit record, two read shapes, never two places that could disagree about
+    which escalations actually happened."""
+    rows = conn.execute(
+        "SELECT run_id, workflow, tier, evaluated_at, escalation_role "
+        "FROM hitl_escalation ORDER BY id DESC LIMIT ?", (limit,)
+    ).fetchall()
+    return [
+        {"run_id": r[0], "workflow": r[1], "tier": r[2], "evaluated_at": r[3], "escalation_role": r[4]}
+        for r in rows
+    ]
 
 
 def write_hitl_expired(

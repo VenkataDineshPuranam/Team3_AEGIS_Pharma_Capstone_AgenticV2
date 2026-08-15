@@ -11,7 +11,9 @@ import type {
   EvidenceStats,
   GovernanceSnapshot,
   HealthDetail,
+  NotificationItem,
   QueueEntry,
+  RecordChatResponse,
   RoleCatalogEntry,
   RunDetail,
   RunHistoryPage,
@@ -89,6 +91,15 @@ export const getEvalScorecard = (signal?: AbortSignal) =>
 export const getInjectCoverage = (signal?: AbortSignal) =>
   read<InjectCoverage>(`/api/coverage/injects`, signal);
 
+/**
+ * Recent HITL escalation events -- the notification bell's source
+ * (services/integration/hitl_escalation_watch.py's background scan writes these; nothing
+ * in the frontend can create one). Unauthenticated on the backend, same as `getQueue`, so
+ * this is safe to poll from anywhere in the shell.
+ */
+export const getNotifications = (limit?: number, signal?: AbortSignal) =>
+  read<NotificationItem[]>(`/api/notifications${query({ limit })}`, signal);
+
 // --- writes ----------------------------------------------------------------
 
 export const submitRun = (body: {
@@ -104,6 +115,19 @@ export const submitRun = (body: {
  * record by the graph itself -- it is not held in this client, and not held in React
  * state after this call returns.
  */
+/**
+ * Ask the Record Assistant about one run. A POST because the question is a body, not
+ * because anything is written -- this endpoint decides nothing, records nothing, and
+ * cannot resume a paused run.
+ *
+ * It goes through `mutate()` (no automatic retry) rather than `read()` even though it is
+ * read-only: every call costs a model invocation, and silently retrying one that timed
+ * out would double the spend against the denial-of-wallet guardrail for an answer the
+ * operator can simply ask for again.
+ */
+export const askAboutRun = (runId: string, question: string, signal?: AbortSignal) =>
+  mutate<RecordChatResponse>(`/api/runs/${encodeURIComponent(runId)}/chat`, { question }, signal);
+
 export const decideRun = (
   runId: string,
   body: {

@@ -21,8 +21,13 @@ Run: uvicorn services.api.main:app --reload --port 8000
 """
 from __future__ import annotations
 
+import asyncio
+import contextlib
+import logging
 import os
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from dotenv import load_dotenv
@@ -35,7 +40,7 @@ from langgraph.types import Command
 
 from packages.config.llm_client import get_llm
 from packages.domain.state import new_state
-from services.api import eval_dashboard, governance_view, health_probe, pending_queue
+from services.api import eval_dashboard, governance_view, health_probe, pending_queue, record_chat
 from services.api.auth import require_user
 from services.api.graph import build_graph
 from services.api.pv_graph import build_pv_graph
@@ -54,17 +59,58 @@ from services.api.schemas import (
     HitlTimerInfo,
     InjectCoverage,
     LoginRequest,
+    NotificationItem,
     QueueEntry,
+    RecordChatRequest,
+    RecordChatResponse,
     RunDetail,
     RunHistoryPage,
     RunResult,
     SessionInfo,
     SubmitRunRequest,
 )
-from services.api.supply_graph import PLANNING_LEG, QUALITY_LEG, build_supply_graph
-from services.integration import audit_store, evidence_catalog, hitl_timer, user_store
+from services.api.supply_graph import build_supply_graph
+from services.integration import audit_store, evidence_catalog, hitl_escalation_watch, hitl_timer, user_store
 
-app = FastAPI(title="AEGIS Pharma AI -- Orchestrator API")
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Background scheduler (Stage 23) -- the live poller hitl_timer.py's own docstring said
+# did not exist ("no scheduler advances it"). Notification only: it writes an audit
+# record and sends a best-effort email when a pending run crosses severity 3 or 4
+# (services/integration/hitl_escalation_watch.py has the full scope statement). It never
+# decides, approves, or widens who may approve a run -- BC-12 ("timeout => no action,
+# ever") is unaffected.
+# ---------------------------------------------------------------------------
+
+HITL_NOTIFIER_POLL_SECONDS = float(os.environ.get("HITL_NOTIFIER_POLL_SECONDS", "60"))
+
+
+async def _hitl_escalation_loop() -> None:
+    """Runs for the API process's lifetime. `scan_once` is synchronous sqlite work, run in
+    a thread so it never blocks the event loop other requests share. One bad scan must not
+    end all future ones, so the whole iteration is guarded -- the loop itself is what stays
+    alive; only its current attempt can fail."""
+    while True:
+        try:
+            await asyncio.to_thread(hitl_escalation_watch.scan_once)
+        except Exception:  # noqa: BLE001 -- ADR-007: a scan failure must not end future scans
+            logger.exception("hitl_escalation_watch.scan_once failed")
+        await asyncio.sleep(HITL_NOTIFIER_POLL_SECONDS)
+
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    task = asyncio.create_task(_hitl_escalation_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
+app = FastAPI(title="AEGIS Pharma AI -- Orchestrator API", lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -412,6 +458,62 @@ def get_run(run_id: str):
         decision_support_available=pending is not None,
         decision_support_unavailable_reason=reason,
     )
+
+
+@app.post("/api/runs/{run_id}/chat", response_model=RecordChatResponse)
+def chat_about_run(
+    run_id: str, req: RecordChatRequest, session: user_store.Session = Depends(require_user)
+):
+    """Record Assistant -- a grounded, guarded reading aid for one run.
+
+    Read-only in every sense that matters: it writes nothing, decides nothing, and cannot
+    resume a paused run. The one thing it must not become is a side channel around
+    `decide` -- so it is authenticated like every other endpoint, it enforces the same
+    segregation-of-duties rule the workflow lists enforce (a role segregated from a
+    workflow cannot read its records here either), and its prose is checked against the
+    same ProhibitionContract the graph's own guard uses before it is returned.
+
+    Guard outcomes are results, not errors: a refused question and a withheld answer both
+    come back 200 with `guard` populated, because the record facts and next steps are
+    still valid and still useful. Only "no such run" and "not your workflow" are HTTP
+    failures.
+    """
+    try:
+        return RecordChatResponse(
+            **record_chat.answer(run_id, req.question, role=session.role, llm=_llm)
+        )
+    except record_chat.RecordNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except record_chat.RecordNotVisible as exc:
+        raise HTTPException(403, str(exc)) from exc
+
+
+@app.get("/api/notifications", response_model=list[NotificationItem])
+def list_notifications(limit: int = Query(default=20, ge=1, le=100)):
+    """Recent HITL escalation events -- the web app's notification bell. Read-only: this
+    endpoint cannot fire an escalation, only report ones hitl_escalation_watch.py's
+    background loop already recorded. Authentication is intentionally not required here
+    (unlike every write and every record-specific read) because a login page bell would
+    be a contradiction; nothing this endpoint returns is more sensitive than what
+    `/api/queue` already exposes without auth in the underlying data it references.
+    """
+    conn = audit_store.get_connection()
+    try:
+        rows = audit_store.list_recent_hitl_escalations(conn, limit=limit)
+    finally:
+        conn.close()
+
+    items = []
+    for row in rows:
+        entry = pending_queue.get(row["run_id"])
+        items.append(NotificationItem(
+            run_id=row["run_id"], workflow=row["workflow"], tier=row["tier"],
+            severity=hitl_timer.TIER_SEVERITY.get(row["tier"], 0),
+            evaluated_at=row["evaluated_at"],
+            subject_id=entry.subject_id if entry else None,
+            approver_roles=entry.approver_roles if entry else None,
+        ))
+    return items
 
 
 @app.get("/api/evidence", response_model=list[EvidenceCatalogItem])

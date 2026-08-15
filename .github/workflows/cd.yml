@@ -1,0 +1,290 @@
+# CD -- build, push and deploy to Azure Container Apps (ADR-009).
+#
+# WHAT THIS WORKFLOW ASSUMES, AND WHAT IT REFUSES TO ASSUME
+# ---------------------------------------------------------
+# ADR-009 names Azure Container Apps as the compute target, Azure Key Vault for secrets
+# and Entra ID for identity. This workflow implements the first of those and deliberately
+# does NOT paper over the other two:
+#
+#   - Secrets are read from GitHub Actions secrets and set as Container App secrets. That
+#     is not Key Vault, and the `preflight` job says so out loud in the run summary rather
+#     than letting a reviewer assume ADR-009's secrets story is implemented.
+#   - Login is this repo's own credential store (services/integration/user_store.py), not
+#     Entra ID. ADR-009's claim that approver authorization becomes "enforceable
+#     infrastructure" through Entra group membership is NOT what gets deployed here.
+#
+# Recording those two gaps in the pipeline that ships the system is the point. A deploy
+# workflow that silently implies its ADR is fully realized is how a documented control
+# becomes an assumed one.
+#
+# REQUIRED REPOSITORY SECRETS
+#   AZURE_CREDENTIALS       Output of:
+#                             az ad sp create-for-rbac --name aegis-cd \
+#                               --role contributor --scopes /subscriptions/<id>/resourceGroups/<rg> \
+#                               --sdk-auth
+#   AZURE_RESOURCE_GROUP    Resource group holding the Container Apps environment
+#   AZURE_CONTAINER_REGISTRY  ACR login server, e.g. aegisacr.azurecr.io
+#   ACR_USERNAME / ACR_PASSWORD  ACR admin credentials (or swap the docker/login-action
+#                                step for `az acr login` with the same service principal)
+#   ACA_API_APP             Container App name for the Orchestrator API
+#   ACA_WEB_APP             Container App name for the Control Center
+#   API_PUBLIC_URL          Public https URL of the API app -- needed at BUILD time, see below
+#   ANTHROPIC_API_KEY       Route A inference key (ADR-009)
+#   REDIS_URL, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD   Backing services
+#   LANGSMITH_API_KEY       Optional; tracing is off if absent
+#
+# Until those exist the workflow stops in `preflight` with a readable message instead of
+# failing somewhere inside an az command.
+
+name: CD
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+
+# One deployment at a time, and never cancel one in flight: a half-applied Container App
+# revision is worse than a queued one.
+concurrency:
+  group: cd-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  # Everything in ci.yml must pass before anything is built or pushed.
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  preflight:
+    name: Preflight -- required secrets
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AZURE_CONTAINER_REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+          ACA_API_APP: ${{ secrets.ACA_API_APP }}
+          ACA_WEB_APP: ${{ secrets.ACA_WEB_APP }}
+          API_PUBLIC_URL: ${{ secrets.API_PUBLIC_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          missing=""
+          for name in AZURE_CREDENTIALS AZURE_RESOURCE_GROUP AZURE_CONTAINER_REGISTRY \
+                      ACA_API_APP ACA_WEB_APP API_PUBLIC_URL ANTHROPIC_API_KEY; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+
+          {
+            echo "### CD preflight"
+            echo ""
+            echo "Deploy target: Azure Container Apps (ADR-009)."
+            echo ""
+            echo "**Not implemented by this pipeline, stated explicitly:**"
+            echo "- Secrets come from GitHub Actions secrets, *not* Azure Key Vault."
+            echo "- Approver authorization is this repo's credential store, *not* Entra ID group membership."
+            echo "- The audit store is a container-local SQLite file unless a volume is mounted; ADR-009's Blob WORM store is not wired up."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$missing" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo ""
+              echo "**Deployment skipped** -- missing repository secrets:$missing"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Deployment skipped, missing secrets:$missing"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    needs: [ci, preflight]
+    if: needs.preflight.outputs.configured == 'true'
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        run: echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push API image
+        id: api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/containers/Dockerfile.api
+          push: true
+          tags: |
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-api:${{ steps.meta.outputs.tag }}
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push web image
+        id: web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/containers/Dockerfile.web
+          push: true
+          # NEXT_PUBLIC_API_URL must be supplied HERE, at build time. Next.js inlines
+          # NEXT_PUBLIC_* into the client bundle during `next build`; setting it as a
+          # Container App environment variable later has no effect, and the symptom is a
+          # deployed UI whose every request goes to localhost:8000.
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.API_PUBLIC_URL }}
+          tags: |
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-web:${{ steps.meta.outputs.tag }}
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attach build provenance to the API image
+        # Signed SLSA provenance linking this image digest to this commit and workflow.
+        # Together with the two SBOMs below it means a deployed image can be traced to the
+        # source that produced it -- which is what makes the AI-BOM's prompt hashes worth
+        # anything, since a hash of a prompt in a repo says nothing about the image
+        # actually running unless the two are provably the same build.
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-api
+          subject-digest: ${{ steps.api.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attach build provenance to the web image
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-web
+          subject-digest: ${{ steps.web.outputs.digest }}
+          push-to-registry: true
+
+      - name: Publish both SBOMs as release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms-${{ steps.meta.outputs.tag }}
+          path: |
+            security/sbom/sbom.json
+            security/sbom/ai_sbom.json
+
+  deploy:
+    name: Deploy to Azure Container Apps
+    runs-on: ubuntu-latest
+    needs: [build-and-push, preflight]
+    if: needs.preflight.outputs.configured == 'true'
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Update API container app
+        env:
+          TAG: ${{ needs.build-and-push.outputs.tag }}
+        run: |
+          # Secrets are set as Container App secrets and referenced by env vars, so the
+          # values are not visible in `az containerapp show` output or in the revision's
+          # template. This is the ACA-native mechanism, not Key Vault -- see this file's
+          # header for why that distinction is called out rather than glossed.
+          az containerapp secret set \
+            --name "${{ secrets.ACA_API_APP }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --secrets \
+              anthropic-api-key="${{ secrets.ANTHROPIC_API_KEY }}" \
+              redis-url="${{ secrets.REDIS_URL }}" \
+              neo4j-uri="${{ secrets.NEO4J_URI }}" \
+              neo4j-user="${{ secrets.NEO4J_USER }}" \
+              neo4j-password="${{ secrets.NEO4J_PASSWORD }}" \
+              langsmith-api-key="${{ secrets.LANGSMITH_API_KEY }}"
+
+          az containerapp update \
+            --name "${{ secrets.ACA_API_APP }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-api:${TAG}" \
+            --set-env-vars \
+              LLM_PROVIDER=anthropic \
+              ANTHROPIC_API_KEY=secretref:anthropic-api-key \
+              REDIS_URL=secretref:redis-url \
+              NEO4J_URI=secretref:neo4j-uri \
+              NEO4J_USER=secretref:neo4j-user \
+              NEO4J_PASSWORD=secretref:neo4j-password \
+              LANGSMITH_API_KEY=secretref:langsmith-api-key \
+              LANGSMITH_TRACING=true \
+              LANGSMITH_PROJECT=aegis-pharma-v3 \
+              WEB_ORIGIN="${{ secrets.WEB_PUBLIC_URL }}"
+
+      - name: Update web container app
+        env:
+          TAG: ${{ needs.build-and-push.outputs.tag }}
+        run: |
+          az containerapp update \
+            --name "${{ secrets.ACA_WEB_APP }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ secrets.AZURE_CONTAINER_REGISTRY }}/aegis-web:${TAG}"
+
+      - name: Post-deploy smoke test
+        # Checks the deployed API is actually serving and actually enforcing auth. A deploy
+        # that reports success while /api/health is unreachable, or while an
+        # unauthenticated caller can reach a governed endpoint, is not a success.
+        run: |
+          API="${{ secrets.API_PUBLIC_URL }}"
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 10 "$API/api/health" > /tmp/health.json; then break; fi
+            echo "Health check attempt $attempt failed; the new revision may still be starting."
+            sleep 10
+          done
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+            -X POST -H 'Content-Type: application/json' -d '{"question":"hi"}' \
+            "$API/api/runs/R-smoke/chat")
+          if [ "$code" != "401" ]; then
+            echo "::error::Unauthenticated request to a governed endpoint returned $code, expected 401."
+            exit 1
+          fi
+          echo "Deployed API is healthy and enforcing authentication."
+
+      - name: Record the deployment
+        env:
+          TAG: ${{ needs.build-and-push.outputs.tag }}
+        run: |
+          {
+            echo "### Deployed"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Environment | ${{ github.event.inputs.environment || 'staging' }} |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| Image tag | \`${TAG}\` |"
+            echo "| API | ${{ secrets.API_PUBLIC_URL }} |"
+            echo ""
+            echo "Both SBOMs and signed build provenance for both images are attached to this run."
+          } >> "$GITHUB_STEP_SUMMARY"

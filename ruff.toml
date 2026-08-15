@@ -1,0 +1,37 @@
+# Lint configuration for the CI `ruff check` gate.
+#
+# Ruff's default rule set (E4, E7, E9, F) is kept rather than widened. A lint gate
+# introduced late in a project only survives if its first run is actionable: turning on
+# stylistic rule families here would have produced hundreds of findings across code that
+# has already been reviewed, and the predictable outcome is a `--exit-zero` added a week
+# later, at which point the gate stops meaning anything.
+
+target-version = "py313"
+line-length = 120
+
+exclude = [
+    # Reference context only, gitignored, not part of the V3 repo (see .gitignore).
+    "Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude",
+    "eval-ai-cache",
+    "**/node_modules",
+    "**/__pycache__",
+]
+
+[lint]
+ignore = [
+    # E402: module-level import not at top of file.
+    #
+    # Deliberate and load-bearing in this repository, in two distinct places:
+    #
+    #   1. `load_dotenv()` must run BEFORE `services.api.main` is imported, because that
+    #      module calls `get_llm()` at import time and the provider constructor reads
+    #      os.environ. Moving the import above the dotenv call breaks the app rather than
+    #      tidying it.
+    #   2. `sys.path.insert(...)` must run before `packages.*` / `services.*` are
+    #      importable in the SBOM scripts and several test modules -- the same setup
+    #      conftest.py performs for the suite.
+    #
+    # Both are commented at their call sites. Enforcing E402 would mean rewriting working
+    # startup ordering to satisfy a lint rule.
+    "E402",
+]

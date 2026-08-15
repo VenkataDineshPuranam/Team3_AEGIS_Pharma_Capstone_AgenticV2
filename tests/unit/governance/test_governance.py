@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from packages.domain.evidence import Claim, EvidenceItem
-from packages.domain.state import DecisionSupportOutput, ProhibitionContract
+from packages.domain.state import DecisionSupportOutput
 from services.integration import audit_store, evidence_gate, hitl_route, prohibited_action_guard
 from services.integration.policy_engine import PolicyEngineUnavailable, get_prohibition_contract
 

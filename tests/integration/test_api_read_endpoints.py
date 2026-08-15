@@ -271,3 +271,83 @@ def test_error_responses_do_not_expose_a_stack_trace():
     r = client.get("/api/runs/R-definitely-not-a-real-run")
     assert "Traceback" not in r.text
     assert "sqlite3" not in r.text.lower()
+
+
+# --- notifications (Stage 23) -------------------------------------------------
+
+
+def test_notifications_is_unauthenticated_read_only_and_reports_recent_escalations():
+    """GET /api/notifications is the notification bell's source. Uses the escalation
+    watcher's real scan against the real, shared audit store (this file's own posture --
+    see the module docstring), a unique run_id so this test cannot collide with any
+    other test's rows or with a previous run of itself."""
+    import uuid
+    from datetime import UTC, datetime, timedelta
+
+    from services.api import pending_queue
+    from services.integration import hitl_escalation_watch
+
+    run_id = f"R-notif-endpoint-{uuid.uuid4().hex[:8]}"
+    pending_queue.add(
+        pending_queue.PendingEntry(
+            run_id=run_id, workflow="pv_intake", subject_id="PV-notif-test",
+            requester_role="Safety physician", approver_roles=["Global Head of Pharmacovigilance"],
+            required_legs=None, approved_legs=[], draft_summary=None, draft_claims=[],
+            created_at=(datetime.now(UTC) - timedelta(hours=25)).isoformat(),  # past pv_intake's 24h T3
+        )
+    )
+    try:
+        fired = hitl_escalation_watch.scan_once()
+        assert any(n.run_id == run_id for n in fired)
+
+        r = client.get("/api/notifications")
+        assert r.status_code == 200
+        rows = r.json()
+        match = next(row for row in rows if row["run_id"] == run_id)
+        assert match["tier"] == "T3"
+        assert match["severity"] == 4
+        assert match["workflow"] == "pv_intake"
+        # The pending entry is still in memory at read time, so the enrichment fields
+        # resolve rather than reporting null.
+        assert match["subject_id"] == "PV-notif-test"
+        assert match["approver_roles"] == ["Global Head of Pharmacovigilance"]
+    finally:
+        pending_queue.remove(run_id)
+
+
+def test_notifications_reports_null_enrichment_for_a_run_no_longer_pending():
+    """A decided run, or one from a process that has since restarted, has no pending
+    entry -- the endpoint must say so honestly rather than guessing a subject id."""
+    import uuid
+    from datetime import UTC, datetime, timedelta
+
+    from services.api import pending_queue
+    from services.integration import hitl_escalation_watch
+
+    run_id = f"R-notif-gone-{uuid.uuid4().hex[:8]}"
+    pending_queue.add(
+        pending_queue.PendingEntry(
+            run_id=run_id, workflow="batch_review", subject_id="B-notif-gone",
+            requester_role="EU Qualified Person", approver_roles=["EU Qualified Person"],
+            required_legs=None, approved_legs=[], draft_summary=None, draft_claims=[],
+            created_at=(datetime.now(UTC) - timedelta(hours=17)).isoformat(),
+        )
+    )
+    hitl_escalation_watch.scan_once()
+    pending_queue.remove(run_id)  # simulate: decided, or process restarted
+
+    rows = client.get("/api/notifications").json()
+    match = next(row for row in rows if row["run_id"] == run_id)
+    assert match["subject_id"] is None
+    assert match["approver_roles"] is None
+
+
+def test_notifications_respects_the_limit_param():
+    r = client.get("/api/notifications?limit=1")
+    assert r.status_code == 200
+    assert len(r.json()) <= 1
+
+
+def test_notifications_is_read_only():
+    for method in ("post", "put", "patch", "delete"):
+        assert getattr(client, method)("/api/notifications").status_code == 405

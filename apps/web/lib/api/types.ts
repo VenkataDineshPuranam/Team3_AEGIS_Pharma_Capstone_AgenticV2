@@ -340,3 +340,61 @@ export interface EvidenceStats {
   citable_total: number;
   supersedes_edges: number;
 }
+
+// --- Record Assistant (Stage 23) ---------------------------------------------
+
+export interface PromptGuardHit {
+  pattern_id: string;
+  category: string;
+  severity: "low" | "medium" | "high";
+  excerpt: string;
+}
+
+export interface RecordChatGuard {
+  prompt_guard_version: string;
+  input_verdict: "clear" | "flagged" | "blocked";
+  output_verdict: "clear" | "flagged" | "blocked";
+  input_hits: PromptGuardHit[];
+  /** Injection-shaped text found INSIDE the record itself (threat catalogue T-01). */
+  record_hits: PromptGuardHit[];
+  output_hits: PromptGuardHit[];
+  refused: boolean;
+}
+
+export interface RecordChatNextStep {
+  step: string;
+  owner: string;
+  /** The step the run is actually stuck on, as opposed to context. */
+  blocking: boolean;
+}
+
+/**
+ * `record` and `next_steps` are computed from the run with no model involved;
+ * `summary`, `answer` and `next_steps_explanation` are model-written prose over exactly
+ * those facts. The UI keeps them visually distinct for the same reason the API keeps them
+ * in separate fields -- an operator must be able to tell which half can be wrong.
+ */
+export interface RecordChatResponse {
+  run_id: string;
+  record: Record<string, unknown>;
+  next_steps: RecordChatNextStep[];
+  summary: string;
+  answer: string;
+  next_steps_explanation: string;
+  cites: string[];
+  llm_available: boolean;
+  llm_unavailable_reason: string | null;
+  guard: RecordChatGuard;
+}
+
+// --- Notifications (Stage 23) --------------------------------------------------
+
+export interface NotificationItem {
+  run_id: string;
+  workflow: string;
+  tier: string;
+  severity: number;
+  evaluated_at: string;
+  subject_id: string | null;
+  approver_roles: string[] | null;
+}

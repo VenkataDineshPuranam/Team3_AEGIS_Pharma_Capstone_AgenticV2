@@ -1,0 +1,83 @@
+# Nightly live red-team -- the tests ci.yml excludes with `-m "not live"`.
+#
+# These need a real provider key and cost real tokens, so they do not belong on every
+# push. They also cannot be dropped: the PI/PG guard in
+# services/integration/prompt_guard.py is a pattern matcher, and a pattern matcher's
+# coverage decays as models change and attack phrasings drift. The structural controls
+# (ADR-004 layers 1-3) are what actually hold, and this job is what keeps checking that
+# claim against a live model rather than assuming it.
+#
+# A failure here is not necessarily a broken build -- it may be a model that has started
+# complying with an injection the guard does not recognize. That is exactly the finding
+# worth waking up to, which is why it opens an issue rather than only going red.
+
+name: Nightly red-team
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # 03:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  redteam:
+    name: Live prompt-injection red-team
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Guard unit tests (no key needed)
+        run: pytest tests/security -m "not live" -q
+
+      - name: Live red-team against a real model
+        id: live
+        env:
+          LLM_PROVIDER: anthropic
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEO4J_URI: ${{ secrets.NEO4J_URI }}
+          NEO4J_USER: ${{ secrets.NEO4J_USER }}
+          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not configured; the live red-team did not run."
+            echo "ran=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ran=true" >> "$GITHUB_OUTPUT"
+          pytest -m live -q -rs --durations=10
+
+      - name: Open an issue if the live red-team failed
+        if: failure() && steps.live.outputs.ran == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Nightly red-team failed on ${context.sha.slice(0, 12)}`,
+              labels: ['security', 'ai-safety'],
+              body: [
+                'The live prompt-injection red-team suite failed.',
+                '',
+                'Two very different causes produce this, and they need different responses:',
+                '',
+                '1. **A structural control regressed** (ADR-004 layer 1-3). Treat as a release blocker.',
+                '2. **The model complied with an injection the PI/PG guard does not match.**',
+                '   The structural layers should still have caught the outcome — check whether they did.',
+                '   If they did, this is a guard-coverage gap: add the pattern to',
+                '   `services/integration/prompt_guard.py`, bump `PROMPT_GUARD_VERSION`, and',
+                '   regenerate `security/sbom/ai_sbom.json`.',
+                '',
+                `[Run log](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              ].join('\n'),
+            });

@@ -1,0 +1,61 @@
+# AEGIS Control Center -- apps/web (Next.js, ADR-009: Azure Container Apps).
+#
+# Build from the REPO ROOT:
+#   docker build -f deploy/containers/Dockerfile.web \
+#     --build-arg NEXT_PUBLIC_API_URL=https://<api-host> -t aegis-web .
+#
+# NEXT_PUBLIC_API_URL is a BUILD argument, not a runtime one. Next.js inlines
+# NEXT_PUBLIC_* into the client bundle at build time, so setting it as a container
+# environment variable at deploy time does nothing -- the built JavaScript already
+# contains whatever value was present during `next build`. This is a frequent and
+# silent deployment failure (the app comes up and every request goes to localhost:8000),
+# so the workflow that builds this image passes the value here, and the CD workflow's
+# own comments say the same thing.
+#
+# WHY THE APP LIVES AT /app/apps/web AND NOT AT /app
+# ---------------------------------------------------
+# apps/web/next.config.ts sets `outputFileTracingRoot` to the repository root, so the
+# standalone bundle is emitted with the app nested at `apps/web/` inside it -- server.js
+# lands at .next/standalone/apps/web/server.js, not at the bundle root. Flattening the
+# source into /app here would make the container's tracing root differ from the one every
+# local build uses, and the nesting would silently change with it. Mirroring the repo
+# layout keeps the two identical, so `docker build` and `npm run build` produce the same
+# tree in the same place.
+
+FROM node:22-alpine AS deps
+WORKDIR /app/apps/web
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci
+
+FROM node:22-alpine AS builder
+WORKDIR /app/apps/web
+COPY --from=deps /app/apps/web/node_modules ./node_modules
+COPY apps/web/ ./
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+# `output: "standalone"` produces a server bundled with only the modules it actually
+# imports, so this stage carries no build toolchain. The bundle already contains the
+# apps/web/ prefix (see the note above), hence the copy into /app rather than /app/apps/web.
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+RUN addgroup -g 10001 -S aegis && adduser -u 10001 -S aegis -G aegis
+USER aegis
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:3000/login || exit 1
+
+CMD ["node", "apps/web/server.js"]

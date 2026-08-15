@@ -1,0 +1,31 @@
+# Both Dockerfiles build from the repo root, so this file is what keeps the build context
+# from including the 983MB V2 reference tree and every local artifact.
+
+Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/
+
+.git/
+.github/
+.claude/
+.deepeval/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+
+node_modules/
+**/node_modules/
+apps/web/.next/
+apps/web/tsconfig.tsbuildinfo
+
+# Secrets must never enter a build context -- an ARG or COPY mistake turns a .env into a
+# layer anyone who can pull the image can read.
+.env
+.env.*
+!.env.example
+
+# Local audit/session databases. The container creates its own.
+**/*.sqlite3
+
+*.log
+*.jpg
+*.png
+!apps/web/public/**

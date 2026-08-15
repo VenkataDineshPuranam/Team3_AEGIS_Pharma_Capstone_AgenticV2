@@ -1,0 +1,52 @@
+# Orchestrator API -- services/api/main.py (ADR-009: Azure Container Apps).
+#
+# Build from the REPO ROOT, not this directory:
+#   docker build -f deploy/containers/Dockerfile.api -t aegis-api .
+#
+# The graphs import `packages.*` and `services.*` as top-level packages (see conftest.py),
+# and the governance layer reads real files at runtime -- security/policies/ for the
+# prohibition contract, packages/contracts/ for the tool schemas. Those are not optional
+# extras to be mounted later: policy_engine fails closed if the contract is unreadable
+# (ADR-005/BC-3), so an image missing them starts and then refuses every request. They are
+# copied in below for that reason.
+
+FROM python:3.13-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Dependencies first, so a source-only change does not re-resolve the wheel set.
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Application code and the governance artifacts it reads at runtime.
+COPY packages/ ./packages/
+COPY services/ ./services/
+COPY infra/ ./infra/
+COPY security/policies/ ./security/policies/
+COPY security/sbom/ ./security/sbom/
+COPY quality/ ./quality/
+COPY evidence/ ./evidence/
+COPY knowledge/ ./knowledge/
+COPY conftest.py ./
+
+# Non-root. The audit store (services/integration/audit_store.py) writes a SQLite file
+# under evidence/, so that path must be writable by this user -- in Azure Container Apps
+# the durable version of this is a mounted volume or the Blob WORM store ADR-009 names;
+# the local file is the dev-parity fallback, not the deployment answer.
+RUN useradd --create-home --uid 10001 aegis && chown -R aegis:aegis /app
+USER aegis
+
+EXPOSE 8000
+
+# Startup integrity checks, then serve. Both verifiers exit non-zero on drift, so a
+# tampered tool contract or a dependency that does not match the SBOM stops the container
+# from starting rather than being discovered later -- which is the cadence
+# tool_manifest.py's own docstring specifies ("at process startup and in CI").
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status==200 else 1)"
+
+CMD ["sh", "-c", "python3 -m security.sbom.verify_sbom && python3 -c 'from services.integration import tool_manifest; tool_manifest.verify_manifest()' && exec uvicorn services.api.main:app --host 0.0.0.0 --port 8000"]

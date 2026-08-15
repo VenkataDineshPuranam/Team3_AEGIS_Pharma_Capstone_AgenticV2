@@ -6,6 +6,8 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { getQueue } from "@/lib/api";
 import { useApiResource, useVisiblePolling } from "@/hooks/useApiResource";
+import { AssistantLauncher } from "@/components/assistant/AssistantLauncher";
+import { NotificationBell } from "./NotificationBell";
 import { OperatorBar } from "./OperatorBar";
 
 /**
@@ -118,14 +120,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
         </button>
         <Wordmark />
-        {pendingCount != null && pendingCount > 0 && (
-          <Link
-            href="/decisions"
-            className="ml-auto tnum rounded-[var(--radius-full)] border border-[var(--status-pending-border)] bg-[var(--status-pending-bg)] px-2 py-0.5 text-xs font-medium text-[var(--status-pending-fg)]"
-          >
-            {pendingCount} pending
-          </Link>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {pendingCount != null && pendingCount > 0 && (
+            <Link
+              href="/decisions"
+              className="tnum rounded-[var(--radius-full)] border border-[var(--status-pending-border)] bg-[var(--status-pending-bg)] px-2 py-0.5 text-xs font-medium text-[var(--status-pending-fg)]"
+            >
+              {pendingCount} pending
+            </Link>
+          )}
+          <NotificationBell />
+        </div>
       </header>
 
       {/* --- sidebar ------------------------------------------------------ */}
@@ -140,6 +145,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="hidden items-center gap-2.5 px-5 py-4 lg:flex">
           <Wordmark />
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
         </div>
 
         <ul className="flex-1 space-y-0.5 overflow-y-auto px-2.5 py-2 lg:py-1">
@@ -188,6 +196,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main id="main" className="min-w-0 flex-1">
         {children}
       </main>
+
+      {/* Mounted in the shell rather than per-page, so the assistant is reachable from
+          every authenticated screen. It sits inside RequireAuth's tree, so it is never
+          rendered on /login -- there is no session to answer questions under. */}
+      <AssistantLauncher />
     </div>
   );
 }

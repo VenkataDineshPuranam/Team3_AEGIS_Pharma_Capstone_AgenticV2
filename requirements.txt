@@ -1,0 +1,24 @@
+# Runtime dependencies for the Orchestrator API and the governed workflow graphs.
+#
+# Every version here is PINNED and must agree with security/sbom/sbom.json --
+# security/sbom/verify_sbom.py compares the installed environment against that file and
+# fails the build on any drift, so an unpinned range here would turn a green CI run into
+# a coincidence. Update both files together, or CI will say so.
+#
+# Split from requirements-dev.txt so the container image does not ship a test runner.
+
+anthropic==0.121.0
+fastapi==0.141.1
+jsonschema==4.23.0
+langgraph==1.1.8
+langgraph-checkpoint==4.0.2
+neo4j==6.2.0
+# GroqLLM (packages/config/llm_client.py) reaches Groq through its OpenAI-compatible
+# endpoint, so `openai` is the SDK on the call path. `groq` is kept because the SBOM
+# records it as available and .env.example documents the provider.
+groq==0.37.1
+openai==2.32.0
+pydantic==2.12.5
+python-dotenv==1.2.2
+redis==8.1.0
+uvicorn==0.44.0

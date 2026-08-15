@@ -1,0 +1,6 @@
+# Test and lint tooling. Not installed into the runtime container.
+-r requirements.txt
+
+pytest==9.1.1
+httpx==0.28.1          # fastapi.testclient
+ruff==0.14.6

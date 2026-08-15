@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
-from langgraph.types import Command, interrupt
+from langgraph.types import interrupt
 
 from packages.domain import hitl_decision
 from packages.domain.payloads import BatchPayload, ReconciliationFinding

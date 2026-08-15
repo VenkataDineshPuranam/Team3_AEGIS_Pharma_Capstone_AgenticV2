@@ -146,13 +146,24 @@ consulted — caught and fixed before merge, not caught after; recorded here so 
 mistake and its correction are both on the record, not just the fix.
 
 **What this does NOT close, stated plainly:**
-- **No live scheduler.** `hitl_route.resolve_tier` (§7's actual escalation-ladder state
-  machine, widening approver eligibility at T2) is still called nowhere outside its own
-  test file. `hitl_timer.py` is a read-time, display-only computation — reaching severity
-  4 changes a badge's colour, not who is authorized to decide the run.
-  `user_store.approver_string_for` is completely unaffected.
-- **No notification channel.** No email, Slack, webhook, or push exists in this build.
-  Severity is only visible to someone who opens the app and looks.
+- **`hitl_route.resolve_tier` is still unwired.** §7's actual escalation-ladder state
+  machine — the one that WIDENS approver eligibility at T2 — is still called nowhere
+  outside its own test file. `hitl_timer.py` remains a read-time, display-only
+  computation — reaching severity 4 changes a badge's colour and now also triggers a
+  notification (below), but does not change who is authorized to decide the run.
+  `user_store.approver_string_for` is completely unaffected by either.
+- **Notification channel — CLOSED, Stage 23** (`services/integration/
+  hitl_escalation_watch.py`, `services/integration/notifier.py`). A background poller
+  inside the API process (`services/api/main.py`'s lifespan, `HITL_NOTIFIER_POLL_SECONDS`)
+  checks pending runs and, the first time one crosses severity 3 (T2) or 4 (T3), writes an
+  audit record (`hitl_escalation`, powering the web app's notification bell —
+  `GET /api/notifications`, no configuration required) and sends one best-effort email via
+  Gmail SMTP (`SMTP_*` / `NOTIFY_EMAIL_TO` in `.env`; degrades to bell-only if unset). This
+  closes the "severity is only visible to someone who opens the app and looks" gap this
+  section used to describe — but it is still visibility only: reaching severity 3 or 4
+  authorizes no one new and does not touch `hitl_route.resolve_tier`'s widening above. Full
+  scope statement, including why an MCP tool was ruled out for this, lives in
+  `hitl_escalation_watch.py`'s and `notifier.py`'s module docstrings.
 - **The three Stage 21 workflows have no documented ladder.** `research_review`,
   `clinical_integrity`, and `regulatory_completeness` postdate this document; `hitl_timer.py`
   falls back to the Batch Review numbers for them as the closest analog, stated as an

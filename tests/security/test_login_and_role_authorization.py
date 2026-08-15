@@ -1,7 +1,6 @@
 """Stage 22 -- login functionality. Verifies user_store's credential check, session
 lifecycle, and the role-to-approver-string authorization map that main.decide_run now
 enforces before a request reaches any graph."""
-import time
 
 import pytest
 

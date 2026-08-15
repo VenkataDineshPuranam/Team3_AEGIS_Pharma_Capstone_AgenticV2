@@ -1,0 +1,599 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-08-15T05:26:49.792573+00:00",
+    "component": {
+      "type": "application",
+      "bom-ref": "aegis-pharma-v3",
+      "name": "AEGIS Control Center",
+      "description": "Governed multi-agent decision-support system for six pharmaceutical workflows. Decision support only -- no agent makes a terminal safety, release, allocation or reportability decision."
+    },
+    "properties": [
+      {
+        "name": "aegis:ai_sbom_schema_revision",
+        "value": "1.0.0"
+      },
+      {
+        "name": "aegis:generator",
+        "value": "security/sbom/generate_ai_sbom.py"
+      },
+      {
+        "name": "aegis:verification",
+        "value": "Every hash in this document is recomputed from the live repository by security/sbom/verify_ai_sbom.py, which exits non-zero on drift. Model identifiers are mutable aliases and are NOT verifiable this way -- see each model component's aegis:identifier_is_mutable_alias property."
+      },
+      {
+        "name": "aegis:eu_ai_act_note",
+        "value": "Supports the transparency and record-keeping expectations recorded in docs/governance/compliance/eu_ai_act_risk_classification.md. This is an engineering artifact, not a legal conformity assessment."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "model/anthropic-claude",
+      "name": "claude-sonnet-4-5",
+      "version": "claude-sonnet-4-5",
+      "publisher": "Anthropic",
+      "description": "Anthropic API directly in development; Azure AI Foundry is the deployment binding behind the same packages/config/llm_client.py interface.",
+      "modelCard": {
+        "modelParameters": {
+          "task": "text-generation"
+        },
+        "considerations": {
+          "useCases": [
+            "synthesize",
+            "critic_verify",
+            "record_assistant"
+          ],
+          "ethicalConsiderations": [
+            {
+              "name": "no-terminal-decision",
+              "mitigationStrategy": "This model never makes a terminal safety, release, allocation or reportability decision. Prohibited outputs are structurally unrepresentable (ADR-004 layers 1-2), pattern-blocked at runtime (layer 3), and every generated answer is re-scanned by services/integration/prompt_guard.py before a human sees it."
+            }
+          ]
+        }
+      },
+      "properties": [
+        {
+          "name": "aegis:route",
+          "value": "ADR-009 Route A"
+        },
+        {
+          "name": "aegis:status",
+          "value": "authoritative"
+        },
+        {
+          "name": "aegis:identifier_is_mutable_alias",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "model/groq-llama",
+      "name": "llama-3.1-8b-instant",
+      "version": "llama-3.1-8b-instant",
+      "publisher": "Groq (Meta Llama weights)",
+      "description": "Groq OpenAI-compatible endpoint.",
+      "modelCard": {
+        "modelParameters": {
+          "task": "text-generation"
+        },
+        "considerations": {
+          "useCases": [
+            "synthesize",
+            "critic_verify",
+            "record_assistant"
+          ],
+          "ethicalConsiderations": [
+            {
+              "name": "no-terminal-decision",
+              "mitigationStrategy": "This model never makes a terminal safety, release, allocation or reportability decision. Prohibited outputs are structurally unrepresentable (ADR-004 layers 1-2), pattern-blocked at runtime (layer 3), and every generated answer is re-scanned by services/integration/prompt_guard.py before a human sees it."
+            }
+          ]
+        }
+      },
+      "properties": [
+        {
+          "name": "aegis:route",
+          "value": "dev-only substitute, ADR-009"
+        },
+        {
+          "name": "aegis:status",
+          "value": "provisional -- output from this provider does not count toward any interim-assumption exit criterion (.env.example, LLM_PROVIDER)"
+        },
+        {
+          "name": "aegis:identifier_is_mutable_alias",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/batch_critic_system",
+      "name": "_BATCH_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4b877a4c882ad794cee54357cabdb7324195ada9b63e0f216e1fbedfef95b5c4"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "855"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/batch_synthesize_system",
+      "name": "_BATCH_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "967d6a72b2f7e8351dc6e980970f23c57881fe59825a5247c9563ebf395a1dd2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "758"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/clinical_critic_system",
+      "name": "_CLINICAL_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a17d2b89912bbb3babcefb2aeb873461b0011cc06b85f4369577957c2eb86ca5"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "838"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/clinical_synthesize_system",
+      "name": "_CLINICAL_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "89185c5608de2377f83b94e5941b11803d51e7fa4109d3064e17f3c92d28e370"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "776"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/pv_critic_system",
+      "name": "_PV_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ebabcdcb9bd3c744fed670da16ba50c2911579954e88c709ca810569ebd0d3c2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "846"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/pv_synthesize_system",
+      "name": "_PV_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4cb4d31274ebf508463df2b89cc828a3c73250b9ea530e0e11893032f08a6168"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "930"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/record_chat_system",
+      "name": "_RECORD_CHAT_SYSTEM",
+      "description": "System prompt (record_assistant), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "73c63db74dd37c67195edcf43c1c55c5355774f59ec188415f1f1ad0607b3a0b"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "record_assistant"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "2536"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/regulatory_critic_system",
+      "name": "_REGULATORY_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "792e3bedca9ba8761a0d22c5c92366ec12f7ab0557b426679b5e00291c579c4a"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "837"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/regulatory_synthesize_system",
+      "name": "_REGULATORY_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "868ab9eff5019e6e907dc6bd6f59956fe447821843a63f19865b6209ed8004f3"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "777"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/research_critic_system",
+      "name": "_RESEARCH_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e3e47af049c294e0c05d9d38be54f5638faa7f8c3724f83bc9982365e1feb5a4"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "839"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/research_synthesize_system",
+      "name": "_RESEARCH_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d7546afa6edcd756b5ec4c58c8f78b7ac452a9f157baa4cb021ba8f4e40a3345"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "778"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/supply_critic_system",
+      "name": "_SUPPLY_CRITIC_SYSTEM",
+      "description": "System prompt (critic), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c8594443aef2ddbbb029fafa2314fb54eaf6f903132a66b25f74fbd38b05c1d9"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "critic"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "811"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "prompt/supply_synthesize_system",
+      "name": "_SUPPLY_SYNTHESIZE_SYSTEM",
+      "description": "System prompt (synthesize), packages/config/llm_client.py",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "295264003b855831f79f1de12be0d90f8faa0dad412de9157b82fa32c0418e69"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:prompt_role",
+          "value": "synthesize"
+        },
+        {
+          "name": "aegis:chars",
+          "value": "866"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "guard/prompt-guard-ruleset",
+      "name": "prompt_guard ruleset (PI/PG)",
+      "version": "1.0.0",
+      "description": "Prompt-injection detection and prompt-guarding pattern set, services/integration/prompt_guard.py. Layer 0 (input) and layer 4 (output) around ADR-004's three structural layers -- attack visibility, never the sole control.",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b27f25e198e787462d6571845759b2e357f33781d28b48e53128f59b1962354d"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:input_pattern_count",
+          "value": "13"
+        },
+        {
+          "name": "aegis:output_pattern_count",
+          "value": "3"
+        },
+        {
+          "name": "aegis:input_ruleset_sha256",
+          "value": "b27f25e198e787462d6571845759b2e357f33781d28b48e53128f59b1962354d"
+        },
+        {
+          "name": "aegis:output_ruleset_sha256",
+          "value": "e8dbf6fbc97c4361143d55f7104509ebdc27532f241fe93dfcd652189df733e8"
+        },
+        {
+          "name": "aegis:system_prompt_markers_sha256",
+          "value": "ab9f27a7de01ce3accaf3aa1712ff77464affb1b1e3cb263059f99cd6fbed7d8"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "governance/policy_contract",
+      "name": "policy_contract",
+      "description": "Per-workflow prohibition contracts (ADR-004 layer 3). Determines which generated phrases block a run, and which the Record Assistant's output guard refuses.",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c37c1e44891b8bc17b7806beeb2b9a5ac8a2b42ea9d205b50561433d74467a6e"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:path",
+          "value": "security/policies/policy_contract.v1.json"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "governance/tool_manifest",
+      "name": "tool_manifest",
+      "description": "Recorded hashes and read-only status of every tool contract (INJ-066).",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1581026e90cacc46fc8736ec0e9486ce2563062036cb2940cc143d82c762b9ee"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:path",
+          "value": "services/integration/tool_manifest.json"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "governance/dependency_sbom",
+      "name": "dependency_sbom",
+      "description": "The runtime-dependency SBOM this AI-BOM complements. Hashed so the two cannot drift apart unnoticed.",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "db91beb7683b5dca589d6824c0b088d8e710a3116a947e4f050e75fa8b8bc3cd"
+        }
+      ],
+      "properties": [
+        {
+          "name": "aegis:path",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/anthropic",
+      "name": "anthropic",
+      "version": "0.121.0",
+      "description": "LLM provider SDK (ADR-009 Route A)",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/groq",
+      "name": "groq",
+      "version": "0.37.1",
+      "description": "LLM provider SDK (dev-only substitute, ADR-009)",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/openai",
+      "name": "openai",
+      "version": "2.32.0",
+      "description": "SDK actually used to reach Groq's OpenAI-compatible endpoint -- packages/config/llm_client.py's GroqLLM imports `openai`, not `groq`. Recorded Stage 23: an SDK on the live LLM call path was absent from this file, which is precisely the blind spot INJ-070 is about. The `groq` row above stays because the SDK is installed and available; this row is what the code actually imports.",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/langgraph",
+      "name": "langgraph",
+      "version": "1.1.8",
+      "description": "Workflow orchestration -- the graph engine every governed workflow runs on",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/langgraph-checkpoint",
+      "name": "langgraph-checkpoint",
+      "version": "4.0.2",
+      "description": "Graph state checkpointing (HITL interrupt/resume)",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "library/neo4j",
+      "name": "neo4j",
+      "version": "6.2.0",
+      "description": "Knowledge-graph driver (evidence retrieval)",
+      "properties": [
+        {
+          "name": "aegis:version_source",
+          "value": "security/sbom/sbom.json"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "aegis-pharma-v3",
+      "dependsOn": [
+        "model/anthropic-claude",
+        "model/groq-llama",
+        "prompt/batch_critic_system",
+        "prompt/batch_synthesize_system",
+        "prompt/clinical_critic_system",
+        "prompt/clinical_synthesize_system",
+        "prompt/pv_critic_system",
+        "prompt/pv_synthesize_system",
+        "prompt/record_chat_system",
+        "prompt/regulatory_critic_system",
+        "prompt/regulatory_synthesize_system",
+        "prompt/research_critic_system",
+        "prompt/research_synthesize_system",
+        "prompt/supply_critic_system",
+        "prompt/supply_synthesize_system",
+        "guard/prompt-guard-ruleset",
+        "governance/policy_contract",
+        "governance/tool_manifest",
+        "governance/dependency_sbom",
+        "library/anthropic",
+        "library/groq",
+        "library/openai",
+        "library/langgraph",
+        "library/langgraph-checkpoint",
+        "library/neo4j"
+      ]
+    }
+  ]
+}

@@ -11,7 +11,6 @@ unclear state. Guarding against regression explicitly.
 import uuid
 from pathlib import Path
 
-import pytest
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")

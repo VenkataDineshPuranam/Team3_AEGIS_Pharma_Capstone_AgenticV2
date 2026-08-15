@@ -80,7 +80,6 @@ def test_indirect_injection_via_gap_description_is_caught_regardless_of_model_co
 def test_content_excerpt_is_never_transmitted_to_the_model():
     """Static/structural check backing the claim above: EvidenceItem.content_excerpt
     never appears in the synthesize prompt payload, regardless of what content it holds."""
-    import json
 
     from packages.config.llm_client import _build_synthesize_user_prompt
     from packages.domain.evidence import EvidenceItem

@@ -256,3 +256,70 @@ class InjectCoverage(BaseModel):
     by_status: dict[str, int]
     dimensions: list[dict[str, Any]]
     injects: list[dict[str, Any]]
+
+
+# --- Record Assistant (Stage 23) ---------------------------------------------
+
+
+class RecordChatRequest(BaseModel):
+    """`question` may be empty: an empty question means "just describe this record",
+    which is the panel's initial load. It is capped because a very long question is
+    almost always either a paste accident or an injection payload padded to push the
+    operator instructions out of the model's attention -- and a legitimate question about
+    one record does not need this much room."""
+
+    question: str = Field(default="", max_length=1000)
+
+
+class RecordChatGuard(BaseModel):
+    """What services/integration/prompt_guard.py saw. Returned to the caller rather than
+    logged only, so an operator can tell the difference between "the assistant had nothing
+    to say" and "the assistant's answer was withheld" -- and so a red-team exercise can
+    assert on the guard from outside the process."""
+
+    prompt_guard_version: str
+    input_verdict: Literal["clear", "flagged", "blocked"]
+    output_verdict: Literal["clear", "flagged", "blocked"]
+    input_hits: list[dict[str, str]] = []
+    record_hits: list[dict[str, str]] = []
+    output_hits: list[dict[str, str]] = []
+    refused: bool = False
+
+
+class RecordChatResponse(BaseModel):
+    """`record` and `next_steps` are computed deterministically from the run; `summary`,
+    `answer` and `next_steps_explanation` are model-written prose over those same facts.
+    The split is load-bearing -- see services/api/record_chat.py's module docstring -- so
+    the two are kept in separate fields rather than merged into one blob of text a client
+    could not tell apart."""
+
+    run_id: str
+    record: dict[str, Any]
+    next_steps: list[dict[str, Any]]
+    summary: str
+    answer: str
+    next_steps_explanation: str
+    cites: list[str] = []
+    llm_available: bool
+    llm_unavailable_reason: str | None = None
+    guard: RecordChatGuard
+
+
+# --- Notifications (Stage 23) -------------------------------------------------
+
+
+class NotificationItem(BaseModel):
+    """One HITL escalation event, from services/integration/hitl_escalation_watch.py.
+    `subject_id` and `approver_roles` are best-effort: they come from the in-memory
+    pending queue at READ time (services/api/pending_queue.py), which is disposable UI
+    state, not the audit record itself -- if the run has since been decided or the API
+    process restarted, they are `null` rather than guessed. `tier`/`workflow`/`run_id`/
+    `evaluated_at` always come from the append-only audit store and are never null."""
+
+    run_id: str
+    workflow: str
+    tier: str
+    severity: int
+    evaluated_at: str
+    subject_id: str | None = None
+    approver_roles: list[str] | None = None

@@ -3,17 +3,25 @@
 graph state.
 
 Why this exists separately from hitl_route.resolve_tier: that function is Batch Review's
-own escalation-ladder state machine, wired into nothing (no scheduler advances it -- see
-the finding this module closes). This module answers a narrower, purely presentational
-question -- "how severe does this wait look right now" -- for EVERY workflow's queue
-entry and run detail, recomputed fresh on each request (the Decision Queue already polls
-every 10s, so this is naturally live without adding a background job or notification
-channel, neither of which exists in this build).
+own escalation-ladder state machine, wired into nothing (no scheduler advances it -- that
+finding, and this module, predate Stage 23). This module answers a narrower, purely
+presentational question -- "how severe does this wait look right now" -- for EVERY
+workflow's queue entry and run detail, recomputed fresh on each request (the Decision
+Queue already polls every 10s, so this is naturally live without a background job of its
+own).
+
+Stage 23 added a real background job and a real notification channel on top of this
+module's severity number -- services/integration/hitl_escalation_watch.py polls the
+pending queue and, the first time a run's severity here crosses 3 or 4, records the event
+and sends a best-effort email (services/integration/notifier.py). That is a SEPARATE,
+strictly additive module: it reads this module's `compute()` output and does not change
+anything about it. This module's own scope is unchanged by that addition.
 
 SCOPE, stated plainly: this is DISPLAY ONLY. Reaching T2 here does not change who is
 authorized to decide a run -- user_store.approver_string_for is unchanged. Actually
 widening approver eligibility at T2 (the "escalate to another approver" half of the
-original ask) is a real RBAC change, deliberately not made in this pass.
+original ask) is a real RBAC change, deliberately not made in this pass -- and
+hitl_escalation_watch.py's notification does not make it either.
 
 THRESHOLDS -- per-workflow, not uniform. `docs/governance/hitl_control_model.md` SS7
 already specifies distinct ladders for the three original workflows, confirmed against

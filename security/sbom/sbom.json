@@ -5,6 +5,7 @@
   "components": [
     { "name": "anthropic", "version": "0.121.0", "purpose": "LLM provider SDK (ADR-009 Route A)" },
     { "name": "groq", "version": "0.37.1", "purpose": "LLM provider SDK (dev-only substitute, ADR-009)" },
+    { "name": "openai", "version": "2.32.0", "purpose": "SDK actually used to reach Groq's OpenAI-compatible endpoint -- packages/config/llm_client.py's GroqLLM imports `openai`, not `groq`. Recorded Stage 23: an SDK on the live LLM call path was absent from this file, which is precisely the blind spot INJ-070 is about. The `groq` row above stays because the SDK is installed and available; this row is what the code actually imports." },
     { "name": "fastapi", "version": "0.141.1", "purpose": "Orchestrator API framework" },
     { "name": "uvicorn", "version": "0.44.0", "purpose": "ASGI server" },
     { "name": "langgraph", "version": "1.1.8", "purpose": "Workflow orchestration -- the graph engine every governed workflow runs on" },

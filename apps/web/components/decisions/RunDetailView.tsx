@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, Field } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { ErrorState, Notice, SkeletonText } from "@/components/ui/States";
+import { RecordAssistant } from "@/components/assistant/RecordAssistant";
 import { AuditTimeline } from "@/components/audit/AuditTimeline";
 import { ApprovalPanel } from "@/components/decisions/ApprovalPanel";
 import { DecisionSupport } from "@/components/decisions/DecisionSupport";
@@ -20,7 +21,7 @@ import { useApiResource } from "@/hooks/useApiResource";
 import { getRun, type Workflow } from "@/lib/api";
 import { WORKFLOW_LABELS, WORKFLOW_SUBJECT_LABEL, formatDateTime } from "@/lib/format";
 
-type Tab = "support" | "findings" | "governance" | "audit";
+type Tab = "support" | "findings" | "governance" | "audit" | "assistant";
 
 /**
  * Decision workspace.
@@ -144,6 +145,7 @@ export function RunDetailView({
                       },
                       { value: "governance", label: "Governance" },
                       { value: "audit", label: "Audit", count: detail.timeline.length },
+                      { value: "assistant", label: "Assistant" },
                     ]}
                   >
                     <div className="pb-5">
@@ -171,6 +173,16 @@ export function RunDetailView({
                       )}
 
                       {tab === "audit" && <AuditTimeline events={detail.timeline} />}
+
+                      {/* Mounted only while its tab is selected: opening the panel costs
+                          a model call, and a background tab quietly spending tokens on a
+                          page nobody is reading is exactly what the denial-of-wallet
+                          guardrail exists to prevent. */}
+                      {tab === "assistant" && (
+                        <div className="pt-4">
+                          <RecordAssistant key={detail.run_id} runId={detail.run_id} embedded />
+                        </div>
+                      )}
                     </div>
                   </Tabs>
                 </div>

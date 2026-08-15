@@ -6,9 +6,7 @@ three graphs with bare strings and {"leg","action"} dicts, and those tests are w
 the veto, dual-approval, and timeout guarantees. If `decode` reinterpreted any of them,
 those proofs would silently stop covering the paths they claim to.
 """
-import pytest
 
-from packages.domain import hitl_decision
 from packages.domain.hitl_decision import LEGACY_PLACEHOLDER, decode
 
 
