@@ -1,6 +1,6 @@
 {
   "category": "privacy_cross_border",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #9 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #9 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/privacy_grader.py:grade_privacy",
   "note": "Grounded in kg_schema.md SS1/SS4 (patient_key_ref not patient_key; SensitiveSegment access-group check) and PRIVACY_AND_PSEUDONYMISATION.md (K-020).",

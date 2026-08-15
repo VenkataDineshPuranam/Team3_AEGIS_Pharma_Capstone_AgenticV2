@@ -1,3 +1,3 @@
 # synthetic
 
-Synthetic-only test fixtures (no real PHI/PII), mirroring V2's synthetic-data rule.
+Synthetic-only test fixtures (no real PHI/PII), mirroring V1's synthetic-data rule.

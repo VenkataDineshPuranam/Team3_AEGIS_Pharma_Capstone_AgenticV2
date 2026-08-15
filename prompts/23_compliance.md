@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 19 (`stage-19-compliance`)
 **Lifecycle stage:** Verify (compliance)
-**Framework derived:** V3 addition.
+**Framework derived:** V2 addition.
 **Core question:** Does the system satisfy the applicable EU AI Act obligations and ISO 42001 AI management system requirements, with evidence?
 **Prerequisites:** Prompts 04/14/20/22 (domain boundaries, agent design, governance, security) — compliance is verification, not new design.
 

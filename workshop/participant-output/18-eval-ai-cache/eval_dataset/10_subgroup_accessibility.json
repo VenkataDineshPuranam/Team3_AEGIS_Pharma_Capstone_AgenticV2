@@ -1,9 +1,9 @@
 {
   "category": "subgroup_accessibility",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #10 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #10 (V1, verified)",
   "grading_mode": "deterministic_surface_only",
   "grader": "graders/subgroup_grader.py:grade_subgroup_evidence",
-  "note": "Ported from V2's subgroup_grader.py pattern: this grader always 'passes' in the surfacing sense -- a gap existing is a data fact, not itself a defect; SILENTLY DROPPING a disclosed gap is the defect. No V3 model_performance.csv equivalent exists yet (needs a real run, Stage 15); this stage tests the surfacing logic against synthetic slices.",
+  "note": "Ported from V1's subgroup_grader.py pattern: this grader always 'passes' in the surfacing sense -- a gap existing is a data fact, not itself a defect; SILENTLY DROPPING a disclosed gap is the defect. No V2 model_performance.csv equivalent exists yet (needs a real run, Stage 15); this stage tests the surfacing logic against synthetic slices.",
   "scenarios": [
     {
       "scenario_id": "SGA-01",

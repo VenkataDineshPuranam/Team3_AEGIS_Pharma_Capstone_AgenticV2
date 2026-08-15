@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 16 (`stage-16-governance-control`)
 **Lifecycle stage:** Design + Build (control plane)
-**Framework derived:** V3 addition, formalizing Prompt 04's rules/AI/HITL boundaries into an enforced policy layer independent of any single agent.
+**Framework derived:** V2 addition, formalizing Prompt 04's rules/AI/HITL boundaries into an enforced policy layer independent of any single agent.
 **Core question:** What stops an agent from crossing a governed boundary, enforced outside the agent's own reasoning?
 **Prerequisites:** Prompt 04 (rules vs AI vs HITL), Prompt 14 (agent roster), Prompt 16 (hooks).
 

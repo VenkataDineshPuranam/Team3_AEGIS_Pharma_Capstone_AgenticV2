@@ -48,7 +48,7 @@ class DenialOfWalletGuard:
     A real deployment backs this with a shared store (Redis or the audit
     store, per ADR-006) so the ceiling holds across process restarts and
     horizontally-scaled instances -- the in-memory dict here is sufficient
-    for this stage's self-test, exactly as V2's own tool_gateway.py used an
+    for this stage's self-test, exactly as V1's own tool_gateway.py used an
     in-process dict for its idempotency cache "since the tests exercise a
     single process" (verified pattern, Stage 14).
     """

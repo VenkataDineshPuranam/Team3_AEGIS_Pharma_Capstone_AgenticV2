@@ -1,6 +1,6 @@
 {
   "category": "agent_unauthorized_tool_call",
-  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V3 addition, agent-specific)",
+  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V2 addition, agent-specific)",
   "grading_mode": "deterministic",
   "grader": "graders/security_grader.py:grade_security",
   "scenarios": [

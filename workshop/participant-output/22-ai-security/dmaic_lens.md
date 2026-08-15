@@ -5,7 +5,7 @@ Discovery/Frame/DDD/C4/ADR — not a thin lens.
 
 ## Define
 
-Which attack surface is new because this system is multi-agent/tool-using, versus V2's
+Which attack surface is new because this system is multi-agent/tool-using, versus V1's
 single-shot app? Answer, concretely, from `threat_catalogue.md`: T-01 (indirect injection via
 a tool's downstream output), T-03 (tool abuse — no tool-calling surface existed before), T-05
 (agent-to-agent trust — the Critic exists specifically because a second agent shouldn't trust

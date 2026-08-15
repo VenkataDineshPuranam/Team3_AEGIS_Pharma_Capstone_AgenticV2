@@ -6,7 +6,7 @@ exists -- Stage 20 is deliberately last): this executes real grader logic
 against synthetic fixture inputs shaped like our contracts, proving the
 GRADING LOGIC is correct. It does not execute a live agentic system,
 because none exists. Categories with grading_mode="human_rubric" are
-recorded as NOT_APPLICABLE to automated grading, matching V2's own
+recorded as NOT_APPLICABLE to automated grading, matching V1's own
 EVALUATION_PLAN.md ("Evaluation deliverables: ... calibrated human
 rubric"). Categories with grading_mode="blocked_by_environment" are
 recorded as BLOCKED_BY_ENVIRONMENT, not silently skipped.
@@ -56,7 +56,7 @@ def _grade_scenario(category, scenario):
     inp = scenario.get("input", {})
 
     if category == "business_outcome":
-        return {"gate_state": "NOT_APPLICABLE", "reason": "human_rubric category, no automated grader (matches V2's own EVALUATION_PLAN.md)"}
+        return {"gate_state": "NOT_APPLICABLE", "reason": "human_rubric category, no automated grader (matches V1's own EVALUATION_PLAN.md)"}
 
     if category == "evidence_fidelity_provenance":
         return eag.grade_evidence_fidelity(inp["evidence"], inp["claims"], inp.get("declared_sources"))

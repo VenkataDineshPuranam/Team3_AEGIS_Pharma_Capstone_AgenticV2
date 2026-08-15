@@ -1,7 +1,7 @@
 """supply.generate_options -- implements
 packages/contracts/tool_contracts/supply_generate_options.schema.json exactly, over the
 synthetic supply fixtures (tests/fixtures/synthetic/supply/*.json). Stage 20b's minimal
-real-data substitute for V2's cross-repo supply/inventory data (NAB-3).
+real-data substitute for V1's cross-repo supply/inventory data (NAB-3).
 
 The constraint filter is applied BEFORE this tool returns -- the agent ranks within the
 result, it cannot widen the set (agent_roster.md SS2). In this fixture-backed

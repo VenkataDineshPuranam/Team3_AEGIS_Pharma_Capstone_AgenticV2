@@ -134,5 +134,5 @@ single candidate set, and may not fit Supply's dual approval or PV's clock recon
 - [x] Loop guards and budgets are numeric — `failure_and_loop_guards.md` §2–3. The HITL
       timeout is a four-tier escalation ladder (§5), with durations set per workflow;
       Stage 16 confirms them with the accountable roles, and PV's 24h expiry additionally
-      needs verification against V2's actual reporting-clock material before it is final.
+      needs verification against V1's actual reporting-clock material before it is final.
 - [x] Artifact status stated, split by graph, with the reason for the split.

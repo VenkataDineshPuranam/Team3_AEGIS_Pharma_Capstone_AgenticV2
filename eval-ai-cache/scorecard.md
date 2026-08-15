@@ -57,7 +57,7 @@ shows the final green run overstates how first-try-correct this was:
 |---|---|---|---|
 | 1-3 | `SOA-01/02/04` — `FileNotFoundError` loading schema files | `schema_grader.load_schema` concatenated `CONTRACTS_DIR` (already pointing at `tool_contracts/`) with a schema_ref that repeated the full path, doubling it | Use only the filename component |
 | 4 | `PDC-03` — false failure on a documentary `note` field | `_check` treated every key in `expected`, including human-readable commentary, as a required match | Skip `note` keys in comparison |
-| 5 | `ATA-01` — `execution_count_after_second_call` was 2, expected 1 | `_invoke`'s plain-replay branch incremented the execution counter, contradicting the whole point of replay detection (no duplicate execution) | Replay branch now returns the cached count unchanged, matching V2's verified `tool_gateway.py` behaviour exactly |
+| 5 | `ATA-01` — `execution_count_after_second_call` was 2, expected 1 | `_invoke`'s plain-replay branch incremented the execution counter, contradicting the whole point of replay detection (no duplicate execution) | Replay branch now returns the cached count unchanged, matching V1's verified `tool_gateway.py` behaviour exactly |
 | 6 | `ATA-02` — adversarial case couldn't actually fail, because the grader had no way to simulate the buggy behaviour it was meant to catch | Fixture asserted an adversarial outcome the grader's correct logic would never produce | Added an `actual_replay_detected` override parameter (same pattern as other graders' `actual_decision` overrides) so the adversarial branch is genuinely exercised; added `ATA-06` as the golden-path companion so both branches are covered |
 | 7 | `SGA-02` — expected `gate_blocked`/`gate_id` keys that the grader never set | Gate evaluation result was stored under an internal `_gate` key instead of being flattened into the result | Flattened `gate_blocked` and `gate_id` onto the grader's return value |
 
@@ -72,7 +72,7 @@ for: self-test the harness before trusting its verdicts on real output.
 
 | # | Category | Grading mode | Scenarios | Status |
 |---|---|---|---|---|
-| 1 | Business outcome | Human rubric (matches V2 — no automated grader exists there either) | 2 | `NOT_APPLICABLE` to automation, by design |
+| 1 | Business outcome | Human rubric (matches V1 — no automated grader exists there either) | 2 | `NOT_APPLICABLE` to automation, by design |
 | 2 | Evidence fidelity/provenance | Deterministic | 3 | All pass |
 | 3 | GxP/safety boundary | Deterministic | 5 | All pass |
 | 4 | Data integrity/audit trail | Deterministic | 4 | All pass |
@@ -81,7 +81,7 @@ for: self-test the harness before trusting its verdicts on real output.
 | 7 | PV duplicate/clock/terminology | Deterministic (designed, PV provisional) | 6 | All pass |
 | 8 | Agent/tool authorization/idempotency | Deterministic | 6 | All pass |
 | 9 | Privacy/cross-border | Deterministic | 5 | All pass |
-| 10 | Subgroup/accessibility | Deterministic (surfacing-only, ported from V2) | 2 | All pass |
+| 10 | Subgroup/accessibility | Deterministic (surfacing-only, ported from V1) | 2 | All pass |
 | 11 | Latency/cost/denial-of-wallet | Deterministic ceilings; real cost threshold `THRESHOLD_NOT_DEFINED` | 4 | 3 pass, 1 honestly unscored |
 | 12 | Model substitution/regression | `BLOCKED_BY_ENVIRONMENT` pending ADR-009 | 2 | 1 pass (degraded-mode continuity), 1 honestly blocked |
 | 13 | Agent wrong handoff | Deterministic | 4 | All pass — includes the `PROHIBITION_ADJACENT` regression |
@@ -89,7 +89,7 @@ for: self-test the harness before trusting its verdicts on real output.
 | 15 | Agent unauthorized tool call | Deterministic | 5 | All pass |
 
 **12 of 12 required categories present, 0 silently dropped.** Only category 1 has no automated
-grader — matching V2's own eval design, not a gap this programme introduced.
+grader — matching V1's own eval design, not a gap this programme introduced.
 
 ## 4. What this scorecard does not claim
 

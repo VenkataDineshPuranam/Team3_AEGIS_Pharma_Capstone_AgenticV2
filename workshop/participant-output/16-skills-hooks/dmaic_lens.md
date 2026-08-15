@@ -22,11 +22,11 @@ skill/hook split itself remove waste or just relabel Stage 10's design?
 
 **Which hook removes a Human-review or Evaluation waste category by automating a check that
 was manual?** None of these hooks *automates a previously-manual check* — there was no prior
-manual process, since V2 was single-shot and had no agent handoffs to check. What they do
+manual process, since V1 was single-shot and had no agent handoffs to check. What they do
 instead is **prevent a waste category from being introduced in the first place** by the
 multi-agent redesign: the `pre-tool-call` credential check and `post-tool-call` evidence gate
 exist specifically because splitting evidence retrieval across bounded contexts *created* a
-cross-context leakage risk V2 never had (register row D1/D2). This reframes the Lean question
+cross-context leakage risk V1 never had (register row D1/D2). This reframes the Lean question
 correctly for this program: Stage 12's hooks are waste-*prevention*, not waste-*removal* —
 there is no baseline process to have removed waste from.
 

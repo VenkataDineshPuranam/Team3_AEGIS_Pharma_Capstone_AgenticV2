@@ -1,14 +1,14 @@
-# Project AEGIS-PHARMA — V3 Agentic AI: Spec-Driven Development Plan
+# Project AEGIS-PHARMA — V2 Agentic AI: Spec-Driven Development Plan
 
-## 0. What V3 Is
+## 0. What V2 Is
 
-V3 evolves the V2 capstone (a document-and-rubric-driven FDE exercise with a static
+V2 evolves the V1 capstone (a document-and-rubric-driven FDE exercise with a static
 inject-explorer `app/` and a completed Next.js reference `submission/app-advanced/`)
 into an **agentic AI system**: a multi-agent, tool-using, governed application that
 performs the same three governed pharma workflows (GxP batch-review evidence
 reconciliation; pharmacovigilance intake/signal support; supply-shortage/cold-chain
 option planning) via orchestrated agents instead of a single-shot Q&A app — while
-preserving V2's non-negotiables: synthetic-only data, no terminal safety/release
+preserving V1's non-negotiables: synthetic-only data, no terminal safety/release
 decisions made by the system, full evidence provenance, and GxP/privacy boundaries.
 
 **Runtime stack decision (binding, formalized in `docs/adr/ADR-0001-runtime-stack.md`):**
@@ -22,7 +22,7 @@ decisions made by the system, full evidence provenance, and GxP/privacy boundari
 This repo follows the `.claude`-based "AI-Assisted SDLC Repository" scaffold
 (15 top-level sections): `.claude/`, `docs/`, `plans/`, `apps/`, `services/`,
 `packages/`, `tests/`, `quality/`, `security/`, `infra/`, `deploy/`, `ops/`,
-`evidence/`, `templates/`, `workshop/` — plus V2-derived carry-overs
+`evidence/`, `templates/`, `workshop/` — plus V1-derived carry-overs
 (`prompts/`, `knowledge/`, `evaluation/`, `runbooks/`, `eval-ai-cache/`).
 See `README.md` for the full folder map and `STRUCTURE_MANIFEST.json` for the
 machine-readable tree.
@@ -67,11 +67,11 @@ format — it is the layer where exact behavior gets pinned down.
 ## 2. Method: Spec-Driven Development (SDD)
 
 **Process discovery and design come first; the app is built last.** Every stage
-follows the same loop, mirroring V2's prompt-driven pipeline
+follows the same loop, mirroring V1's prompt-driven pipeline
 (`prompts/01_discovery.md` … `13_solution_proposal.md`):
 
 1. **Spec** — write the stage's spec doc (in `plans/active/`, then the stage's home folder) before any code/diagram.
-2. **Review gate** — spec states what "provisional" vs "stable" means; downstream stages inherit the weaker status (same propagation rule as V2 prompts).
+2. **Review gate** — spec states what "provisional" vs "stable" means; downstream stages inherit the weaker status (same propagation rule as V1 prompts).
 3. **Build** — implement only what the spec calls for.
 4. **Verify** — DMAIC "Control" check: what test/metric/evidence proves this stage's exit criteria are met (logged under `evidence/`).
 5. **Branch + PR** — each stage lives on its own git branch (see §4), merged to `main` only when exit criteria are met; the spec then moves `plans/active/` → `plans/completed/`.
@@ -80,7 +80,7 @@ follows the same loop, mirroring V2's prompt-driven pipeline
 Each stage doc includes a DMAIC-Lean block:
 - **Define** — problem/decision this stage resolves
 - **Measure** — current-state baseline (metric, doc, or artefact reference)
-- **Analyze** — root cause / options considered, incl. an AI-waste register entry (unused context, redundant calls, over-generation, un-graded output — per V2's DOWNTIME+AI-waste model)
+- **Analyze** — root cause / options considered, incl. an AI-waste register entry (unused context, redundant calls, over-generation, un-graded output — per V1's DOWNTIME+AI-waste model)
 - **Improve** — the decision/design taken
 - **Control** — the check/eval/guardrail that prevents regression
 
@@ -117,10 +117,10 @@ stages inserted in between. Stages 05–08 (current/interim/final state, graphic
 originally placed *before* DDD but were moved to **after** ADR: they now synthesize and
 visualize the domain/architecture model once it is stable, rather than speculating about
 state before the domain model exists. Stage 09 (DMAIC/Lean) consolidates everything from
-01–08 before Stage 10 begins the V3-specific agentic/governance/eval/security/compliance
+01–08 before Stage 10 begins the V2-specific agentic/governance/eval/security/compliance
 additions (10–19). **Stage 20 (app build) remains deliberately last** — no code is written
 until discovery, SCQA, DDD, C4, ADR, and the agentic/governance/eval design are stable.
-Stage 21 closes the loop with a defensible submission, matching V2's
+Stage 21 closes the loop with a defensible submission, matching V1's
 `requirements/FINAL_DEFENCE.md` pattern.
 
 ## 4. Git Workflow
@@ -133,4 +133,4 @@ Stage 21 closes the loop with a defensible submission, matching V2's
 
 ## 5. Status Legend (used in `STAGES.md`)
 
-`not started` → `spec drafted` → `in review` → `stable` (mirrors V2's provisional/stable propagation rule).
+`not started` → `spec drafted` → `in review` → `stable` (mirrors V1's provisional/stable propagation rule).

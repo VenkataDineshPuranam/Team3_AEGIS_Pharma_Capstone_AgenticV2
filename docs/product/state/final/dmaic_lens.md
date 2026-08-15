@@ -25,8 +25,8 @@ Which waste does defining the final state this way prevent?
 - **Defects** — gates 6 and 7 make zero-prohibited-action findings and real compliance
   evidence completion conditions, so neither can be quietly deferred.
 
-Specifically analyzed and rejected: adding V2's workflows D/E (clinical trial, discovery
-science). They appear in V2's eval datasets (`S13`, `S14`) but V2's own mandate names three
+Specifically analyzed and rejected: adding V1's workflows D/E (clinical trial, discovery
+science). They appear in V1's eval datasets (`S13`, `S14`) but V1's own mandate names three
 mandatory workflows; the extras came from a prior participant run. Including them would be
 scope expansion without a requirement — textbook Overproduction.
 

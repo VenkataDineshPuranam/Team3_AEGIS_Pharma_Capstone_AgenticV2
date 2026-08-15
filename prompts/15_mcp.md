@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 11 (`stage-11-mcp`)
 **Lifecycle stage:** Design (integration)
-**Framework derived:** V3 addition — Model Context Protocol tool contracts.
+**Framework derived:** V2 addition — Model Context Protocol tool contracts.
 **Core question:** What tools may agents call, with what authority, and what do they return?
 **Prerequisites:** Prompt 14 agentic architecture (agent roster + tool names referenced).
 

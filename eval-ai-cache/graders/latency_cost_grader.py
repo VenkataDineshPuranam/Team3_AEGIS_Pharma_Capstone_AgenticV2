@@ -25,7 +25,7 @@ def grade_latency_cost(llm_calls, tokens_total, max_single_call_tokens):
 
 
 def compute_cost_per_successful_task(usage_row, cost_row):
-    """Kept for parity with V2's latency_cost_grader.py pattern -- usable
+    """Kept for parity with V1's latency_cost_grader.py pattern -- usable
     once real usage/cost rows exist (Stage 15). Not exercised by any
     passing scenario in this stage's dataset; LCD-04 deliberately routes
     through grade_cost_threshold below instead, since the number to check

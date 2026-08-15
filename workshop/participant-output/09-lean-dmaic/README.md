@@ -13,7 +13,7 @@ work from.
 | [build_constraints_from_lean.md](build_constraints_from_lean.md) | Must-fix-before-build vs. fix-in-pilot vs. accept-as-residual-risk |
 | [structural_reopen.md](structural_reopen.md) | Does any Improve action reopen C4/ADRs/contracts? **Gate: `cleared`** |
 
-**Mode: Measure-first.** No V3 system has run; every baseline that matters (token cost,
+**Mode: Measure-first.** No V2 system has run; every baseline that matters (token cost,
 latency, eval pass rate, cache hit rate) is Unknown. Instrumentation therefore outranks
 feature scale-out, and nothing in these documents claims a waste is *fixed* — each has an
 owning decision and a scheduled proof, which is not the same thing.

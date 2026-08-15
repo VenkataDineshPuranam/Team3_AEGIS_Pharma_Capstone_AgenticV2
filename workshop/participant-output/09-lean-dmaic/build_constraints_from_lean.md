@@ -44,7 +44,7 @@ correctly. Fixing them by guesswork now would be worse than fixing them later wi
 | **BC-17** | Batch Review HITL risk-tiering | AI-Human-review, N2 | Stage 16 | U7. **PV and Supply are not candidates** — 100% routing is regulatory |
 | **BC-18** | Cache design: status-aware keys, no as-if-cached fallback | D5, I1 | Stages 14–15 | Correctness of the uncached path being proven first |
 | **BC-19** | Trace-to-audit correlation IDs so one run is followable end-to-end | M2 | Stage 17 | A running system to trace |
-| **BC-20** | Consume `eval-ai-cache/` (29 files) and decide NAB-3 (copy V2 `knowledge/`+fixtures locally vs. cross-repo reference) | O3 | Stages 13, 14 | A decision, not data — but it is cheapest to make when Stage 13/14 opens |
+| **BC-20** | Consume `eval-ai-cache/` (29 files) and decide NAB-3 (copy V1 `knowledge/`+fixtures locally vs. cross-repo reference) | O3 | Stages 13, 14 | A decision, not data — but it is cheapest to make when Stage 13/14 opens |
 
 ## C. Accept as residual risk
 
@@ -57,7 +57,7 @@ re-decision.
 | **RR-2** | **Single-workflow generalization.** Batch Review's evidence-reconciliation shape may not transfer to PV's duplicate/clock semantics or Supply's option ranking | Proving one workflow properly beats proving three ambiguously | **T-10** — every interim conclusion must be re-checked per workflow at Stage 20, never assumed to transfer |
 | **RR-3** | **Shared blast radius.** One deployment serves all three graphs (ADR-008) | Deliberate, accepted trade-off: operational simplicity over isolation, with graph-level separation preserved | A production incident where one graph's failure affects another |
 | **RR-4** | **9 containers exceed DDD's "minimum governed workflow"** | Each addition (Redis, LangSmith, separate audit store) answers a specific named risk. Reconciled at `lens_rollup.md` C2: DDD minimalism governs the interim state, C4 completeness the final state | A container that cannot name the risk it answers |
-| **RR-5** | **Vendor concentration** — Microsoft *and* the model provider. V2's source-system pack flags "bundled vendor, weak cost controls" as a known org failure pattern | Sponsor directive (ADR-009). OpenTelemetry keeps the trace backend swappable; Redis and the audit store are substitutable | A material pricing or availability event |
+| **RR-5** | **Vendor concentration** — Microsoft *and* the model provider. V1's source-system pack flags "bundled vendor, weak cost controls" as a known org failure pattern | Sponsor directive (ADR-009). OpenTelemetry keeps the trace backend swappable; Redis and the audit store are substitutable | A material pricing or availability event |
 | **RR-6** | **Air-gapped GxP-network deployment is not supported** | Sponsor confirmed cloud-connected operation is acceptable (EAB-2 closed); recorded as a known limitation in ADR-007 | **T-5** — a later hard air-gap requirement reopens ADR-001 and ADR-007 |
 | **RR-7** | **Dual audit-sink duplication** (ADR-006) | The alternative couples a regulatory retention obligation to a vendor SLA | Audit-write success dropping below 100% while LangSmith is healthy |
 | **RR-8** | **Fallback-path test burden** (ADR-007) | Untested fallbacks are worse than no fallbacks | Only if the burden makes the suite unrunnable — then split it (BC-16), do not cut coverage |

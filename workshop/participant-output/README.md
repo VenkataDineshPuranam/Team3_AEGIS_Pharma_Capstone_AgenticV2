@@ -1,3 +1,3 @@
 # participant-output
 
-Participant-writable workspace (mirrors V2's submission/ pattern).
+Participant-writable workspace (mirrors V1's submission/ pattern).

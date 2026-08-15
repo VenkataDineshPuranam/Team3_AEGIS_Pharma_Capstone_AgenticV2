@@ -12,7 +12,7 @@ RR-2: designed by analogy, unchecked until 20b)
 ## 0. Grounding discipline
 
 Every class below traces to either a DDD aggregate/value object (exit criterion 1) or a real
-field observed in the copied `../../../knowledge/` corpus — not an invented schema. Where V2's own data
+field observed in the copied `../../../knowledge/` corpus — not an invented schema. Where V1's own data
 contains a genuine gap or inconsistency, it's stated as a finding, not smoothed over (§5).
 
 ## 1. Core classes
@@ -21,7 +21,7 @@ contains a genuine gap or inconsistency, it's stated as a finding, not smoothed 
 
 | Class | Traces to | Properties (verified against `knowledge_catalog.csv`) |
 |---|---|---|
-| **EvidenceItem** | DDD §7 `EvidenceItem` value object | `evidence_id` (V2: `doc_id`, e.g. `K-024`), `source_file`, `authority` (e.g. "NovaCura Global Policy", "External/untrusted upload"), `effective_date`, `status` (enum, §1.4), `trust` (derived citability signal — see §1.4), `jurisdiction` (e.g. `Global`, `DE`), `supersedes` (pointer), `content_hash` (SHA-256, verified at ingestion — see §5.3) |
+| **EvidenceItem** | DDD §7 `EvidenceItem` value object | `evidence_id` (V1: `doc_id`, e.g. `K-024`), `source_file`, `authority` (e.g. "NovaCura Global Policy", "External/untrusted upload"), `effective_date`, `status` (enum, §1.4), `trust` (derived citability signal — see §1.4), `jurisdiction` (e.g. `Global`, `DE`), `supersedes` (pointer), `content_hash` (SHA-256, verified at ingestion — see §5.3) |
 
 **`EvidenceItem` is the single most load-bearing class in this ontology.** Every other class's
 provenance requirement (§2) resolves through it. Its schema here is not designed from DDD prose
@@ -32,7 +32,7 @@ examined this closely.
 
 ### 1.2 Batch Review (`stable`)
 
-| Class | Traces to | Grounded by (V2 `data/*.csv`) |
+| Class | Traces to | Grounded by (V1 `data/*.csv`) |
 |---|---|---|
 | **Batch** | DDD §7 `Batch` aggregate root | `batches.csv`: `batch_id`, `product_id`, `site`, `status` (operational status only — see §5.1), `manufacture_date` |
 | **MaterialGenealogyRecord** | DDD §2 "genealogy" (Batch Review scope) | `material_genealogy.csv`: `batch_id`, `material_lot`, `relation` (`consumed`, `missing_branch`), `source` |
@@ -45,15 +45,15 @@ examined this closely.
 **What `Batch` cannot express (verified, not restated from memory):** `batches.csv`'s own
 `status` column only ever contains operational values (`pending_review`, `quality_hold` in the
 observed case data) — never a disposition. This is independent confirmation, from the actual
-V2 fixture data rather than from DDD's prose alone, of DDD §7's invariant that `Batch` has no
+V1 fixture data rather than from DDD's prose alone, of DDD §7's invariant that `Batch` has no
 `release_recommended`/`reject_recommended` field: **the field that would carry a disposition
-does not exist in V2's own schema either.**
+does not exist in V1's own schema either.**
 
 ### 1.3 PV Intake (`provisional`)
 
 | Class | Traces to | Grounded by |
 |---|---|---|
-| **ICSRCase** | DDD §7 `PVCase` aggregate root (V2 calls it an ICSR case) | `icsr_cases.csv`: `case_id`, `source`, `product`, `event`, `country`, `awareness_date`, `language`, `patient_key` |
+| **ICSRCase** | DDD §7 `PVCase` aggregate root (V1 calls it an ICSR case) | `icsr_cases.csv`: `case_id`, `source`, `product`, `event`, `country`, `awareness_date`, `language`, `patient_key` |
 | **DuplicateCandidate** | DDD §7 "Duplicate-check must complete before `SignalTriaged`" | `duplicate_candidates.csv`: `case_a`, `case_b`, `similarity`, `reason` — modeled as an **edge type**, not a class (§2) |
 | **SafetyReceipt** | DDD §2 "reporting-clock reconstruction" | `safety_receipts.csv`: `case_id`, `channel`, `receipt` (timestamp) — one case has multiple receipts across channels; `PV_REPORTING_CLOCKS.md` (K-024) requires reconstructing chronology from **every** receipt, not the first or the most convenient one |
 | **SensitiveSegment** | DDD §2 privacy boundary (new, not in original DDD table — found grounding it) | `sensitive_segments.csv`: `case_id`, `segment` (e.g. `pregnancy`, `minor`), `access_group` (e.g. `PV_PREGNANCY`) — **governance-restricted**, see §5.2 |
@@ -61,7 +61,7 @@ does not exist in V2's own schema either.**
 
 ### 1.4 Supply Planning (`provisional`)
 
-**No single V2 class maps to `ShortageOption` directly** — and that's correct, not a gap.
+**No single V1 class maps to `ShortageOption` directly** — and that's correct, not a gap.
 DDD §7 already defines `ShortageOption` as a **synthesized value object**, not a stored record;
 the semantic layer's job (§3, `semantic_layer_query_contract.md`) is to compose it from these
 underlying, independently-grounded classes:
@@ -82,9 +82,9 @@ actually composes a `ShortageOption` from these classes at query time.
 
 ## 2. Relationships
 
-| Relationship | From → To | Provenance basis | Observed in V2 data? |
+| Relationship | From → To | Provenance basis | Observed in V1 data? |
 |---|---|---|---|
-| `evidences` | `EvidenceItem` → any core-context class | The generic citation edge every `DecisionSupportOutput` claim must resolve through | Designed — the generic pattern V2's own graders check for, not a single fixture row |
+| `evidences` | `EvidenceItem` → any core-context class | The generic citation edge every `DecisionSupportOutput` claim must resolve through | Designed — the generic pattern V1's own graders check for, not a single fixture row |
 | `supersedes` | `EvidenceItem` → `EvidenceItem` | `knowledge_catalog.csv`'s `supersedes` column | **Yes** — `K-006` (`BATCH_RELEASE_EVIDENCE_POLICY.md`) supersedes `K-007` (`BATCH_RELEASE_POLICY_OLD.md`) |
 | `consumed_by` | Material lot → `Batch` | `material_genealogy.csv` (`relation = consumed`) | **Yes** |
 | `evaluates` | `LabResult` → `Batch` | `RELATIONSHIP_MODEL.csv`: `lab_results.csv.batch_id → batches.csv.batch_id` | **Yes** |
@@ -103,7 +103,7 @@ actually composes a `ShortageOption` from these classes at query time.
 The prompt's illustrative list (`caused_by`, `evidences`, `supersedes`) is not a requirement to
 include all three — it's an example of the *kind* of relationship the ontology should express.
 `deviations.csv`'s `taxonomy` field names a deviation *category* (e.g. `mixing_time`), not a
-causal chain, and no V2 dataset links a deviation to a verified root cause independent of its
+causal chain, and no V1 dataset links a deviation to a verified root cause independent of its
 CAPA's `action` text. Modeling a `caused_by` edge here would be inventing a relationship the
 evidence doesn't support — exactly the over-modeling risk §3 of the prompt warns against.
 
@@ -113,11 +113,11 @@ Stated to avoid over-modeling, per the prompt's own instruction:
 
 | Out of scope | Why |
 |---|---|
-| Clinical trial entities (`subjects.csv`, `clinical_trials.csv`, `consents.csv`, …) | Workflows D/E were rejected at Stage 07 as scope expansion without a stated requirement. Their relationship rows exist in V2's `RELATIONSHIP_MODEL.csv` but are not part of this ontology |
+| Clinical trial entities (`subjects.csv`, `clinical_trials.csv`, `consents.csv`, …) | Workflows D/E were rejected at Stage 07 as scope expansion without a stated requirement. Their relationship rows exist in V1's `RELATIONSHIP_MODEL.csv` but are not part of this ontology |
 | A `caused_by` edge type | §2 — no grounded basis; would be invented |
 | An `allocated_quantity`-shaped property on any class | ADR-004 layer 1 — structurally excluded, not merely unmodeled |
 | Governance/audit entities (`agent_runs.csv`, `audit_trails.csv`, `access_logs.csv`) | These describe the **system observing itself** (Stage 17's concern), not domain knowledge the agents reason over. Modeling them here would blur the ontology/observability boundary |
-| A full expiry-date range on `EvidenceItem` | §5.3 — V2's data has no such field; modeling one would invent temporal semantics beyond what's evidenced |
+| A full expiry-date range on `EvidenceItem` | §5.3 — V1's data has no such field; modeling one would invent temporal semantics beyond what's evidenced |
 
 ## 4. Semantic layer and conflict rules
 
@@ -127,12 +127,12 @@ Covered in the two companion documents this stage produces:
 
 ## 5. Findings from grounding against real data (not assumptions)
 
-### 5.1 `Deviation` has no `batch_id` in V2's own schema
+### 5.1 `Deviation` has no `batch_id` in V1's own schema
 
 `deviations.csv`'s columns are `deviation_id,taxonomy,status,capa,similarity_to` — **no
 `batch_id` column**, and `RELATIONSHIP_MODEL.csv` has no row linking `deviations.csv` to
 `batches.csv`. This is worth stating plainly rather than assuming a clean foreign key exists:
-**the deviation-to-batch link is not a guaranteed structured join in V2's own data model.** A
+**the deviation-to-batch link is not a guaranteed structured join in V1's own data model.** A
 `batch.reconcile` call that needs to associate a deviation with a batch must do so through
 other evidence (site, date, product overlap) — which is precisely the kind of reconciliation
 work DDD §8 assigns to the deterministic `reconcile` tool, not to model judgment, but it means

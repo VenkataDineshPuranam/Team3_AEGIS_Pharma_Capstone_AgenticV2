@@ -40,7 +40,7 @@ design (DDD §5, carried into `c4_context.md`) means no request ever crosses cor
 boundaries directly — every cross-context need routes through Evidence & Provenance or
 Governance, which are both single, well-defined hops, not N-to-N coupling. Where could
 containers create Waiting? The HITL interrupt is an intentional wait (business-required
-NVA, same classification as Stage 01's DOWNTIME register gave V2's sequential prompt
+NVA, same classification as Stage 01's DOWNTIME register gave V1's sequential prompt
 pipeline) — but the *async* Agent Workers container exists specifically so a long-running
 Supply Planning search doesn't force the whole request into a synchronous wait. Risk of
 Observability waste: addressed by the separate Audit/Evidence Log Store (Define, above).

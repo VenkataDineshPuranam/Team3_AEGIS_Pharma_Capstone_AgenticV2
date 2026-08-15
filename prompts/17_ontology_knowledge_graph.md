@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 13 (`stage-13-ontology-kg`)
 **Lifecycle stage:** Design (domain semantics)
-**Framework derived:** V3 addition, built directly on Prompt 04's ubiquitous language and bounded contexts.
+**Framework derived:** V2 addition, built directly on Prompt 04's ubiquitous language and bounded contexts.
 **Core question:** What is the formal, machine-usable model of domain concepts and their relationships, and how do agents query it?
 **Prerequisites:** Prompt 04 DDD (ubiquitous language, entities, invariants).
 

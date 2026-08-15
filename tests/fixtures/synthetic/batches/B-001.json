@@ -1,5 +1,5 @@
 {
-  "_note": "Synthetic fixture, Stage 20a Phase 2.5. No real V2 batch data used (NAB-3: data/ stays cross-repo). Cites real K-IDs from knowledge_catalog.csv where a category maps to a real policy. 'Clean' case: every category complete, no gaps or conflicts.",
+  "_note": "Synthetic fixture, Stage 20a Phase 2.5. No real V1 batch data used (NAB-3: data/ stays cross-repo). Cites real K-IDs from knowledge_catalog.csv where a category maps to a real policy. 'Clean' case: every category complete, no gaps or conflicts.",
   "batch_id": "B-001",
   "product_id": "P-100",
   "site": "Site-EU-01",

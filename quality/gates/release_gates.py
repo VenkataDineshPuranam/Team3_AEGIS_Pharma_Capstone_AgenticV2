@@ -2,16 +2,16 @@
 
 Executes prompts/18_eval_ai_cache.md exit criterion: "Release gates are
 wired to block Stage 20 build sign-off on failure." Pattern verified
-against V2's submission/evaluation/policies/release_gates.py: hard-gate
+against V1's submission/evaluation/policies/release_gates.py: hard-gate
 failures must never be averaged away by a passing overall score.
 
-Gate set below is NOT a copy of V2's ten gates -- it is re-derived from
+Gate set below is NOT a copy of V1's ten gates -- it is re-derived from
 this program's own ADRs and DDD invariants (docs/quality/dmaic-lean/
 dmaic_plan.md's Measure section, "Target metrics" table), consistent with
 ADR-002 (no code reuse; behaviour must be independently derived, not
 assumed to match). Where a gate concept is the same (schema failure,
 fabricated fact, stale authorization), the underlying rule differs in
-detail because it is sourced from this program's own contracts, not V2's.
+detail because it is sourced from this program's own contracts, not V1's.
 
 See release_gates.md (this directory) for the full mapping table and
 allowed gate-state vocabulary (PASS/FAIL/REVIEW/NOT_APPLICABLE/

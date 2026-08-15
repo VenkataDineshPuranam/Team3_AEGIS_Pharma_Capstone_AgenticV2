@@ -1,6 +1,6 @@
 {
   "category": "model_substitution_regression",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #12 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #12 (V1, verified)",
   "grading_mode": "blocked_by_environment",
   "note": "Cannot be meaningfully scored until ADR-009's open LLM-route sub-decision (Route A: Claude via Azure AI Foundry vs Route B: Azure OpenAI) is confirmed AND a baseline exists to regress against (interim assumption 6). Recorded as a real category with a real blocker, not skipped silently.",
   "scenarios": [

@@ -61,7 +61,7 @@ including owners and the events/entities each context governs.
   only through the common `DecisionSupportOutput` contract (Stage 08 §I2), which is this
   map's anti-corruption layer.
 - Evidence & Provenance must translate each source system's local evidence representation
-  (V2's brownfield, multi-source estate — `case/SOURCE_SYSTEM_FACT_PACK.md`) into the
+  (V1's brownfield, multi-source estate — `case/SOURCE_SYSTEM_FACT_PACK.md`) into the
   common `EvidenceItem` value object before any core context sees it; core contexts must
   never reach past Evidence & Provenance to a raw source system directly.
 

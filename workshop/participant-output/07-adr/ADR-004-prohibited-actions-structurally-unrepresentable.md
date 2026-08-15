@@ -1,7 +1,7 @@
 # ADR-004 — Prohibited terminal actions are structurally unrepresentable, not merely disallowed
 
 **Status:** `accepted`
-**Evidence basis:** Fact (V2's prohibited-action lists are verbatim in
+**Evidence basis:** Fact (V1's prohibited-action lists are verbatim in
 `case/INTEGRATED_CASE.md` §4 and `CLAUDE.md`) + derivation (multi-agent authority-leak risk,
 `discovery.md` §9 H5).
 

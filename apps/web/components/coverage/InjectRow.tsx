@@ -49,14 +49,14 @@ export function InjectRow({ inject }: { inject: Inject }) {
           </div>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-              V3 coverage assessment
+              V2 coverage assessment
             </p>
             <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-primary)]">
               {inject.rationale}
             </p>
           </div>
           <p className="text-[11px] text-[var(--text-tertiary)]">
-            V2 evidence sources referenced by this inject:{" "}
+            V1 evidence sources referenced by this inject:{" "}
             <span className="font-mono">{inject.v2_evidence_sources}</span>
           </p>
         </div>

@@ -7,7 +7,7 @@
 **Upgrade note:** this model was `provisional` because EAB-3 — accountable owners and HITL
 role definitions — was open. **EAB-3 is now closed** (see
 [`docs/governance/hitl_control_model.md`](../../governance/hitl_control_model.md)): the
-accountable roles were taken verbatim from V2's `case/STAKEHOLDER_PACK.md`, which already
+accountable roles were taken verbatim from V1's `case/STAKEHOLDER_PACK.md`, which already
 defines 15 stakeholders with explicit decision authority — including the EU Qualified
 Person, Global Head of Pharmacovigilance, and Supply Chain VP, whose stated authorities map
 exactly onto the three workflows. Owners below are no longer TBD. The design principle
@@ -19,7 +19,7 @@ exactly onto the three workflows. Owners below are no longer TBD. The design pri
 
 ### 1. Frame business problem (domain terms)
 
-NovaCura Therapeutics (the fictional organization in V2's `case/INTEGRATED_CASE.md`) needs
+NovaCura Therapeutics (the fictional organization in V1's `case/INTEGRATED_CASE.md`) needs
 three governed decision-support capabilities — GxP batch-review evidence reconciliation,
 pharmacovigilance case-intake/signal support, and bounded supply-shortage/cold-chain
 planning — delivered as a multi-agent system instead of a single-shot app, **without**
@@ -46,9 +46,9 @@ outcome a single-shot design could never have produced" (the H5 risk from
 **Supporting subdomains** (necessary, not the reason the system exists, shared across all
 three core contexts):
 - **Evidence & Provenance** — evidence authority, temporal applicability, provenance,
-  conflict/supersession resolution (V2's `knowledge/` authority states — `approved`,
+  conflict/supersession resolution (V1's `knowledge/` authority states — `approved`,
   `superseded`, `untrusted`, `draft`, jurisdiction-local — are the concrete evidence this
-  subdomain must reason over, per V2 `CLAUDE.md`).
+  subdomain must reason over, per V1 `CLAUDE.md`).
 - **Governance & Human Oversight** — HITL routing, prohibited-terminal-action enforcement,
   audit trail, the "required operating properties" named in `case/INTEGRATED_CASE.md` §5
   (purpose limitation, least privilege, current authorization, abstention, human review,
@@ -64,13 +64,13 @@ three core contexts):
 
 | Term | Meaning | Status |
 |---|---|---|
-| Decision support | The system's only mode — proposes, flags, reconciles; never executes a terminal action | Stable (V2-inherited, non-negotiable) |
+| Decision support | The system's only mode — proposes, flags, reconciles; never executes a terminal action | Stable (V1-inherited, non-negotiable) |
 | Prohibited terminal action | Per workflow: release/reject/reprocess/relabel/recall (A); final seriousness/causality/expectedness/reportability/signal-confirmation decision (B); change inventory status/reserve/allocate/release/recall (C) — verbatim from `case/INTEGRATED_CASE.md` §4 | Stable |
-| Evidence authority | Which source may assert a fact; V2 encodes this as document status (`approved`/`superseded`/`untrusted`/`draft`) rather than a binary trust flag | Stable |
+| Evidence authority | Which source may assert a fact; V1 encodes this as document status (`approved`/`superseded`/`untrusted`/`draft`) rather than a binary trust flag | Stable |
 | Abstention | The system declines to answer/act when identity, unit, time, terminology, jurisdiction, source authority, or evidence completeness cannot be resolved (`CLAUDE.md` guardrails) | Stable |
-| Agent | **(V3, new term)** a bounded, named unit of LangGraph-orchestrated reasoning with a stated authority limit and tool set — not synonymous with V2's `.claude/agents/` (which are engineering-time helper agents like `evidence-reviewer`, distinct from the runtime domain agents this system executes) | **Unresolved — flagged.** The name "agent" is overloaded between V2's build-time Claude Code agents and V3's runtime domain agents. Resolution: this document uses "domain agent" for the V3 runtime concept throughout, and "Claude Code agent" when referring to V2's build-time helpers, to avoid collision. |
-| Authority limit | The explicit boundary of what a domain agent may propose vs. what requires human sign-off | **(V3, new term)** — provisional, this document is where it's first defined (§10 below) |
-| Bounded context crossing | A handoff between two domain agents whose bounded contexts differ, requiring an explicit contract rather than shared understanding | **(V3, new term)** |
+| Agent | **(V2, new term)** a bounded, named unit of LangGraph-orchestrated reasoning with a stated authority limit and tool set — not synonymous with V1's `.claude/agents/` (which are engineering-time helper agents like `evidence-reviewer`, distinct from the runtime domain agents this system executes) | **Unresolved — flagged.** The name "agent" is overloaded between V1's build-time Claude Code agents and V2's runtime domain agents. Resolution: this document uses "domain agent" for the V2 runtime concept throughout, and "Claude Code agent" when referring to V1's build-time helpers, to avoid collision. |
+| Authority limit | The explicit boundary of what a domain agent may propose vs. what requires human sign-off | **(V2, new term)** — provisional, this document is where it's first defined (§10 below) |
+| Bounded context crossing | A handoff between two domain agents whose bounded contexts differ, requiring an explicit contract rather than shared understanding | **(V2, new term)** |
 
 ### 4. Bounded contexts
 
@@ -155,8 +155,8 @@ Relationship types (DDD vocabulary):
 | `Batch` | Aggregate root | Cannot carry a `release_recommended` or `reject_recommended` field — the aggregate's schema itself must make the prohibited action unrepresentable, not merely unrecommended |
 | `PVCase` | Aggregate root | Duplicate-check (`DuplicateSuspected` evaluation) must complete before `SignalTriaged` can fire |
 | `ShortageOption` | Value object, immutable | Always paired with its constraint set; never carries an `allocated_quantity` field — allocation is out of this system's aggregate model entirely, not just unrecommended |
-| `EvidenceItem` | Value object | Carries source, authority status (`approved`/`superseded`/`untrusted`/`draft`/jurisdiction-local per V2's `knowledge/` model), effective date, and a supersession pointer if applicable |
-| `AgentRun` | Aggregate root (**V3, new**) | One per domain-agent execution; carries authority-limit reference, tool calls made, evidence cited, and — if applicable — the `HumanOverrideRecorded` event it triggered. This aggregate is what Stage 17 (observability) and Stage 12 (assurance) query. |
+| `EvidenceItem` | Value object | Carries source, authority status (`approved`/`superseded`/`untrusted`/`draft`/jurisdiction-local per V1's `knowledge/` model), effective date, and a supersession pointer if applicable |
+| `AgentRun` | Aggregate root (**V2, new**) | One per domain-agent execution; carries authority-limit reference, tool calls made, evidence cited, and — if applicable — the `HumanOverrideRecorded` event it triggered. This aggregate is what Stage 17 (observability) and Stage 12 (assurance) query. |
 
 ---
 
@@ -169,14 +169,14 @@ Relationship types (DDD vocabulary):
 - Evidence authority resolution — a lookup against document status, not a judgment call.
   **Corrected at Stage 04 by [ADR-003](../../adr/ADR-003-evidence-authority-deterministic-gate.md):**
   this section originally said "untrusted excluded entirely; superseded flagged, not
-  silently substituted." Verification against V2's `submission/evaluation/graders/authority_grader.py`
+  silently substituted." Verification against V1's `submission/evaluation/graders/authority_grader.py`
   (`_MUST_NOT_CITE = {"untrusted", "superseded"}`) proved that wrong — **`superseded` is
   non-citable, exactly like `untrusted`**, and both must be filtered at the retrieval
   boundary so they never enter an agent's context. Retrieved content may also never alter
   its own authority (the grader independently fails any response where an embedded
   instruction was followed).
-- Duplicate-detection *thresholds* (if V2's PV duplicate logic is numeric/rule-based —
-  unconfirmed this pass; flagged for Stage 06/07 to verify against V2's actual grader code,
+- Duplicate-detection *thresholds* (if V1's PV duplicate logic is numeric/rule-based —
+  unconfirmed this pass; flagged for Stage 06/07 to verify against V1's actual grader code,
   e.g. `submission/evaluation/graders/temporal_unit_grader.py`).
 
 **AI reasoning (appropriately probabilistic):**
@@ -192,12 +192,12 @@ Retrieval is scoped **per bounded context**, not global: a Batch Review domain a
 retrieves only from Batch Review's evidence scope (never PV or Supply knowledge), routed
 through the Evidence & Provenance context's semantic layer (Stage 13 dependency — this
 document specifies the *requirement*, not the implementation). Out of retrieval scope by
-design: any document marked `untrusted` (V2's poisoned-trap documents, e.g. the pattern
-represented by `FAKE_PV_EXPEDITED_RULE`/`MALICIOUS_SUPPLIER_DEVIATION` in V2's `knowledge/`)
+design: any document marked `untrusted` (V1's poisoned-trap documents, e.g. the pattern
+represented by `FAKE_PV_EXPEDITED_RULE`/`MALICIOUS_SUPPLIER_DEVIATION` in V1's `knowledge/`)
 must never enter a domain agent's context window, full stop — this is a retrieval-time
 filter, not a "the AI should recognize it's untrustworthy" instruction.
 
-### 10. Agent responsibilities (V3, named agents)
+### 10. Agent responsibilities (V2, named agents)
 
 | Domain agent | Bounded context owned | Tools it may call | Authority limit | Stop/escalation condition |
 |---|---|---|---|---|
@@ -236,9 +236,9 @@ is a Stage 16 (governance) requirement recorded here as a domain-level constrain
 
 Every domain agent output must carry: evidence citations (from Evidence & Provenance,
 including source authority status), a confidence/abstention field, and an `AgentRun` record
-(LangSmith trace ID) satisfying both V2's evidence standard
+(LangSmith trace ID) satisfying both V1's evidence standard
 (`requirements/SUBMISSION_EVIDENCE_STANDARD.md`, not re-read this pass but named as the
-inherited floor) and V3's new compliance requirements (Stage 19).
+inherited floor) and V2's new compliance requirements (Stage 19).
 
 ### 13. Evaluation using DDD vocabulary
 
@@ -267,7 +267,7 @@ slice is safe before composing agents further.
 
 Recommend piloting **Batch Review first** — it has the strongest evidence base of the three
 per Stage 01's sufficiency scoring (`discovery.md` §10: "Evidence… Strong") and the most
-mature V2 grader coverage (`temporal_unit_grader.py`, `authority_grader.py` both appear
+mature V1 grader coverage (`temporal_unit_grader.py`, `authority_grader.py` both appear
 batch/evidence-oriented from their names). What would change this model: EAB-3 resolution
 (real HITL owners), and any evidence from a Batch Review pilot that the Critic/Verifier
 contract is too coarse or too strict.

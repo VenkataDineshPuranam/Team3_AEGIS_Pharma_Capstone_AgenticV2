@@ -89,7 +89,7 @@ Produce `traceability_gap_audit.md` that explicitly flags:
 
 Every gap must be: fixed now, assumed with revisit trigger, or open-blocked for tasks.
 
-### I2. Agent/tool contracts (V3, required)
+### I2. Agent/tool contracts (V2, required)
 
 - **LangGraph state schema** — the shared graph state object(s): fields, types, which node reads/writes each field, reducers for concurrent writes.
 - **Per-agent node contract** — inputs consumed, outputs produced, tools it may call (by MCP tool name), termination/handoff conditions, and the HITL interrupt condition if any.

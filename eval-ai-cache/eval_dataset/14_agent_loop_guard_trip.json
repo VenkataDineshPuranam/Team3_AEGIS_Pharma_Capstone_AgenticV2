@@ -1,6 +1,6 @@
 {
   "category": "agent_loop_guard_trip",
-  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V3 addition, agent-specific)",
+  "prompt_source": "prompts/18_eval_ai_cache.md #1 (V2 addition, agent-specific)",
   "grading_mode": "deterministic",
   "grader": "graders/loop_guard_grader.py:grade_loop_guards",
   "note": "Numeric caps G1-G8 verbatim from failure_and_loop_guards.md SS2.",

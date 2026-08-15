@@ -27,7 +27,7 @@ slice is safe before composing agents further.
 **One workflow — Batch Review — running end-to-end as a real multi-agent graph.**
 
 Batch Review is the recommended pilot per DDD §15, on evidence: Stage 01's sufficiency
-scoring rated its evidence base **Strong**, and V2's most directly applicable graders
+scoring rated its evidence base **Strong**, and V1's most directly applicable graders
 (`authority_grader.py`, `temporal_unit_grader.py` — both verified at Stage 04) are
 evidence/authority-oriented, which is Batch Review's core concern.
 

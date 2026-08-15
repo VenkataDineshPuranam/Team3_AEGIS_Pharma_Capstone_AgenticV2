@@ -1,6 +1,6 @@
 {
   "category": "evidence_fidelity_provenance",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #2 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #2 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/evidence_authority_grader.py:grade_evidence_fidelity",
   "scenarios": [

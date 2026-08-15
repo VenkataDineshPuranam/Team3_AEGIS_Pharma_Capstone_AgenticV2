@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 15 (`stage-15-performance-tuning`)
 **Lifecycle stage:** Build/Tune (quality infrastructure)
-**Framework derived:** V3 addition, drawing on `eval-ai-cache/` runbooks (Windows Cursor Redis Caching Runbook, OpenTelemetry Brownfield Implementation Runbook).
+**Framework derived:** V2 addition, drawing on `eval-ai-cache/` runbooks (Windows Cursor Redis Caching Runbook, OpenTelemetry Brownfield Implementation Runbook).
 **Core question:** What does each workflow cost (latency, tokens, $) and where is the budget being spent?
 **Prerequisites:** Prompt 18 (cache design + baseline metrics).
 

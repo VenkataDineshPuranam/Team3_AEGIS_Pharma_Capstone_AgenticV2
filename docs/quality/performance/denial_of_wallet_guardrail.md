@@ -86,7 +86,7 @@ see that file for the full hook index this joins.
   the Stage 15 measured pass, per BC-13/14 — the replacement condition is the same one
   `failure_and_loop_guards.md` §3 already states for C1/C2/C4.
 - **Not yet wired to a shared store.** The in-process dict is sufficient for this stage's
-  self-test, matching the precedent set by V2's own `tool_gateway.py` idempotency cache
+  self-test, matching the precedent set by V1's own `tool_gateway.py` idempotency cache
   (verified pattern, consumed at Stage 14). A real deployment needs this backed by Redis or the
   audit store so the ceiling holds across restarts and horizontally-scaled instances — noted
   in the module docstring as a Stage 20 implementation requirement, not resolved here.

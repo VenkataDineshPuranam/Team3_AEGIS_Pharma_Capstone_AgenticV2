@@ -74,9 +74,9 @@ flowchart TD
    are full). They roll up again at Stage 21.
 4. **Status honesty:** `provisional` until dependencies are `stable`. "Designed" is never
    reported as "measured."
-5. **Verify V2 behaviour against V2 code**, never from filenames (ADR-002 guardrail; the
+5. **Verify V1 behaviour against V1 code**, never from filenames (ADR-002 guardrail; the
    ADR-003 correction is the precedent).
-6. **Consume `eval-ai-cache/` (29 files) and V2's `knowledge/` (32 docs)** rather than
+6. **Consume `eval-ai-cache/` (29 files) and V1's `knowledge/` (32 docs)** rather than
    re-deriving — trigger T-7 makes this a Measure-step obligation at Stage 14.
 7. **Azure is the deployment target, not a development prerequisite.** Only LLM inference
    needs cloud. See §6.
@@ -93,7 +93,7 @@ for, and its exit gate.
 | **10 Agentic architecture** `prompts/14` → `docs/architecture/agentic/` | DDD §14–15, C4 components, ADR-001/004/008, **BC §A** | `agent_roster.md`, `langgraph_design.md`, `memory_design.md`, `failure_and_loop_guards.md` | **BC-1** guard day one · **BC-5** retry/diagnosis rules (the item that lost its owner) · **BC-6** Critic complementary to deterministic gates · **BC-7** token accounting designed in · **BC-9** shared-state schema as single source · **BC-11** zero cross-graph calls, structurally · **BC-4** design against an ontology *contract* | Graph design covers all 7 interim assumptions' instrumentation points; no node depends on a prompt instruction for a prohibition |
 | **11 MCP tools** `prompts/15` → `services/integration/`, `packages/contracts/` | Stage 10 graph, ADR-003/004 | `tool_inventory.md`, `tool_contracts/*.schema.json`, `prohibited_write_enforcement.md` | **BC-2** status gate at the retrieval boundary, before ranking · **BC-10** versioned schemas + `tests/contract/` from the first tool | The two interim tools (Evidence Retrieval, Reconciliation) have contracts with **no write method** for any prohibited action |
 | **12 Skills & Hooks** `prompts/16` → `.claude/skills/`, `.claude/hooks/` | ADR-004 layer 3, Stage 11 contracts | `skills.md`, `hooks.md`, `skill_vs_hook_boundary.md` | **BC-1** — the Prohibited-Action Guard is a *hook*, i.e. enforced, not an instruction | Guard fires on a red-team attempt in a dry run |
-| **13 Ontology / KG** `prompts/17` → `docs/architecture/ontology/`, `packages/domain/` | Stage 10's BC-4 contract, ADR-003, V2 `knowledge/` (32 docs) | `ontology.md`, `kg_schema.md`, `semantic_layer_query_contract.md`, `conflict_authority_rules.md` | **BC-4** fills the contract · **BC-20** decide NAB-3 (copy V2 knowledge locally vs. cross-repo) *here*, it blocks this stage | Scoped, status-aware retrieval is expressible without raw-document RAG |
+| **13 Ontology / KG** `prompts/17` → `docs/architecture/ontology/`, `packages/domain/` | Stage 10's BC-4 contract, ADR-003, V1 `knowledge/` (32 docs) | `ontology.md`, `kg_schema.md`, `semantic_layer_query_contract.md`, `conflict_authority_rules.md` | **BC-4** fills the contract · **BC-20** decide NAB-3 (copy V1 knowledge locally vs. cross-repo) *here*, it blocks this stage | Scoped, status-aware retrieval is expressible without raw-document RAG |
 
 ### Wave 2 — Design the controls (stages 16, 14, 17 — design pass)
 
@@ -104,7 +104,7 @@ not after.
 | Stage | Consumes | Produces | Constraints | Exit gate |
 |---|---|---|---|---|
 | **16 Governance & Control** `prompts/20` → `docs/governance/`, `security/policies/` | ADR-004/005, `hitl_control_model.md` (**already exists** — extend, do not overwrite), named approver roles | `policy_register.md`, `escalation_override_log_design.md`, `control_ownership.md` | **BC-3** fails closed · **BC-12** timeout ⇒ no action; roles not individuals · **BC-17** Batch-Review-only risk-tiering deferred until U7 exists | Policy Engine refuses when unreachable, in design *and* in a test |
-| **14 Eval harness (design pass)** `prompts/18` → `eval-ai-cache/`, `quality/gates/`, `tests/` | V2's 12 categories + 15 fixtures, interim §3, **`eval-ai-cache/`'s 24-part runbook** | `eval_dataset/`, `graders/`, `release_gates.md`, assumption-test harness (**I-4**) | **T-7** — justify any re-derivation · cache-correctness evals designed but **not run** (no cache yet) | The 7 interim assumptions are executable tests, not prose |
+| **14 Eval harness (design pass)** `prompts/18` → `eval-ai-cache/`, `quality/gates/`, `tests/` | V1's 12 categories + 15 fixtures, interim §3, **`eval-ai-cache/`'s 24-part runbook** | `eval_dataset/`, `graders/`, `release_gates.md`, assumption-test harness (**I-4**) | **T-7** — justify any re-derivation · cache-correctness evals designed but **not run** (no cache yet) | The 7 interim assumptions are executable tests, not prose |
 | **17 Observability (design pass)** `prompts/21` → `packages/observability/`, `ops/` | ADR-006/009, C4 | `tracing_design.md`, `trace_redaction_and_retention.md`, dashboards/alerts | **BC-7** token accounting per node/graph · **BC-8** **redaction rules written before the first trace** · **BC-19** trace↔audit correlation IDs | Nothing can be traced until redaction exists; audit sink is provably separate from LangSmith |
 
 ### Wave 3 — Build and measure (20a → Gate M → 18 → 20b)
@@ -148,8 +148,8 @@ These are on the critical path and **cannot be resolved by building**:
 | # | Decision | Owner | Latest point it can be answered | Cost of answering late |
 |---|---|---|---|---|
 | **1** | **LLM route: Claude via Azure AI Foundry (Route A, recommended) vs. Azure OpenAI (Route B)** — ADR-009's open sub-decision | Sponsor | **Before 20a runs.** Design is route-independent; *measurements* are not | Every eval baseline and token number taken under the wrong route must be re-run (**T-6**) |
-| **2** | **NAB-3** — copy V2's `knowledge/` (32 docs) + fixtures locally, or keep as cross-repo reference | User | **Before Stage 13** | Blocks the ontology's source material |
-| **3** | **EAB-1** — does V3 reuse V2's assessment rubric, or need its own? | User/sponsor | Before Stage 21 | Stage 21 wouldn't know what it is scored against |
+| **2** | **NAB-3** — copy V1's `knowledge/` (32 docs) + fixtures locally, or keep as cross-repo reference | User | **Before Stage 13** | Blocks the ontology's source material |
+| **3** | **EAB-1** — does V2 reuse V1's assessment rubric, or need its own? | User/sponsor | Before Stage 21 | Stage 21 wouldn't know what it is scored against |
 | **4** | **EAB-4** — audience: the same FDE workshop participants, or different? | User | Before Stage 21 | Changes formality and whether a workshop rubric applies |
 | **5** | Region availability for the chosen model route | Architecture owner | At deployment, not before | Deployment-time surprise only |
 

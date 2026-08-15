@@ -9,7 +9,7 @@ live session. It replaces `OperatorContext`'s old "claimed identity" free-text f
 What this deliberately still is NOT: a production identity provider. Ten synthetic accounts
 (one per governed role, see ROLE_CATALOG below), no SSO, no password reset flow, no lockout
 policy beyond what's noted in login(). That scope matches the project's "fully synthetic,
-offline-capable" ethos (see V2 CLAUDE.md) applied to V3's own login layer, not a shortcut
+offline-capable" ethos (see V1 CLAUDE.md) applied to V2's own login layer, not a shortcut
 taken silently -- see docs/governance/demo_login_credentials.md for the seeded accounts and
 the reasoning for not going further.
 """

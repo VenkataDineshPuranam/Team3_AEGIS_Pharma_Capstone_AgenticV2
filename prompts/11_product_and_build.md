@@ -81,7 +81,7 @@ In `dmaic_lens.md` (short), record:
 ## Output
 
 Write under `apps/` and `services/` (implementation) **and mirror build notes** to `workshop/participant-output/11-build/`.
-**Note (V3): this prompt executes at Stage 20 (repo implementation), deliberately last — after Prompts 01–13 and Stages 10–19 (agentic architecture, MCP, skills/hooks, ontology, eval-ai-cache, performance, governance, observability, security, compliance) are stable.**
+**Note (V2): this prompt executes at Stage 20 (repo implementation), deliberately last — after Prompts 01–13 and Stages 10–19 (agentic architecture, MCP, skills/hooks, ontology, eval-ai-cache, performance, governance, observability, security, compliance) are stable.**
 
 - `task_execution_log.md` (task ID → status, PR/commit, notes)
 - `traceability_matrix_updated.md`

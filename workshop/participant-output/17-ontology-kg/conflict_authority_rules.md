@@ -19,7 +19,7 @@ knowledge-graph query to execute mechanically.
 downgrade-and-include.
 
 - **Source:** ADR-003 (`../../../docs/adr/ADR-003-evidence-authority-deterministic-gate.md`), which
-  itself corrected a wrong DDD assumption after reading V2's actual
+  itself corrected a wrong DDD assumption after reading V1's actual
   `authority_grader.py`: `_MUST_NOT_CITE = {"untrusted", "superseded"}`.
 - **This stage's independent confirmation:** `knowledge_catalog.csv`'s `trust` column (§4,
   `ontology.md` §5.3) encodes exactly this — every `untrusted` and `superseded` row's `trust`
@@ -83,7 +83,7 @@ supersession guardrail.
 
 - Every `EvidenceItem` has `effective_date`. A query scoped to an as-of date `D` excludes any
   item where `effective_date > D`.
-- **What this rule does not do, stated honestly:** V2's data has no expiry-date field —
+- **What this rule does not do, stated honestly:** V1's data has no expiry-date field —
   temporal invalidity is expressed entirely through the `status` transition to `superseded`,
   not through a computed validity window. This document does **not** invent an expiry range.
   A document remains `approved` indefinitely until a later document explicitly supersedes it in
@@ -115,5 +115,5 @@ equally-citable pieces of evidence.
 | `draft` is citable, with a confidence qualifier | ADR-003's exact `_MUST_NOT_CITE` set (only two statuses, not three) |
 | Jurisdiction-local ≠ subordinate to global | `hitl_control_model.md` §5 |
 | Supersession only from catalog data, never from prose | ADR-003 (content never self-declares authority) + `kg_schema.md` §2 |
-| No invented expiry window | Absence of the field in V2's actual data (`ontology.md` §5) |
+| No invented expiry window | Absence of the field in V1's actual data (`ontology.md` §5) |
 | Factual conflicts flagged, never silently resolved | DDD `domain_model.md` §6, `EvidenceConflictDetected` |

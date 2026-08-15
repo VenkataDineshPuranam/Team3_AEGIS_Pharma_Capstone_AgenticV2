@@ -22,7 +22,7 @@ not a restart.
 | PV duplicate/clock/terminology | A signal triaged before duplicate-check; a reporting clock reconstructed from a convenient receipt instead of the earliest one | DDD §7, `PV_REPORTING_CLOCKS.md` (K-024) |
 | Agent/tool authorization/idempotency | Cross-context tool access; stale authorization trusted from intake; a replay causing duplicate execution | ADR-008, `tool_inventory.md` §1, BC-2/BC-3 |
 | Privacy/cross-border | Raw PII persisted; a sensitive segment returned without the matching access group; jurisdiction-local evidence treated as globally citable | `kg_schema.md` §1/§4 (Stage 13's own finding), `conflict_authority_rules.md` §2 |
-| Subgroup/accessibility | A disclosed performance or accessibility gap silently dropped rather than surfaced | Register, ported from V2 pattern |
+| Subgroup/accessibility | A disclosed performance or accessibility gap silently dropped rather than surfaced | Register, ported from V1 pattern |
 | Latency/cost/denial-of-wallet | Runaway token spend; a run exceeding a structural cap without the cap actually holding | Register row AI-Token, `failure_and_loop_guards.md` |
 | Model substitution/regression | An LLM route change (ADR-009) invalidating baselines silently | Trigger T-6 |
 | Agent wrong handoff | A verdict routed to the wrong graph node — this session's real `PROHIBITION_ADJACENT` bug | `langgraph_design.md` correction record |

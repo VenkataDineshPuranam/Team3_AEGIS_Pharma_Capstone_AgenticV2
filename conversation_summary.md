@@ -93,13 +93,13 @@ can do it at that time."* Replaced the single placeholder deadline with **T0 (in
   named; that role has a **live** Entra assignment right now (not at submission); the draft is
   still guard-clear; the policy version is still current; the role's own authority actually
   covers the decision. Any failed condition → audit-logged skip, run stays with primary.
-- **Supply's planning leg has no escalation role at all** — V2's stakeholder pack names none
+- **Supply's planning leg has no escalation role at all** — V1's stakeholder pack names none
   above the Supply Chain VP; inventing one was explicitly rejected. Supply's dual approval
   survives escalation intact (both legs still required).
 - PV's advisory veto (Patient Safety Rep) sits outside the ladder — registrable at any tier,
   never overridden.
 - PV's 24h expiry is a stated *principle* (never sit on a reporting clock), explicitly flagged
-  as needing verification against V2's real PV clock material before being treated as final.
+  as needing verification against V1's real PV clock material before being treated as final.
 - State schema gained `hitl_tier`, `hitl_required_legs`/`hitl_approved_legs` (append-only),
   `veto_recorded`; `approver_roles` documented as append-only widening.
 
@@ -135,7 +135,7 @@ schema entirely** (fixed at server-binding time, not agent-supplied) — applyin
 on the most volatile data in the system) — both marked do-not-cache-by-default.
 
 **Operational-safety decision (repeated at every later stage touching `.claude/`):**
-`.claude/mcp.json`'s `mcpServers` stays `{}`. These are registrations for the *deployed* V3
+`.claude/mcp.json`'s `mcpServers` stays `{}`. These are registrations for the *deployed* V2
 runtime (Stage 20), not this coding session — populating real commands now would make this
 repo's own Claude Code session try to launch nonexistent processes on startup. User confirmed
 mid-session: *"For mcp if we need we use the available mcps."*
@@ -165,7 +165,7 @@ Answered with tables: **4 agent roles** (Batch-Review, PV-Intake, Supply-Plannin
 Critic/Verifier — one Critic instance per graph, not shared), **8 skills** (4 runtime + 4
 build-process), **9 hook bindings**, **7 MCP tools / 6 servers**. Clarified nothing is "live" —
 all Stage 10–12 design, implemented at Stage 20. Also clarified this session has no project-level
-MCP connections active (separate from the V3 design question).
+MCP connections active (separate from the V2 design question).
 
 ## 8. "Why does the other team use only one agent?" comparison
 
@@ -173,12 +173,12 @@ User pasted another team's rationale for a single-loop design (agents do near-ze
 work — annotation only — over a deterministic core; centralizing controls in one shared gateway
 avoids drift risk). Before responding, **verified their specific technical claims against real
 source** rather than accepting them at face value:
-- Confirmed `trajectory_grader.py` and `tool_gateway.py` are real, in V2's own
-  `submission/src/services/` — V2's actual reference app already has **two named agents**
+- Confirmed `trajectory_grader.py` and `tool_gateway.py` are real, in V1's own
+  `submission/src/services/` — V1's actual reference app already has **two named agents**
   (`evidence-summarizer`, `duplicate-similarity-scorer`) behind **one shared gateway** handling
   authority limits, idempotency/replay, and disposition-write prohibition centrally.
-- Found **no 25-step bound**, no `F7`, `T-013`, or `ADR-014` anywhere in V2's code — flagged
-  these as the other team's own fork-specific artifacts, not shared V2 ground truth.
+- Found **no 25-step bound**, no `F7`, `T-013`, or `ADR-014` anywhere in V1's code — flagged
+  these as the other team's own fork-specific artifacts, not shared V1 ground truth.
 - **Rebutted the "duplicated fail-closed controls" risk using our own verified design**: our
   Governance/Policy Engine is one shared container (ADR-005), the Prohibited-Action Guard is
   one implementation shared as a compile-time template (`agent_roster.md` §6) — not duplicated
@@ -192,21 +192,21 @@ source** rather than accepting them at face value:
 
 ## 9. Stage 13 — Ontology / Knowledge Graph (`docs/architecture/ontology/`)
 
-Departed from prior stages by reading V2's actual `data/*.csv` and `knowledge/*.md` directly
+Departed from prior stages by reading V1's actual `data/*.csv` and `knowledge/*.md` directly
 rather than working from prior-stage prose alone (the `grade-evidence-provenance` /
 `verify-against-source-not-filename` skills, actually exercised for the first time).
 
-- **NAB-3 half-resolved**: copied V2's `knowledge/` (32 policy docs) + `knowledge_catalog.csv`
+- **NAB-3 half-resolved**: copied V1's `knowledge/` (32 policy docs) + `knowledge_catalog.csv`
   into this repo's own `knowledge/`, SHA-256-verified against the catalog's own hashes.
   `data/`/`evaluation/` fixtures stay cross-repo, left for Stage 14 (Overproduction argument).
   Not a reopening of ADR-002 — domain reference data, not application code.
-- **17 classes, 14 edge types**, grounded against real V2 CSV schemas.
+- **17 classes, 14 edge types**, grounded against real V1 CSV schemas.
 - **Two findings surfaced only by checking real data:**
   1. `SensitiveSegment` (pregnancy/minor case segments, restricted `access_group`) — a
      governance boundary DDD's original pass never named. Flows backward as a gap in a
      `stable` Stage 02 artifact, recorded honestly. PV-Intake Agent's evidence scope needs an
      access-group check nothing in Stage 10/11 currently models.
-  2. `Deviation` has **no `batch_id` foreign key anywhere** in V2's own relationship model —
+  2. `Deviation` has **no `batch_id` foreign key anywhere** in V1's own relationship model —
      Stage 20's `batch.reconcile` will need a defined matching heuristic, not a lookup.
 - Semantic layer fills **BC-4** exactly: specifies what `evidence.retrieve`'s query terms
   resolve against (KG concept/relationship/text match, single-hop, bounded by context).
@@ -226,7 +226,7 @@ stages: **wrote and actually ran real Python code**, not just markdown design.
 - Consumed `eval-ai-cache/AI_FDE_Brownfield_Evals_Cursor_Runbook/` (gate-state vocabulary:
   PASS/FAIL/REVIEW/NOT_APPLICABLE/NOT_OBSERVABLE/THRESHOLD_NOT_DEFINED/BLOCKED_BY_ENVIRONMENT;
   hard/threshold/operational gate taxonomy) rather than re-deriving it (NAB-4/T-7).
-- Verified V2's actual `submission/evaluation/graders/*.py` (8 real graders) and
+- Verified V1's actual `submission/evaluation/graders/*.py` (8 real graders) and
   `tool_gateway.py` first, then **independently re-derived** grader logic against our own
   contracts (ADR-002 — pattern reuse, not code reuse).
 - **63 real scenarios across 15 categories** (12 required + 3 agent-specific: wrong-handoff,
@@ -236,7 +236,7 @@ stages: **wrote and actually ran real Python code**, not just markdown design.
   deterministic rule it checks, sourced from the specific Stage 09–13 document that defines it.
 - **Ran the harness against itself before trusting it — found and fixed 7 real defects:**
   schema-loader path doubling; a `_check` helper treating documentary `note` fields as required
-  matches; a replay counter that incorrectly incremented on plain replays (contradicting V2's
+  matches; a replay counter that incorrectly incremented on plain replays (contradicting V1's
   own verified gateway behavior — fixed to match exactly); an adversarial fixture whose failure
   branch the grader had no way to actually produce (added an `actual_replay_detected` override
   parameter, plus a golden-path companion scenario); a gate-result flattening miss. All
@@ -254,7 +254,7 @@ stages: **wrote and actually ran real Python code**, not just markdown design.
   including the exact scenario the prompt names (a hit on `K-007` after it transitions to
   `superseded` is caught, not served).
 - Release gates independently re-derived from our own ADRs/DDD invariants, not copied from
-  V2's 10 gates — full traceability table in `release_gates.md`.
+  V1's 10 gates — full traceability table in `release_gates.md`.
 
 ---
 
@@ -325,9 +325,9 @@ first thing to do in a new session (see §14 for the exact list).
 1. **Never populate `.claude/mcp.json` or `.claude/hooks.json` with live entries** pointing at
    code that doesn't exist yet — would make this coding session itself try to launch/run
    nonexistent processes. Register for real only at Stage 20.
-2. **Never claim another system's (V2's, or another team's) behavior without reading its actual
+2. **Never claim another system's (V1's, or another team's) behavior without reading its actual
    code/data** — verify, don't infer from filenames or pasted descriptions. Caught real,
-   consequential findings twice this session (V2's real agent/gateway shape; V2's actual grader
+   consequential findings twice this session (V1's real agent/gateway shape; V1's actual grader
    patterns) and once nearly avoided a bad rebuttal (the other team's 25-step/ADR-014 claims).
 3. **Flag and fix errors openly, immediately, when found** — the `PROHIBITION_ADJACENT` bug and
    the 7 eval-harness defects were fixed in place and recorded, not smoothed over.

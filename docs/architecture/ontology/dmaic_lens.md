@@ -13,7 +13,7 @@ documented — the prompt's own second Lean question, answered directly rather t
 | Metric | Value |
 |---|---|
 | Ontology classes | 17 (7 Batch Review/Evidence, 5 PV, 5 Supply) |
-| Classes grounded against real V2 fixture data, not DDD prose alone | 16 of 17 (`ShortageOption` is deliberately synthesized, not stored — `ontology.md` §1.4) |
+| Classes grounded against real V1 fixture data, not DDD prose alone | 16 of 17 (`ShortageOption` is deliberately synthesized, not stored — `ontology.md` §1.4) |
 | Edge types with a stated FK-based provenance rule | 10 of 14 (the rest are designed/computed, explicitly marked) |
 | Findings from grounding that DDD's prose-only pass missed | 2 (`SensitiveSegment`'s access-group boundary; `Deviation` has no `batch_id` FK) |
 | `knowledge/` files copied and hash-verified | 33 (32 policy docs + `knowledge_catalog.csv`) |
@@ -31,7 +31,7 @@ because the filter never reads chunk content.
 
 1. **"`Batch` has no disposition field"** — DDD stated this as a schema *design intent*.
    Grounding against `batches.csv`'s real columns (`ontology.md` §5.1) confirms it's also true
-   of V2's own operational data, independently. Once the KG schema is implemented (Stage 20),
+   of V1's own operational data, independently. Once the KG schema is implemented (Stage 20),
    a query for a disposition-shaped property on `Batch` fails at the type level, not at review
    time.
 2. **"`untrusted`/`superseded` are never citable"** — previously enforced only inside
@@ -48,14 +48,14 @@ because the filter never reads chunk content.
 ## Improve
 
 The four documents are the Improve artifact, filling **BC-4** (Stage 10's ontology contract,
-designed against but not populated until now). What grounding against real V2 data — rather
+designed against but not populated until now). What grounding against real V1 data — rather
 than working from DDD's prose alone — actually changed:
 
 - **Found, not assumed:** `SensitiveSegment` (`ontology.md` §5.2) — a governance boundary DDD's
   original entity table never named, because DDD was written before this data was read this
   closely. This is a genuine addition to the domain model, flowing *backward* from Stage 13 to
   a gap in Stage 02, recorded honestly as a finding rather than silently patched into DDD.
-- **Found, not assumed:** the `Deviation`–`Batch` link has no clean foreign key in V2's data
+- **Found, not assumed:** the `Deviation`–`Batch` link has no clean foreign key in V1's data
   (§5.1) — meaning `batch.reconcile`'s actual matching logic (Stage 20) needs a defined
   heuristic, not a lookup. Previously this would have been discovered during implementation,
   the expensive place to discover a data-model gap.

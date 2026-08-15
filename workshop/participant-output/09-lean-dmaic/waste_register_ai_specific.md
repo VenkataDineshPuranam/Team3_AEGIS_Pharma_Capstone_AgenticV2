@@ -14,7 +14,7 @@ Stages 10–21 work from.**
 
 | Field | Content |
 |---|---|
-| **Where it appears** | Every agent turn, every tool-result summarization, every Critic/Verifier pass consumes tokens V2's single-shot call never spent. Multiplied by workflow count and by any retry loop |
+| **Where it appears** | Every agent turn, every tool-result summarization, every Critic/Verifier pass consumes tokens V1's single-shot call never spent. Multiplied by workflow count and by any retry loop |
 | **Obs/Hyp** | **Hypothesized** — magnitude is baseline **U1**, Unknown since Stage 01 (EAB-6) |
 | **Magnitude** | **Highest-magnitude AI waste in the register**, and the only one with no number at all |
 | **Impact** | Direct cost; denial-of-wallet exposure; potentially forces a topology change |
@@ -27,7 +27,7 @@ Stages 10–21 work from.**
 | Field | Content |
 |---|---|
 | **Where it appears** | Unbounded, unranked, cross-context retrieval — an agent pulling documents from outside its workflow, or pulling non-citable documents and spending tokens ranking them |
-| **Obs/Hyp** | **Hypothesized** (design-time); the underlying authority rule is **Fact**, verified in V2's `authority_grader.py` |
+| **Obs/Hyp** | **Hypothesized** (design-time); the underlying authority rule is **Fact**, verified in V1's `authority_grader.py` |
 | **Magnitude** | Medium-high |
 | **Impact** | Cost **and** quality — irrelevant context degrades answers; non-citable context is an integrity failure (D2) |
 | **Treatment** | Per-bounded-context RAG scoping (`gen_ai_boundaries.md`); `untrusted`/`superseded` filtered **at the retrieval boundary, before ranking**, not after generation (ADR-003); ontology/semantic layer as the retrieval interface rather than raw RAG |
@@ -60,7 +60,7 @@ Stages 10–21 work from.**
 
 | Field | Content |
 |---|---|
-| **Where it appears** | Running V2's 12 categories plus V3's agent-specific categories on every change, with no fast-feedback subset; or tracking metrics that never affect a release decision |
+| **Where it appears** | Running V1's 12 categories plus V2's agent-specific categories on every change, with no fast-feedback subset; or tracking metrics that never affect a release decision |
 | **Obs/Hyp** | **Hypothesized** — no suite has ever run (baseline **U3**) |
 | **Magnitude** | Medium |
 | **Impact** | Developer velocity; and, if metrics are decorative, false assurance |
@@ -71,8 +71,8 @@ Stages 10–21 work from.**
 
 | Field | Content |
 |---|---|
-| **Where it appears** | Each MCP tool server is a contract that can silently drift. V2 had **zero** MCP integrations; V3 will have four (Evidence Retrieval, Reconciliation, Duplicate-Check, Option-Generation) — two of them in the interim state |
-| **Obs/Hyp** | **Fact of new surface** (V2 has zero, V3 has N>0); severity hypothesized |
+| **Where it appears** | Each MCP tool server is a contract that can silently drift. V1 had **zero** MCP integrations; V2 will have four (Evidence Retrieval, Reconciliation, Duplicate-Check, Option-Generation) — two of them in the interim state |
+| **Obs/Hyp** | **Fact of new surface** (V1 has zero, V2 has N>0); severity hypothesized |
 | **Magnitude** | Medium |
 | **Impact** | Reliability; silent behavioural drift is the dangerous form |
 | **Treatment** | Versioned MCP schemas + contract tests in `tests/contract/` (Stage 11). Separately, ADR-005 **knowingly adds** integration surface (the Policy Engine as its own container) to remove policy-drift Defects risk — accepted because it fails closed |
@@ -94,7 +94,7 @@ Stages 10–21 work from.**
 | Field | Content |
 |---|---|
 | **Where it appears** | Three faces: (a) traces so noisy the signal is buried, or so thin that a run cannot be reconstructed; (b) **PII captured into traces** — a privacy failure, not merely waste; (c) compliance-critical audit records living only on a vendor-owned surface |
-| **Obs/Hyp** | (a),(b) **Hypothesized**; (c) **fact of new surface** — V2 had no agent traces at all |
+| **Obs/Hyp** | (a),(b) **Hypothesized**; (c) **fact of new surface** — V1 had no agent traces at all |
 | **Magnitude** | Medium; (b) is a governance breach if realized |
 | **Impact** | Debuggability, privacy, regulatory retention |
 | **Treatment** | **OpenTelemetry as the instrumentation layer** so the backend stays swappable (LangSmith + Azure Monitor/App Insights); **redaction rules defined before the first trace is written**, not retrofitted; audit store **owned and separate** from LangSmith — Azure Blob with WORM immutability (ADR-006, ADR-009) |

@@ -7,7 +7,7 @@
 > **Mode: MEASURE-FIRST.** Framing mode is `decision-ready` (`discovery.md` §10), but the
 > scarce-data rule fires on the *other* condition: the programme's baselines are almost
 > entirely **Unknown**. Every number produced in Stages 01–08 is either counted from files
-> (249 tracked files, 7 designed hops, 143 V2 datasets) or explicitly Unknown (token cost,
+> (249 tracked files, 7 designed hops, 143 V1 datasets) or explicitly Unknown (token cost,
 > latency, eval pass rate, cache hit rate). **Nothing has been measured from a running
 > system, because no system has run.** Instrumentation and evidence acquisition therefore
 > outrank feature scale-out in Improve, and no agent/retrieval/cache scale-out is scheduled
@@ -17,10 +17,10 @@
 
 ## Define
 
-**The improvement problem.** V2 delivers governed pharma decision-support as a single-shot,
+**The improvement problem.** V1 delivers governed pharma decision-support as a single-shot,
 document-driven exercise: one prompt in, one JSON contract out, graded post-hoc. It is safe
 but cannot exercise the operational realities of a multi-agent, tool-using, cached,
-continuously observed system. V3 re-architects the same three governed workflows — GxP Batch
+continuously observed system. V2 re-architects the same three governed workflows — GxP Batch
 Review, PV Intake, Supply-Shortage Planning — as a **governed, observable, multi-agent
 system**, additively: the domain, the prohibitions, and the eval floor carry over unchanged;
 the agent topology, tool contracts, governance layer, cache, and observability are new.
@@ -32,8 +32,8 @@ the agent topology, tool contracts, governance layer, cache, and observability a
 | Multi-agent orchestration for the 3 governed workflows | Any write integration to a brownfield system |
 | Governance/policy enforcement as code, not prompting | Autonomous terminal decisions in any workflow |
 | Evidence authority as a deterministic gate | Cross-workflow agent chaining (ADR-008) |
-| Token/cost measurement, then control | V2 workflows D/E (no stated requirement) |
-| Trace + audit observability | Re-litigating the settled V2 domain model |
+| Token/cost measurement, then control | V1 workflows D/E (no stated requirement) |
+| Trace + audit observability | Re-litigating the settled V1 domain model |
 
 **The improvement thesis, one sentence:** sequence governance and domain before architecture,
 architecture before implementation, and *measurement* before scale — because every high-
@@ -68,12 +68,12 @@ ADR thresholds, which are stricter and already ratified.
 |---|---|---|---|---|
 | U1 | **Token / cost per workflow run** | Stage 01 (EAB-6) | Interim state, assumption 6 | Stage 15; topology confirmation |
 | U2 | Latency per workflow run | Stage 01 | Interim state | Stage 15 SLOs |
-| U3 | Eval pass rate on V2's 12 categories | Stage 01 | Stage 14 harness on the interim slice | Release gating |
+| U3 | Eval pass rate on V1's 12 categories | Stage 01 | Stage 14 harness on the interim slice | Release gating |
 | U4 | Cache hit rate | N/A (no cache) | Final state only — cache is excluded from interim by design | Stage 15 |
 | U5 | Actual hop count vs. the designed 7 | Stage 03 | Interim state, assumption 7 | Stage 12 drift finding |
 | U6 | Added latency from the ADR-005 Policy Engine hop | Stage 04 | Interim state | ADR-005 revisit trigger |
 | U7 | HITL escalation rate and reviewer load | Stage 01 | Final state (needs all 3 workflows) | Stage 16 risk-tiering |
-| U8 | V2's own eval scorecard numbers | Stage 01 | Deliberately never read — out of scope (ADR-002) | Nothing |
+| U8 | V1's own eval scorecard numbers | Stage 01 | Deliberately never read — out of scope (ADR-002) | Nothing |
 
 **U1 is the disproportionate one.** It has been Unknown since Stage 01, it was the stated
 precondition for locking agent topology, and that precondition was **not met** — ADR-008 was
@@ -115,11 +115,11 @@ Root causes, each traced to the register rows it explains
 | # | Root cause | Explains | Class |
 |---|---|---|---|
 | **RC-1** | **Prohibition was expressible in the data model.** The failure mode is not an agent choosing to act — it is a schema that can *represent* release/reject/allocation at all. Prompting cannot fix a representable state | D-rows 1–2; the whole ADR-004 layer stack | Derivation, from DDD analysis — **assumption until interim assumption 1 runs** |
-| **RC-2** | **Authority was treated as content, not status.** If a document's trustworthiness is judged by reading it, a document can assert its own trustworthiness — the prompt-injection path | AI-Retrieval, AI-Model rows | **Fact** — verified against V2's `authority_grader.py`, which defines `_MUST_NOT_CITE = {"untrusted","superseded"}` |
+| **RC-2** | **Authority was treated as content, not status.** If a document's trustworthiness is judged by reading it, a document can assert its own trustworthiness — the prompt-injection path | AI-Retrieval, AI-Model rows | **Fact** — verified against V1's `authority_grader.py`, which defines `_MUST_NOT_CITE = {"untrusted","superseded"}` |
 | **RC-3** | **Composition outruns control.** Each added agent turn multiplies tokens, hops, and handoff surfaces; without per-graph bounds this grows super-linearly with workflow count | AI-Token, D-Transportation, D-Overproduction | Derivation — magnitude Unknown (U1) |
 | **RC-4** | **Simultaneous risk introduction makes failure ambiguous.** Cache + agents + governance at once means a failure cannot be attributed | D-Inventory, D-Defects | Derivation — the interim state is the countermeasure |
 | **RC-5** | **Compliance obligations attached to vendor-owned surfaces.** Audit retention on a SaaS SLA is an availability/retention risk dressed as observability | AI-Observability | Derivation — resolved by ADR-006 |
-| **RC-6** | **Reference material already in the repo goes unread.** 29 `eval-ai-cache/` files, 32 V2 knowledge docs, V2 fixtures — re-deriving these is pure Overproduction | D-Overproduction (NAB-3, NAB-4) | **Fact** — counted at Stage 05 |
+| **RC-6** | **Reference material already in the repo goes unread.** 29 `eval-ai-cache/` files, 32 V1 knowledge docs, V1 fixtures — re-deriving these is pure Overproduction | D-Overproduction (NAB-3, NAB-4) | **Fact** — counted at Stage 05 |
 | **RC-7** | **Method-vs-practice drift in the SDD scaffold itself.** `plans/active/` empty, ADR-009 absent from the decision index and architecture review | NAB-2; `lens_rollup.md` C4 | **Fact** — verified this stage |
 
 **Analyses resting on assumptions — flagged, per the prompt's constraint.** RC-1, RC-3, RC-4
@@ -128,11 +128,11 @@ plausible and internally consistent, and every one of them is scheduled for a sp
 interim-state test. None of them may be described as "fixed" before that test runs. RC-2, RC-6
 and RC-7 rest on verified file evidence.
 
-**The one analysis that changed a decision.** RC-2 came from reading V2's actual 66-line
+**The one analysis that changed a decision.** RC-2 came from reading V1's actual 66-line
 grader rather than inferring behaviour from filenames — and it found an error in this
 programme's own DDD model, which had claimed `superseded` documents were citable with a flag.
-That correction is the precedent for the standing rule: never claim V2 behaviour without
-verifying V2 code.
+That correction is the precedent for the standing rule: never claim V1 behaviour without
+verifying V1 code.
 
 ## Improve
 
@@ -175,7 +175,7 @@ Ordered. **Instrumentation and evidence acquisition come first** — the scarce-
 |---|---|---|
 | I-17 | NAB-2 — `plans/active/` empty vs. method doc | **Correct the method doc.** `prompts/` already are the per-stage spec; duplicating them violates "nothing written twice" |
 | I-18 | ADR-009 missing from `decision_index.md` and `architecture_review.md` | Add it; note its open LLM-route sub-decision |
-| I-19 | NAB-3 — copy V2 `knowledge/` + fixtures locally, or keep cross-repo | Decide before Stage 13 |
+| I-19 | NAB-3 — copy V1 `knowledge/` + fixtures locally, or keep cross-repo | Decide before Stage 13 |
 
 ## Control
 
@@ -186,7 +186,7 @@ Ordered. **Instrumentation and evidence acquisition come first** — the scarce-
 2. **Authority is a status lookup, never a model judgement** (ADR-003). Content never
    self-declares authority.
 3. **Fail closed.** Policy Engine unreachable ⇒ refuse. HITL timeout ⇒ no action.
-4. **No claim of V2 behaviour without reading V2 code** (ADR-002 guardrail, RC-2 precedent).
+4. **No claim of V1 behaviour without reading V1 code** (ADR-002 guardrail, RC-2 precedent).
 5. **Status honesty.** Artifacts are marked `provisional` until their dependencies are
    `stable`; "designed" is never reported as "measured."
 

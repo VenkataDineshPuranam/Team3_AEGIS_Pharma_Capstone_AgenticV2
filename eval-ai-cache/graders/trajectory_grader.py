@@ -8,7 +8,7 @@ routing) as corrected this session -- see docs/architecture/agentic/
 dmaic_lens.md "Correction record" for the PROHIBITION_ADJACENT bug this
 grader's AWH-01 case exists specifically to catch as a regression.
 
-Mirrors V2's trajectory_grader.py pattern (verified against
+Mirrors V1's trajectory_grader.py pattern (verified against
 submission/evaluation/graders/trajectory_grader.py): invoke, then invoke
 again with the same key, and require the second call to be recognised as a
 replay with no duplicate execution -- adapted here to be self-contained
@@ -31,7 +31,7 @@ def _invoke(idempotency_key, snapshot_version=None):
         cached["snapshot_version"] = snapshot_version
         return {"decision": "allow", "replay_detected": False, "execution_count": cached["execution_count"], "reran_due_to_snapshot_change": True}
     # Plain replay: recognised, NOT re-executed -- execution_count stays at
-    # whatever it already was (matches V2's tool_gateway.py exactly: the
+    # whatever it already was (matches V1's tool_gateway.py exactly: the
     # cached count is returned unchanged on a replay hit).
     return {"decision": "allow", "replay_detected": True, "execution_count": cached["execution_count"]}
 

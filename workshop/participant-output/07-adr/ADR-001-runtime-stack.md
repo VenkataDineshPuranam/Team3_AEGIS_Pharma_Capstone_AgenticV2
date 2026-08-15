@@ -6,7 +6,7 @@
 
 ## Context
 
-V3 must be a multi-agent system with governance, control, and observability
+V2 must be a multi-agent system with governance, control, and observability
 (`discovery.md` §5). A stateful orchestration mechanism, a tracing/eval backend, and a
 response cache are all required by the architecture in `docs/architecture/c4/`.
 
@@ -31,11 +31,11 @@ Sponsor directive; native HITL-interrupt and checkpointing support; LLM-aware tr
 ## Consequences
 
 - **Easier:** HITL interrupts, graph state, checkpoint/resume, trace-level debugging.
-- **Harder:** introduces three infrastructure dependencies V2 never had, two of them
+- **Harder:** introduces three infrastructure dependencies V1 never had, two of them
   networked — this is the direct cause of the degraded-mode work in ADR-007.
-- **Riskier:** vendor concentration (V2's `case/SOURCE_SYSTEM_FACT_PACK.md` explicitly
+- **Riskier:** vendor concentration (V1's `case/SOURCE_SYSTEM_FACT_PACK.md` explicitly
   names "bundled vendor, stale entitlements… weak cost controls" as a known failure
-  pattern in this organization's AI-platform estate — V3 should not repeat it).
+  pattern in this organization's AI-platform estate — V2 should not repeat it).
 
 ## Guardrails
 

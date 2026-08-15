@@ -1,6 +1,6 @@
 {
   "category": "pv_duplicate_clock_terminology",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #7 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #7 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/pv_duplicate_clock_grader.py:grade_pv_duplicate_clock",
   "status_note": "PV Intake is provisional throughout this programme (RR-2). These scenarios test the DESIGNED invariants; they cannot pass against a real system until 20b builds the pv_intake graph.",

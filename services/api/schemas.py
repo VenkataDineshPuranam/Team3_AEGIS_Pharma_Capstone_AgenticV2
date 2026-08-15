@@ -246,7 +246,7 @@ class EvalScorecard(BaseModel):
 
 
 class InjectCoverage(BaseModel):
-    """The curated 84-inject V2-to-V3 coverage mapping -- read from a reviewed file, not
+    """The curated 84-inject V1-to-V2 coverage mapping -- read from a reviewed file, not
     computed per-request. See services/api/eval_dashboard.py's module docstring."""
 
     methodology: str

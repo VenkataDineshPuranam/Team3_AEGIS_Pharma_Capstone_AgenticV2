@@ -70,7 +70,7 @@ Control commitments that carry forward to Stage 09's consolidation and Stage 12'
    → `stable`, and therefore these → `accepted`).
 2. ADR-007's revisit trigger is the sharpest in the set: sponsor confirmation of an air-gap
    requirement reopens ADR-001 entirely.
-3. ADR-002's guardrail — *no claim of matching V2 behavior without verifying V2 code* — is
+3. ADR-002's guardrail — *no claim of matching V1 behavior without verifying V1 code* — is
    now a standing rule for all later stages, with ADR-003 as the precedent for why.
 
 ## Waste registers

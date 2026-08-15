@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 10 (`stage-10-agentic-architecture`)
 **Lifecycle stage:** Design (agentic runtime)
-**Framework derived:** V3 addition — has no V2 equivalent (V2 was single-shot workflows, not multi-agent).
+**Framework derived:** V2 addition — has no V1 equivalent (V1 was single-shot workflows, not multi-agent).
 **Core question:** How do multiple agents collaborate, hand off, and stay within their authority?
 **Prerequisites:** Prompt 04 DDD (agent responsibilities, §10), Prompt 06 C4 (agentic runtime view).
 **Primary output type:** Agent roster + LangGraph graph design (may be provisional).
@@ -33,7 +33,7 @@ workflow (fewest agents, no speculative parallelism) and mark this **provisional
 
 ### Lean / DMAIC lens (thin)
 
-**Focus:** Improve (this design *is* the improvement over V2's single-shot app) + Control (loop guards, budgets).
+**Focus:** Improve (this design *is* the improvement over V1's single-shot app) + Control (loop guards, budgets).
 
 1. Which named waste (from Prompt 01/04 registers) does splitting into multiple agents actually remove, vs risk adding (Integration/Context/Token waste from added hops)?
 2. Loop-guard and token/tool-call budgets that make runaway agent loops a Control metric, not a hope.

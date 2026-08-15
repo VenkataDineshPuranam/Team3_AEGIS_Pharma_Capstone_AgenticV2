@@ -28,14 +28,14 @@ These prompts guide engineering work and do not contain solution content. Always
 
 ---
 
-## V3 addendum — agentic AI prompts
+## V2 addendum — agentic AI prompts
 
-Prompts `01`–`13` are carried forward from V2 (see `ADAPTATION_NOTES.md` for what changed:
+Prompts `01`–`13` are carried forward from V1 (see `ADAPTATION_NOTES.md` for what changed:
 output paths remapped to this repo's `.claude`-based structure, plus targeted additions in
 `04_ddd.md` §10, `06_c4.md` (agentic runtime view), `08_technical_design.md` §I2, and
 `12_assurance.md` (agentic assurance) for multi-agent/LangGraph/MCP/cache concerns).
 
-Prompts `14`–`23` are new — V2 had no multi-agent runtime, so it needed no orchestration,
+Prompts `14`–`23` are new — V1 had no multi-agent runtime, so it needed no orchestration,
 tool-contract, skills/hooks, ontology, eval-cache, performance, governance, observability,
 security, or compliance stage of its own:
 

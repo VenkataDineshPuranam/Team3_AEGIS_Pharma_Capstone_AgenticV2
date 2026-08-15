@@ -1,6 +1,6 @@
 """batch.reconcile -- implements packages/contracts/tool_contracts/batch_reconcile.schema.json
 exactly, over the synthetic batch fixtures (tests/fixtures/synthetic/batches/*.json) --
-Stage 20a's minimal real-data substitute for V2's cross-repo `data/` (NAB-3).
+Stage 20a's minimal real-data substitute for V1's cross-repo `data/` (NAB-3).
 
 Deterministic given the same evidence_ids and batch fixture -- no LLM involved, matching
 the schema's own description ("Produces the candidate finding set the Batch-Review Agent

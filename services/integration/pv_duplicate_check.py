@@ -1,7 +1,7 @@
 """pv.duplicate_check -- implements
 packages/contracts/tool_contracts/pv_duplicate_check.schema.json exactly, over the
 synthetic PV case fixtures (tests/fixtures/synthetic/pv_cases/*.json). Stage 20b's
-minimal real-data substitute for V2's cross-repo PV case data (NAB-3), same pattern as
+minimal real-data substitute for V1's cross-repo PV case data (NAB-3), same pattern as
 batch_reconcile.py.
 
 DDD domain_model.md SS7: this must complete before SignalTriaged (i.e. before synthesize)
