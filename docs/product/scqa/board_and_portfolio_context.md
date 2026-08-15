@@ -108,7 +108,7 @@ design already concedes exactly which portion.
 
 The honest comparison is: redesign fixes the inputs, AEGIS fixes the reconciliation and
 accountability layer on top of them, and neither substitutes for the other. A real
-no-AI-baseline measurement (V2's own `data/no_ai_baselines.csv` concept) is the correct
+no-AI-baseline measurement (V1's own `data/no_ai_baselines.csv` concept) is the correct
 instrument to quantify this precisely — this document states the structural argument for
 why some benefit survives a no-AI counterfactual and some does not, which is what a
 tabletop inject asks for; a dollar figure requires the same real-usage measurement (U1)
@@ -119,7 +119,7 @@ tabletop inject asks for; a dollar figure requires the same real-usage measureme
 It is not a business case, a cost-benefit analysis, or a project plan for any of these
 three scenarios — those require real organizational decisions (headcount, timeline,
 integration scope) this document has no authority to make. What it closes is narrower and
-honest: for each of the three board-level pressures the V2 tabletop exercise named, this
+honest: for each of the three board-level pressures the V1 tabletop exercise named, this
 system's actual, already-built design has a real, checkable answer for the technical half
 of the tension, and states plainly where the answer is organizational rather than
 technical.

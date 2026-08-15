@@ -20,10 +20,10 @@ produced from actual system operation rather than asserted.
 
 ## 2. What "done" means — target-state properties
 
-Derived from V2's `case/INTEGRATED_CASE.md` §5 "required operating properties" (inherited
-verbatim, not reinvented) plus V3's additions:
+Derived from V1's `case/INTEGRATED_CASE.md` §5 "required operating properties" (inherited
+verbatim, not reinvented) plus V2's additions:
 
-| Property | Inherited from V2 | V3-specific addition |
+| Property | Inherited from V1 | V2-specific addition |
 |---|---|---|
 | Purpose limitation, least privilege, current authorization | Yes | Enforced per-agent via tool capability (ADR-004) |
 | Evidence authority, temporal applicability, provenance | Yes | Deterministic status gate incl. `superseded` (ADR-003) |
@@ -86,10 +86,10 @@ These are hard gates, not aspirations:
 - Any write integration to a brownfield source system — permanently, not "phase 2."
 - Autonomous terminal decisions in any workflow — permanently.
 - Cross-workflow agent chaining (ADR-008).
-- Workflows D/E that appear in some V2 material (clinical trial context, discovery/
-  translational science). V2's own mandate names **three** mandatory workflows; the extras
-  seen in V2's eval datasets (`S13`, `S14`) were extensions from a prior participant run, not
-  part of the required scope. V3 targets the three mandatory workflows only — adding the
+- Workflows D/E that appear in some V1 material (clinical trial context, discovery/
+  translational science). V1's own mandate names **three** mandatory workflows; the extras
+  seen in V1's eval datasets (`S13`, `S14`) were extensions from a prior participant run, not
+  part of the required scope. V2 targets the three mandatory workflows only — adding the
   others would be scope expansion without a stated requirement.
 
 ## 7. Known risks carried into the final state
@@ -99,8 +99,8 @@ These are hard gates, not aspirations:
    mitigation:** each interim conclusion must be explicitly re-checked per workflow, not
    assumed to transfer. That re-check is a Stage 20 acceptance condition.
 2. **Shared blast radius** (ADR-008, accepted residual) — one deployment serving all three.
-3. **Vendor concentration** — V2's own source-system pack flags "bundled vendor, stale
-   entitlements, weak cost controls" as a known organizational failure pattern; V3's stack
+3. **Vendor concentration** — V1's own source-system pack flags "bundled vendor, stale
+   entitlements, weak cost controls" as a known organizational failure pattern; V2's stack
    (ADR-001) concentrates on Anthropic + LangSmith. Mitigation is the degraded-mode design
    (ADR-007), not vendor diversity — an honest limitation to record rather than paper over.
 

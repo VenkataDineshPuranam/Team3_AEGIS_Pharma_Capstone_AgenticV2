@@ -4,7 +4,7 @@ entry in user_store.py. Run directly: `python3 -m services.integration.seed_user
 Passwords are synthetic and intentionally documented in
 docs/governance/demo_login_credentials.md -- this is a capstone/demo environment with no
 real PHI/PII and no real people behind these accounts, the same posture the project
-already takes with every other fixture (see V2 CLAUDE.md's "Synthetic data only").
+already takes with every other fixture (see V1 CLAUDE.md's "Synthetic data only").
 """
 from __future__ import annotations
 

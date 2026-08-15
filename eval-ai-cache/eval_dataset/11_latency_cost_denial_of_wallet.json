@@ -1,6 +1,6 @@
 {
   "category": "latency_cost_denial_of_wallet",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #11 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #11 (V1, verified)",
   "grading_mode": "deterministic_ceiling_check",
   "grader": "graders/latency_cost_grader.py:grade_latency_cost",
   "note": "Ceilings (C1-C4) are from failure_and_loop_guards.md SS3 -- derived from graph shape, defensible without measurement. This is NOT the same as a Stage 15 budget: THRESHOLD_NOT_DEFINED applies to the real per-task cost cap until U1 is measured at 20a.",

@@ -5,10 +5,10 @@ policy register (`policy_register.md` P-07/P-08/P-09); this document establishes
 accountable roles that were blocking DDD from `stable`. §7 is Stage 16's addition — the
 remainder is unchanged from its original closure.
 
-**Evidence basis: Fact.** Every role below is taken verbatim from V2's
+**Evidence basis: Fact.** Every role below is taken verbatim from V1's
 `case/STAKEHOLDER_PACK.md`, which defines 15 stakeholders with explicit decision authority.
-These were **not invented** — using the existing domain roles keeps V3 consistent with the
-organization the case describes, and several of them already state the exact constraint V3
+These were **not invented** — using the existing domain roles keeps V2 consistent with the
+organization the case describes, and several of them already state the exact constraint V2
 needs.
 
 ---
@@ -82,7 +82,7 @@ the escalation role named in §2 for that workflow. Silence is never approval.
   The system must not become an instrument for resolving that conflict in either direction —
   it reports evidence state, it does not arbitrate priorities.
 - **Global standardization vs. local jurisdictional authority.** Relevant to
-  jurisdiction-local evidence (V2's `knowledge/` contains jurisdiction-scoped documents); the
+  jurisdiction-local evidence (V1's `knowledge/` contains jurisdiction-scoped documents); the
   evidence layer must respect local authority rather than flattening it.
 - **Privacy minimization vs. GxP preservation.** Affects trace retention (Stage 17) and
   compliance evidence (Stage 19) — the DPO and Chief Quality Officer have genuinely opposed

@@ -9,7 +9,7 @@ ahead of Stage 20a, closing the last open sub-decision.
 ## Context
 
 ADR-001 selected LangGraph / LangSmith / Redis without naming a hosting platform, and
-ADR-007 established that V3 runs cloud-connected. The sponsor has now directed **Azure** as
+ADR-007 established that V2 runs cloud-connected. The sponsor has now directed **Azure** as
 the platform. This is a directive, recorded for traceability, not a decision derived from
 comparison.
 
@@ -34,7 +34,7 @@ Target **Microsoft Azure**. Component mapping:
 1. **Entra ID strengthens the HITL control model.** The named approver roles closed in
    EAB-3 (EU Qualified Person, Global Head of Pharmacovigilance, Supply Chain VP + Quality
    co-approver) become **Entra ID groups with role assignments**, so "current authorization
-   checked at execution time" — a V2 required operating property that was previously only a
+   checked at execution time" — a V1 required operating property that was previously only a
    design statement — becomes enforceable infrastructure. Supply Planning's dual-approval
    requirement maps to requiring membership in two distinct groups.
 2. **Blob immutability strengthens ADR-006.** The audit store's requirement to be

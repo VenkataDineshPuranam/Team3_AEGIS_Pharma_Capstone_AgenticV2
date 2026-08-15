@@ -13,7 +13,7 @@ that the rest of Stage 09 must close.
 
 | Stage | Lens file | Depth | DMAIC focus | Top finding |
 |---|---|---|---|---|
-| 01 Discovery | [dmaic_lens.md](../../product/discovery/dmaic_lens.md) | **Full** | All five | V2's single-shot architecture is the root cause of the gap V3 exists to close; token/cost baseline **Unknown** |
+| 01 Discovery | [dmaic_lens.md](../../product/discovery/dmaic_lens.md) | **Full** | All five | V1's single-shot architecture is the root cause of the gap V2 exists to close; token/cost baseline **Unknown** |
 | 02 SCQA/Frame | [dmaic_lens.md](../../product/scqa/dmaic_lens.md) | **Full** | Analyze | Sequencing (governance before architecture, architecture before app) is not one mitigation among many — it is the unifying mechanism behind almost every named risk |
 | 02 DDD | [dmaic_lens.md](../../architecture/ddd/dmaic_lens.md) | **Full** | Analyze/Improve | The Defects risk is **structural, not behavioural**: "the data model might let an agent represent the prohibited action," not "an agent might choose it" |
 | 03 C4 | [dmaic_lens.md](../../architecture/c4/dmaic_lens.md) | **Full** | Measure | **7 container/component crossings** on the common Batch Review path — the programme's only architectural number that is designed rather than guessed |

@@ -1,12 +1,12 @@
 """Subgroup / accessibility grader.
 
-Pattern verified against V2's submission/evaluation/graders/subgroup_grader.py
+Pattern verified against V1's submission/evaluation/graders/subgroup_grader.py
 and adapted: this grader "passes" in the surfacing sense -- a disclosed gap
 existing is a data fact, not itself a defect; SILENTLY DROPPING it is. The
 actual release-gate decision (block if surfaced-but-unrecorded) is made by
-quality/gates/release_gates.py, mirroring V2's own separation of concerns.
+quality/gates/release_gates.py, mirroring V1's own separation of concerns.
 
-No V3 equivalent of V2's disclosed model_performance.csv exists yet --
+No V2 equivalent of V1's disclosed model_performance.csv exists yet --
 these scenarios test the surfacing LOGIC against synthetic slices, not a
 real measured gap (that needs a run, Stage 15).
 """

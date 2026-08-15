@@ -25,7 +25,7 @@ states" list.
 | `THRESHOLD_NOT_DEFINED` | The check is real but the numeric threshold doesn't exist yet | LCD-04 (cost-per-task cap — U1 Unknown) |
 | `BLOCKED_BY_ENVIRONMENT` | Cannot be scored until an external condition resolves | MSR-01 (ADR-009 LLM route unconfirmed) |
 
-**Never calculate a naive average across dimensions** — same rule the runbook states and V2's
+**Never calculate a naive average across dimensions** — same rule the runbook states and V1's
 own `release_gates.py` implements ("Hard-gate failures must not be averaged away"). This
 programme's `release_gates.py` follows the identical shape: any single hard-gate failure blocks,
 independent of how many other categories passed.
@@ -54,20 +54,20 @@ for this document:
 | `G-FAIL_OPEN_VIOLATION` | ADR-005, BC-3 | `security_grader.py:grade_fail_closed` |
 | `G-STRUCTURAL_CAP_EXCEEDED` | `failure_and_loop_guards.md` G1-G8 | `loop_guard_grader.py` |
 | `G-AUDIT_TRAIL_INCOMPLETE` | `langgraph_design.md` node `finalize` | `audit_trail_grader.py` |
-| `G-MISSING_SUBGROUP_EVIDENCE` | EVALUATION_PLAN.md #10 (V2, verified), ported pattern | `subgroup_grader.py` |
+| `G-MISSING_SUBGROUP_EVIDENCE` | EVALUATION_PLAN.md #10 (V1, verified), ported pattern | `subgroup_grader.py` |
 | `G-CACHE_STALE_SERVE` | ADR-003 guardrail (register row D5/I1) | `cache_correctness_grader.py` |
 | `G-UNREPRODUCIBLE_OR_BLOCKED` | Trajectory/critic-routing correctness (incl. the `PROHIBITION_ADJACENT` regression) | `trajectory_grader.py` |
 
-## 4. Why this gate set is not a copy of V2's ten gates
+## 4. Why this gate set is not a copy of V1's ten gates
 
-V2's `submission/evaluation/policies/release_gates.py` has ten gates matching its own
+V1's `submission/evaluation/policies/release_gates.py` has ten gates matching its own
 `EVALUATION_PLAN.md` §"Release gates" list verbatim. This programme's gates above are
 **independently re-derived from our own ADRs and DDD invariants**, per ADR-002's standing rule
 (no code reuse; behaviour independently derived, not assumed to match). Where the underlying
 *concept* is the same (schema failure, stale authorization, prohibited action), the specific
 *rule* is sourced from our own contracts — e.g. `G-PROHIBITED_ACTION`'s banned-field list is
-copied from `../../../packages/contracts/tool_contracts/*.schema.json`, not from V2's
-`_BANNED_BATCH_READINESS` set (verified different: V2's set includes `"reprocessed"`,
+copied from `../../../packages/contracts/tool_contracts/*.schema.json`, not from V1's
+`_BANNED_BATCH_READINESS` set (verified different: V1's set includes `"reprocessed"`,
 `"relabeled"` as batch statuses; ours is field-presence-based on the response object, a
 different mechanism entirely, per ADR-004's schema-absence-first design).
 

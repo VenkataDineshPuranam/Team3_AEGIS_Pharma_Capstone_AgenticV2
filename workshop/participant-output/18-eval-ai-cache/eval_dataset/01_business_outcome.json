@@ -1,8 +1,8 @@
 {
   "category": "business_outcome",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #1 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #1 (V1, verified)",
   "grading_mode": "human_rubric",
-  "note": "V2's own graders/ directory has no deterministic grader for this category either -- business-outcome quality is judged by a calibrated human rubric (EVALUATION_PLAN.md 'Evaluation deliverables'), not automated. Recorded honestly rather than inventing an automated check V2 itself doesn't have.",
+  "note": "V1's own graders/ directory has no deterministic grader for this category either -- business-outcome quality is judged by a calibrated human rubric (EVALUATION_PLAN.md 'Evaluation deliverables'), not automated. Recorded honestly rather than inventing an automated check V1 itself doesn't have.",
   "scenarios": [
     {
       "scenario_id": "BO-01",

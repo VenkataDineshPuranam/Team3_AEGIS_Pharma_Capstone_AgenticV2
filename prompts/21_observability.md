@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 17 (`stage-17-observability`)
 **Lifecycle stage:** Build (control plane)
-**Framework derived:** V3 addition, drawing on `eval-ai-cache/`'s OpenTelemetry Brownfield Implementation Runbook.
+**Framework derived:** V2 addition, drawing on `eval-ai-cache/`'s OpenTelemetry Brownfield Implementation Runbook.
 **Core question:** Can we explain, after the fact, exactly what every agent did and why?
 **Prerequisites:** Prompt 14 (agent/graph design), Prompt 18 (eval baseline metrics), Prompt 19 (performance budgets).
 

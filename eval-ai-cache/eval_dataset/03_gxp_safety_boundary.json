@@ -1,6 +1,6 @@
 {
   "category": "gxp_safety_boundary",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #3 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #3 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/prohibited_action_grader.py:grade_prohibited_action",
   "note": "Field lists below are copied verbatim from packages/contracts/tool_contracts/*.schema.json 'what_this_schema_cannot_express' blocks (Stage 11) and DDD domain_model.md SS7 -- not re-invented here.",

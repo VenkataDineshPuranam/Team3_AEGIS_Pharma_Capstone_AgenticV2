@@ -1,4 +1,4 @@
-<title>AEGIS-PHARMA V3 Architecture Explorer</title>
+<title>AEGIS-PHARMA V2 Architecture Explorer</title>
 <style>
   :root {
     --bg: #f7f8fa;
@@ -196,7 +196,7 @@
 
 <header class="top">
   <div>
-    <h1 id="meta-name">AEGIS-PHARMA V3 Architecture Explorer</h1>
+    <h1 id="meta-name">AEGIS-PHARMA V2 Architecture Explorer</h1>
     <p id="meta-desc"></p>
   </div>
   <div class="top-actions">
@@ -232,10 +232,10 @@
 
 <script id="graph-data" type="application/json">{
   "meta": {
-    "name": "AEGIS-PHARMA V3 Architecture Explorer",
+    "name": "AEGIS-PHARMA V2 Architecture Explorer",
     "generated": "2026-08-14",
-    "description": "Interactive map of the actual implemented AEGIS-PHARMA V3 system: a FastAPI orchestrator wrapping six governed LangGraph workflows sharing one 14-node spine, a Next.js/React operator UI, SQLite audit + user stores, Neo4j evidence corpus, Redis response cache, and the eval-ai-cache harness.",
-    "note": "Reflects the actual implemented V3 codebase as read from services/api, services/integration, packages/, security/, infra/, apps/web, and eval-ai-cache -- not the Stage 08 design-only view this file replaces. Every node's file path and every edge was verified against real source during this analysis."
+    "description": "Interactive map of the actual implemented AEGIS-PHARMA V2 system: a FastAPI orchestrator wrapping six governed LangGraph workflows sharing one 14-node spine, a Next.js/React operator UI, SQLite audit + user stores, Neo4j evidence corpus, Redis response cache, and the eval-ai-cache harness.",
+    "note": "Reflects the actual implemented V2 codebase as read from services/api, services/integration, packages/, security/, infra/, apps/web, and eval-ai-cache -- not the Stage 08 design-only view this file replaces. Every node's file path and every edge was verified against real source during this analysis."
   },
   "nodes": [
     {
@@ -306,7 +306,7 @@
       "label": "Evaluation & Security Coverage",
       "type": "frontend_page",
       "file": "apps/web/app/coverage/page.tsx",
-      "description": "Two tabs: live eval-ai-cache scorecard (/api/evals/scorecard) and curated 84-inject V2->V3 coverage ledger (/api/coverage/injects)."
+      "description": "Two tabs: live eval-ai-cache scorecard (/api/evals/scorecard) and curated 84-inject V1->V2 coverage ledger (/api/coverage/injects)."
     },
     {
       "id": "fe_appshell",
@@ -502,7 +502,7 @@
       "label": "GET /api/coverage/injects",
       "type": "api_endpoint",
       "file": "services/api/main.py",
-      "description": "Serves the curated, versioned V2-inject-to-V3-reality coverage mapping file, read-only."
+      "description": "Serves the curated, versioned V1-inject-to-V2-reality coverage mapping file, read-only."
     },
     {
       "id": "api_dashboard",
@@ -884,10 +884,10 @@
     },
     {
       "id": "inject_coverage_file",
-      "label": "inject_coverage_v2_to_v3.json",
+      "label": "inject_coverage_v1_to_v2.json",
       "type": "eval",
-      "file": "evidence/quality-gates/inject_coverage_v2_to_v3.json",
-      "description": "Curated, human-reviewed mapping of the 84 V2 tabletop-exercise 'injects' to what V3's actual codebase does about each today, with real file citations per verdict."
+      "file": "evidence/quality-gates/inject_coverage_v1_to_v2.json",
+      "description": "Curated, human-reviewed mapping of the 84 V1 tabletop-exercise 'injects' to what V2's actual codebase does about each today, with real file citations per verdict."
     },
     {
       "id": "domain_state",
@@ -2064,8 +2064,8 @@
     },
     {
       "id": "flow_inject_coverage",
-      "name": "Browse the 84-inject V2->V3 coverage ledger",
-      "description": "A curated, human-reviewed, file-cited mapping of every V2 tabletop inject to what V3's actual code does about it today -- served as-is, not recomputed per request.",
+      "name": "Browse the 84-inject V1->V2 coverage ledger",
+      "description": "A curated, human-reviewed, file-cited mapping of every V1 tabletop inject to what V2's actual code does about it today -- served as-is, not recomputed per request.",
       "steps": [
         "fe_coverage",
         "fe_api_client",

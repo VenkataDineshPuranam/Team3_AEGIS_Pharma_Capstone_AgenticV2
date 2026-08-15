@@ -4,7 +4,7 @@
 
 This review was originally `conditional` because DDD and C4 were `provisional` and four ADRs
 were `proposed`, pending two open backlog items. **Both are now closed:**
-- **EAB-3** — accountable HITL approvers named from V2's `case/STAKEHOLDER_PACK.md`
+- **EAB-3** — accountable HITL approvers named from V1's `case/STAKEHOLDER_PACK.md`
   (see [`../governance/hitl_control_model.md`](../governance/hitl_control_model.md)). DDD → `stable`.
 - **EAB-2** — sponsor confirmed cloud-connected operation. ADR-007 ratified, C4 → `stable`.
 
@@ -32,7 +32,7 @@ assumption. `pass` is now the evidence-supported outcome.
    operation. The air-gapped production variant is recorded as a known limitation in ADR-007
    rather than silently dropped, so a future reader evaluating this as a production design
    sees the constraint.
-2. ~~EAB-3 — no real HITL/context owners~~ — **closed.** Named from V2's existing stakeholder
+2. ~~EAB-3 — no real HITL/context owners~~ — **closed.** Named from V1's existing stakeholder
    pack, including the negative constraint that Manufacturing VP is explicitly not a batch
    approver.
 
@@ -48,11 +48,11 @@ assumption. `pass` is now the evidence-supported outcome.
 ## Correction issued this stage
 
 **ADR-003 corrected a DDD error.** `domain_model.md` §8 had asserted that `superseded`
-documents may be cited with a flag. Verification against V2's `authority_grader.py`
+documents may be cited with a flag. Verification against V1's `authority_grader.py`
 (`_MUST_NOT_CITE = {"untrusted", "superseded"}`) proved this wrong: superseded documents are
 non-citable, exactly like untrusted. The DDD document has been corrected accordingly (a
 Prompt 04 revision, as the ADR prompt's constraints require rather than silently changing
-the model). **This is direct evidence that the ADR-002 residual risk — V3 drifting from V2's
+the model). **This is direct evidence that the ADR-002 residual risk — V2 drifting from V1's
 actual verified behavior — is real, and that verification catches it.**
 
 ## Go-forward decision
@@ -64,7 +64,7 @@ Stage 20a).
 
 Two standing rules carry forward (obligations, not blockers):
 
-1. **Any claim about matching V2 behavior must be verified against V2 code/data**, per
+1. **Any claim about matching V1 behavior must be verified against V1 code/data**, per
    ADR-002's guardrail — never inferred from filenames. The ADR-003 correction is the
    precedent for why this rule exists.
 2. **Interim-state assumptions 1 and 2 remain stop-the-line conditions** — if

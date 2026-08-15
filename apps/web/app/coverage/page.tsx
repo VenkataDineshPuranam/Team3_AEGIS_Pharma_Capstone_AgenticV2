@@ -36,7 +36,7 @@ type StatusFilter = CoverageStatus | "all";
  *     this page (~25ms, pure grading logic, no LLM/network calls) -- these numbers can
  *     differ from five minutes ago if the grader code changed.
  *   - Domain & Security Coverage: a curated mapping of the 84 tabletop-exercise "injects"
- *     inherited from the predecessor V2 project against what V3's actual codebase does
+ *     inherited from the predecessor V1 project against what V2's actual codebase does
  *     today. This is read from a reviewed file, not recomputed per request -- determining
  *     whether a scenario is genuinely addressed requires understanding code, not a script.
  */
@@ -160,11 +160,11 @@ function InjectsContent({ data }: { data: NonNullable<ReturnType<typeof useApiRe
 
       {/* --- summary ---------------------------------------------------- */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Total scenarios" value={data.total_injects} sub="13 dimensions, from the V2 tabletop exercise" />
+        <StatTile label="Total scenarios" value={data.total_injects} sub="13 dimensions, from the V1 tabletop exercise" />
         <StatTile
-          label="In scope for V3"
+          label="In scope for V2"
           value={inScope}
-          sub={`${data.by_status.OUT_OF_SCOPE ?? 0} fall outside what V3 builds`}
+          sub={`${data.by_status.OUT_OF_SCOPE ?? 0} fall outside what V2 builds`}
         />
         <StatTile
           label="Addressed"
@@ -196,7 +196,7 @@ function InjectsContent({ data }: { data: NonNullable<ReturnType<typeof useApiRe
       <Card>
         <CardHeader
           title="Coverage by dimension"
-          description="13 risk dimensions from the V2 exercise, each with its own release-gate framing"
+          description="13 risk dimensions from the V1 exercise, each with its own release-gate framing"
         />
         <CardBody className="space-y-3">
           {data.dimensions.map((dim) => (

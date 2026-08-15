@@ -13,7 +13,7 @@ register (Token, Integration rows) and DOWNTIME register (Defects row).
 ## Measure
 
 Success metrics from the Answer that are Measure targets:
-- Eval pass rate on V2's 12 categories — baseline **Unknown** (carried from Stage 01,
+- Eval pass rate on V1's 12 categories — baseline **Unknown** (carried from Stage 01,
   unchanged — still not measured).
 - Token/cost per workflow run — baseline **Unknown**, target set at Stage 04/15.
 - Cache hit rate — **N/A yet** (no cache exists), target set at Stage 15.

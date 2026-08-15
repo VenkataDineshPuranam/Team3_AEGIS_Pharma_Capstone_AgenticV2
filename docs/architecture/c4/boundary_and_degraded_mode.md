@@ -13,7 +13,7 @@ relationship), and it is not something a domain agent can influence at runtime.
 ## Data boundary
 
 Every external system in `c4_context.md` is **read-only**. No container in this system has
-outbound write capability to any V2 brownfield source system (Manufacturing, Laboratory,
+outbound write capability to any V1 brownfield source system (Manufacturing, Laboratory,
 Quality, Safety, Supply). This is the architecture-level enforcement matching DDD's
 schema-level constraint — two independent layers implementing the same non-negotiable, which
 is intentional redundancy, not duplication to clean up.
@@ -34,8 +34,8 @@ Guard, not by agent judgment). No domain agent or MCP tool server can self-autho
 
 ## Degraded / offline mode
 
-V2's `CLAUDE.md` names a hard requirement inherited here: **"maintain an offline
-deterministic mode and AI-disabled continuity path."** V3's hosted dependencies (LLM
+V1's `CLAUDE.md` names a hard requirement inherited here: **"maintain an offline
+deterministic mode and AI-disabled continuity path."** V2's hosted dependencies (LLM
 provider, LangSmith, Redis) each need an explicit degraded-mode behavior — this is exactly
 the EAB-2 tension flagged in Stage 01, now made concrete per dependency:
 
@@ -46,7 +46,7 @@ the EAB-2 tension flagged in Stage 01, now made concrete per dependency:
 | Redis unreachable | No cache | Fall back to no-cache (slower, costs more) — **never** serve a response as-if-cached when the cache is down; correctness over performance, always |
 | MCP Tool Server unreachable | Agent cannot retrieve evidence/execute a tool | Agent must abstain and escalate to HITL — never proceed with an unretrieved-evidence guess |
 
-**This resolves EAB-2 architecturally**: V3 is not "offline-compatible" in the sense V2's
+**This resolves EAB-2 architecturally**: V2 is not "offline-compatible" in the sense V1's
 static app was (zero network dependency), but it is **degraded-mode-safe** — every hosted
 dependency has a defined, safe fallback that preserves correctness even if it sacrifices
 some capability (tracing completeness, cache speed). This distinction should be written up

@@ -1,5 +1,5 @@
 {
-  "_note": "Synthetic fixture, Stage 20b Phase 1. No real V2 PV case data used (NAB-3). Clean case: no duplicate suspected, one terminology normalization suggestion.",
+  "_note": "Synthetic fixture, Stage 20b Phase 1. No real V1 PV case data used (NAB-3). Clean case: no duplicate suspected, one terminology normalization suggestion.",
   "case_id": "PV-001",
   "comparison_window_version": "cw-2026-08-13",
   "duplicate_suspected": false,

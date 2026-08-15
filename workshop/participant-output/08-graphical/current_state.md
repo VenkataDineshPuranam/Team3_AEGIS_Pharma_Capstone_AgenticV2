@@ -25,7 +25,7 @@ flowchart TB
 
     subgraph resolved["BLOCKERS — both now CLOSED"]
         B1["EAB-2 — air-gap? <b>CLOSED</b><br/>cloud-connected confirmed"]
-        B2["EAB-3 — HITL approvers? <b>CLOSED</b><br/>named from V2 stakeholder pack"]
+        B2["EAB-3 — HITL approvers? <b>CLOSED</b><br/>named from V1 stakeholder pack"]
     end
 
     done --> pending

@@ -10,8 +10,8 @@ required `gen_ai_boundaries.md` output: rules vs AI, RAG, agents, HITL, audit, e
 | Decision | Rules (deterministic) | AI reasoning (probabilistic) |
 |---|---|---|
 | Is this action prohibited? | **Always rules** — schema-level unrepresentability + runtime hook (Stage 16), never AI judgment | Never |
-| Is this evidence source authoritative? | **Always rules** — document status lookup; **both `untrusted` and `superseded` are non-citable** (corrected by [ADR-003](../../adr/ADR-003-evidence-authority-deterministic-gate.md), verified against V2's `authority_grader.py`) | Never — no "the AI decides this document seems trustworthy" |
-| Is this a duplicate PV case? | Threshold/rule component **if** V2's existing logic is rule-based (unconfirmed — verify against `submission/evaluation/graders/` in Stage 06/07) | Candidate-matching/ranking may be AI-assisted, final duplicate flag should remain rule-gated pending verification |
+| Is this evidence source authoritative? | **Always rules** — document status lookup; **both `untrusted` and `superseded` are non-citable** (corrected by [ADR-003](../../adr/ADR-003-evidence-authority-deterministic-gate.md), verified against V1's `authority_grader.py`) | Never — no "the AI decides this document seems trustworthy" |
+| Is this a duplicate PV case? | Threshold/rule component **if** V1's existing logic is rule-based (unconfirmed — verify against `submission/evaluation/graders/` in Stage 06/07) | Candidate-matching/ranking may be AI-assisted, final duplicate flag should remain rule-gated pending verification |
 | How should reconciled evidence be summarized for a human reviewer? | N/A | **AI** — natural-language synthesis |
 | Which shortage options rank highest given already-filtered constraints? | Constraint filtering is rules | Ranking within the filtered set may be AI |
 
@@ -22,7 +22,7 @@ required `gen_ai_boundaries.md` output: rules vs AI, RAG, agents, HITL, audit, e
 - Routed through the Evidence & Provenance context's semantic layer (Stage 13 dependency).
 - **Out of retrieval scope, by construction, not by instruction:** any `untrusted`- **or
   `superseded`**-status document must be filtered before it ever enters a domain agent's
-  context window (per ADR-003 — V2's release gate fails on either).
+  context window (per ADR-003 — V1's release gate fails on either).
 - Cross-workflow retrieval (e.g. a Batch Review agent reading PV evidence) is out of scope
   entirely — if a workflow genuinely needs cross-context evidence, that need routes through
   Evidence & Provenance's shared model, never a direct cross-context RAG call.
@@ -50,7 +50,7 @@ recommended."**
 
 Every domain agent output carries: evidence citations with authority status, a
 confidence/abstention field, and an `AgentRun` record (LangSmith trace ID). This satisfies
-both V2's inherited evidence standard and V3's new EU AI Act / ISO 42001 requirements
+both V1's inherited evidence standard and V2's new EU AI Act / ISO 42001 requirements
 (Stage 19) — the same audit record serves both purposes, it is not duplicated
 infrastructure.
 

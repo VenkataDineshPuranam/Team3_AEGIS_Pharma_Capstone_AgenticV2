@@ -19,12 +19,12 @@ control gap (T-09) found and fixed during this stage, not merely catalogued.
 
 | ID | Threat | Entry point | New because multi-agent/tool-using? |
 |---|---|---|---|
-| **T-01** | Indirect prompt injection via a downstream free-text field | `batch_reconcile`'s `gap_description` (confirmed reaches the synthesis prompt — `content_excerpt` confirmed it does NOT) | Yes — V2's single-shot app had no tool-output-to-prompt pipeline for an agent to reason over |
+| **T-01** | Indirect prompt injection via a downstream free-text field | `batch_reconcile`'s `gap_description` (confirmed reaches the synthesis prompt — `content_excerpt` confirmed it does NOT) | Yes — V1's single-shot app had no tool-output-to-prompt pipeline for an agent to reason over |
 | **T-02** | Direct prompt injection (attacker controls the request itself) | `intake` — the `requester_role`/workflow fields | No — exists in any LLM-facing system, not multi-agent-specific |
 | **T-03** | Tool abuse / excessive agency — a node calls a tool outside its authorized scope | Any MCP-shaped call in `services/integration/` | Yes — a single-shot app has no tool-calling surface at all |
 | **T-04** | Cache poisoning | N/A — no cache exists in 20a (Stage 15 deferred it to 20b) | Would be, once built |
 | **T-05** | Agent-to-agent trust exploitation (a downstream agent trusts an upstream agent's output uncritically) | Synthesis → Critic handoff | Yes — this is exactly why the Critic re-checks rather than trusting `synthesize` |
-| **T-06** | Evidence-authority bypass — citing `untrusted`/`superseded` content | `evidence.retrieve` | Yes — V2 had a flat document store, not a status-gated retrieval tool an agent queries |
+| **T-06** | Evidence-authority bypass — citing `untrusted`/`superseded` content | `evidence.retrieve` | Yes — V1 had a flat document store, not a status-gated retrieval tool an agent queries |
 | **T-07** | Memory/context poisoning across runs | N/A — no cross-run agent memory exists (`memory_design.md` §2, deliberate) | Would be, if that design decision were ever reversed |
 | **T-08** | Stale-authorization replay (a request judged against an old policy version) | `policy_contract_version` field, `evidence.retrieve`/`batch.reconcile` | Yes — only meaningful once multiple policy versions exist; 20a has exactly one (`v1`) |
 | **T-09** | Data exfiltration via tool output — PII/PHI or credentials leaking through a trace or response | Any span (`tracing_design.md`), any tool response | Partially new — the redaction design (Stage 17) exists but has no PII source to redact yet in `batch_review` (PV is where PHI actually lives) |

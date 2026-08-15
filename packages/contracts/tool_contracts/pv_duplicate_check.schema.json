@@ -135,6 +135,6 @@
     { "code": "RATE_LIMITED", "graph_response": "abstain, dependency_unavailable" }
   ],
   "open_items": [
-    "Duplicate-detection threshold logic (numeric vs. rule-based) is unconfirmed against V2's actual grader code (domain_model.md §8) — must be verified before this leaves provisional status, per the ADR-002 standing rule (never claim V2 behaviour without reading V2 code)."
+    "Duplicate-detection threshold logic (numeric vs. rule-based) is unconfirmed against V1's actual grader code (domain_model.md §8) — must be verified before this leaves provisional status, per the ADR-002 standing rule (never claim V1 behaviour without reading V1 code)."
   ]
 }

@@ -7,7 +7,7 @@ Governed by `docs/quality/dmaic-lean/` — the consolidated registers, not the p
 
 The design question at graph granularity: **which structure exists specifically so that
 splitting one governed decision across multiple turns cannot produce an outcome the
-single-shot V2 design could never have produced?** Answer: the two-LLM-node / nine-
+single-shot V1 design could never have produced?** Answer: the two-LLM-node / nine-
 deterministic-node ratio, and the absence of any edge from generated text to a caller that
 does not pass the guard, the Critic, the guard again, and a human.
 

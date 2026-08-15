@@ -9,8 +9,8 @@ score":
      snapshot. Every page load reflects the actual current state of the grader code.
 
   2. inject_coverage() -- reads a CURATED, versioned JSON file
-     (evidence/quality-gates/inject_coverage_v2_to_v3.json). This is NOT computed at
-     request time: whether V3 "covers" a V2 tabletop-exercise inject is a judgment call
+     (evidence/quality-gates/inject_coverage_v1_to_v2.json). This is NOT computed at
+     request time: whether V2 "covers" a V1 tabletop-exercise inject is a judgment call
      that requires reading and understanding code, not something a script can determine by
      pattern-matching. The file is the recorded output of that human-reviewed analysis,
      with real file citations for every non-OUT_OF_SCOPE verdict -- served as-is, not
@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-INJECT_COVERAGE_PATH = REPO_ROOT / "evidence" / "quality-gates" / "inject_coverage_v2_to_v3.json"
+INJECT_COVERAGE_PATH = REPO_ROOT / "evidence" / "quality-gates" / "inject_coverage_v1_to_v2.json"
 
 _GRADERS_DIR = REPO_ROOT / "eval-ai-cache" / "graders"
 _GATES_DIR = REPO_ROOT / "quality" / "gates"
@@ -43,7 +43,7 @@ def eval_scorecard() -> dict:
     Mirrors tests/unit/graders/test_graders.py's own accepted-non-pass set -- a category
     graded NOT_APPLICABLE/BLOCKED_BY_ENVIRONMENT/THRESHOLD_NOT_DEFINED is not a failure,
     it is a correct-by-design non-outcome (e.g. business_outcome has no automated grader
-    by design, matching V2's own EVALUATION_PLAN.md).
+    by design, matching V1's own EVALUATION_PLAN.md).
     """
     for path in (_GRADERS_DIR, _GATES_DIR):
         if str(path) not in sys.path:
@@ -95,7 +95,7 @@ def eval_scorecard() -> dict:
 
 
 def inject_coverage() -> dict:
-    """The curated 84-inject V2-to-V3 coverage mapping. See module docstring for why this
+    """The curated 84-inject V1-to-V2 coverage mapping. See module docstring for why this
     is read from a file rather than computed -- an ANALYSIS this specific cannot be
     reliably re-derived by a script on every request without becoming exactly the kind of
     fabricated metric Phase 5 prohibits."""

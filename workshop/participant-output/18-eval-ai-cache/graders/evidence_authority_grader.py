@@ -4,7 +4,7 @@ Rule source: ADR-003 (docs/adr/ADR-003-evidence-authority-deterministic-gate.md)
 re-verified against knowledge_catalog.csv at Stage 13
 (docs/architecture/ontology/conflict_authority_rules.md SS1).
 
-_MUST_NOT_CITE is the exact two-status set from V2's authority_grader.py
+_MUST_NOT_CITE is the exact two-status set from V1's authority_grader.py
 (verified against submission/evaluation/graders/authority_grader.py) --
 'draft' and 'local_approved' are deliberately NOT in this set.
 

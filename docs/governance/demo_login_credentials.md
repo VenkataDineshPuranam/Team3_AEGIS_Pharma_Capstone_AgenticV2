@@ -62,4 +62,4 @@ hashed (260,000 iterations, stdlib `hashlib` only, no plaintext ever stored or l
 Microsoft Entra ID remains the planned production identity provider
 (`docs/governance/hitl_control_model.md`); this is the synthetic, offline-capable
 equivalent for the same reason every other credential and fixture in this repo is
-synthetic — see the V2 predecessor's `CLAUDE.md`: "Synthetic data only; no real PHI/PII."
+synthetic — see the V1 predecessor's `CLAUDE.md`: "Synthetic data only; no real PHI/PII."

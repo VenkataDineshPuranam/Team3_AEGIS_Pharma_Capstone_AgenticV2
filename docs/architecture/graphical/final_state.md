@@ -107,7 +107,7 @@ flowchart LR
     class F4 gated
 ```
 
-EAB-3 is **closed** — all three approver roles are named from V2's stakeholder pack. Note
+EAB-3 is **closed** — all three approver roles are named from V1's stakeholder pack. Note
 that Supply Planning requires **dual approval** (Supply Chain VP *plus* Quality wherever
 quality status is implicated), because the stakeholder pack limits the VP to planning and
 states that "regulated execution needs approvals".
@@ -137,6 +137,6 @@ flowchart TB
 ```
 
 Gates 2–5 (green) are **satisfied**. Gates 2 and 3 required human answers rather than
-engineering work, and both have been given: approvers named from V2's stakeholder pack, and
+engineering work, and both have been given: approvers named from V1's stakeholder pack, and
 cloud-connected operation confirmed. The three remaining gates (1, 6, 7) cannot be closed by
 design work at all — they require the system to actually run.

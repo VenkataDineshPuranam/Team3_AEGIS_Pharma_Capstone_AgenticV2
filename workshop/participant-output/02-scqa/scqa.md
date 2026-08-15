@@ -9,7 +9,7 @@
 
 - **Narrative class:** `decision-ready` (matches Stage 01's declared framing mode; no
   upgrade needed).
-- **Evidence boundary:** This narrative may claim what is directly evidenced in the V2
+- **Evidence boundary:** This narrative may claim what is directly evidenced in the V1
   repository (domain, constraints, eval floor, rubric structure) and what the user has
   explicitly decided in this conversation (runtime stack, repo pattern, sequencing). It may
   **not** claim specifics of a target agent topology, tool count, or performance numbers —
@@ -24,22 +24,22 @@
 
 ### Situation
 
-Project AEGIS-PHARMA V2 is a complete, evidence-grounded FDE capstone: 84 injects across
+Project AEGIS-PHARMA V1 is a complete, evidence-grounded FDE capstone: 84 injects across
 13 dimensions, 143 CSV datasets, 32 knowledge/policy documents, a deliberately defective
 starter codebase, and a 30-artefact/180-point rubric, all built around three governed
 pharma decision-support workflows — GxP batch-review evidence reconciliation,
 pharmacovigilance intake/signal support, and supply-shortage/cold-chain option planning
-(`case/INTEGRATED_CASE.md`, `discovery.md` §1). V2's solution pattern is
+(`case/INTEGRATED_CASE.md`, `discovery.md` §1). V1's solution pattern is
 **single-shot**: one governed request in, one JSON-contracted response out, evaluated by a
 from-scratch deterministic grader harness against 12 required categories
 (`evaluation/EVALUATION_PLAN.md`, `submission/evaluation/graders/`). This pattern is
 well-governed and thoroughly evidenced, but it does not exercise multi-step agent
 reasoning, tool use, inter-agent handoff, response caching, or continuous runtime
-observability — none of which V2 needed, because it was never designed to have them.
+observability — none of which V1 needed, because it was never designed to have them.
 
 ### Complication
 
-The user has decided V3 must become an **agentic AI system**: multiple LangGraph-orchestrated
+The user has decided V2 must become an **agentic AI system**: multiple LangGraph-orchestrated
 agents collaborating (with governance, control, and observability layers), using MCP tools,
 a Redis-backed cache, and LangSmith-based tracing/evals — while performing the *same* three
 governed workflows under the *same* non-negotiables (synthetic data only; no agent makes a
@@ -48,37 +48,37 @@ terminal safety/release/allocation decision; full evidence provenance)
 several dimensions simultaneously:
 
 - **Technical:** multi-agent orchestration, tool contracts, and shared state did not exist
-  in V2 and must be designed from a domain model (`docs/architecture/ddd/`) that itself
+  in V1 and must be designed from a domain model (`docs/architecture/ddd/`) that itself
   needs re-examination for agent/authority boundaries, not rewriting.
 - **Governance/regulatory:** the single hardest constraint to preserve — no prohibited
   terminal decision — is *more* fragile in a multi-agent design, because authority can leak
   across an agent handoff in a way a single-shot app cannot exhibit (`discovery.md`
   §9, H5).
 - **Operational/cost:** multi-agent designs multiply LLM calls per request; token/cost
-  economics were never a first-order concern in V2 and must become one before agent
+  economics were never a first-order concern in V1 and must become one before agent
   topology is locked (`discovery.md` §9, H8; §11, EAB-6).
-- **Data/caching:** introducing a response cache creates a new failure mode V2's authority/
+- **Data/caching:** introducing a response cache creates a new failure mode V1's authority/
   freshness rules never had to guard against — a cache hit silently serving an answer based
   on since-superseded evidence (`discovery.md` §9, H6).
-- **Compliance (new):** V3 additionally takes on EU AI Act and ISO 42001 obligations that
-  V2 never carried, likely landing the three governed workflows in a high-risk-adjacent
+- **Compliance (new):** V2 additionally takes on EU AI Act and ISO 42001 obligations that
+  V1 never carried, likely landing the three governed workflows in a high-risk-adjacent
   classification given the GxP/PV domain plus required human oversight
   (`discovery.md` §9, H9).
-- **Infrastructure (new, unresolved):** LangSmith is a hosted service; V2 was framed as
-  offline-compatible. Whether V3 preserves that framing, splits into hosted/air-gapped
+- **Infrastructure (new, unresolved):** LangSmith is a hosted service; V1 was framed as
+  offline-compatible. Whether V2 preserves that framing, splits into hosted/air-gapped
   modes, or abandons it, is not yet decided (`discovery.md` §11, EAB-2).
 
 ### Question
 
 **How should Project AEGIS-PHARMA be re-architected as a governed, observable, multi-agent
-system that preserves V2's domain correctness and prohibited-decision boundary while adding
+system that preserves V1's domain correctness and prohibited-decision boundary while adding
 LangGraph orchestration, MCP tool use, Redis caching, and LangSmith observability — without
 inventing an architecture before the domain, governance, and cost constraints that must
 shape it are established?**
 
 ### Answer (decision-ready, capability-level)
 
-**V3 should proceed as an additive re-architecture, not a domain rewrite:** carry V2's
+**V2 should proceed as an additive re-architecture, not a domain rewrite:** carry V1's
 domain model, constraints, and evaluation floor forward unchanged as the substrate, and
 layer a governed multi-agent capability on top of it — sequencing the work so that
 governance/authority boundaries (DDD, Stage 06) and cost/architecture constraints (final
@@ -90,8 +90,8 @@ and Stage 11 decisions, made once the domain/governance/cost inputs this Answer 
 are stable.
 
 **Desired outcomes / what "good" looks like:**
-- Every one of V2's three governed workflows has a working multi-agent implementation that
-  passes V2's original 12 eval categories *and* V3's new agent-specific categories
+- Every one of V1's three governed workflows has a working multi-agent implementation that
+  passes V1's original 12 eval categories *and* V2's new agent-specific categories
   (Stage 14) with zero regressions on the prohibited-decision boundary.
 - Token/cost per workflow run is known and bounded *before* the system ships, not
   discovered after.
@@ -101,7 +101,7 @@ are stable.
   as an end-of-project addendum.
 
 **Measurable outcomes** (baselines marked known vs unknown, per `discovery.md` §2 DMAIC Measure):
-- Eval pass rate on V2's 12 categories: **baseline unknown** (V2's actual scorecard was not
+- Eval pass rate on V1's 12 categories: **baseline unknown** (V1's actual scorecard was not
   read this pass) — must be established at Stage 02→14 transition.
 - Token/cost per workflow run: **unknown**, target to be set at Stage 04/15.
 - Cache hit rate: **unknown** (no cache exists yet), target set at Stage 15.
@@ -116,9 +116,9 @@ engineering capacity) plus any future reviewer of the stage artefacts (per the
 stages); it is revisited at Stage 04 (final state) once cost/architecture constraints are
 quantified, and again at Stage 08 (ADR-0001, runtime stack ratification).
 
-**Evidence boundary / authority boundary:** this Answer rests on the V2 evidence cited above
+**Evidence boundary / authority boundary:** this Answer rests on the V1 evidence cited above
 and the user's explicit decisions recorded in `discovery.md` §5. It does not rest on
-any measured V3 performance data, because none exists yet.
+any measured V2 performance data, because none exists yet.
 
 **Explicit exclusions (what this decision does NOT cover):**
 - Does not select the specific number or names of agents (Stage 10).
@@ -134,7 +134,7 @@ any measured V3 performance data, because none exists yet.
 
 ### 1. Governing answer
 
-**Re-architect additively: preserve V2's domain/constraints/eval floor unchanged; layer
+**Re-architect additively: preserve V1's domain/constraints/eval floor unchanged; layer
 governed multi-agent capability on top; resolve governance and cost constraints before any
 agent topology is locked; build the app last.**
 
@@ -153,10 +153,10 @@ agent topology is locked; build the app last.**
    Token row) that must be quantified before topology is locked, not discovered after
    build.
 4. **Caching introduces a genuinely new correctness risk** (stale-authority answers) that
-   V2's rules never had to address — cache design cannot be bolted on after the fact; it
+   V1's rules never had to address — cache design cannot be bolted on after the fact; it
    needs explicit correctness evals from Stage 14 onward.
 5. **New compliance obligations (EU AI Act, ISO 42001) are additive to, not a replacement
-   for, V2's existing regulatory boundary pack** — they require evidence, not assertion, and
+   for, V1's existing regulatory boundary pack** — they require evidence, not assertion, and
    should be worked continuously (Stage 19) rather than retrofitted at the end.
 6. **Sequencing discovery → SCQA → DDD → C4 → ADR → agentic-specific design → app-last is
    itself the risk-reduction strategy** — it is not incidental process; it is how this
@@ -167,7 +167,7 @@ agent topology is locked; build the app last.**
 
 | Point | Support (fact/derivation) | Labeled assumption (if any) |
 |---|---|---|
-| 1 | V2's `case/` pack, `evaluation/EVALUATION_PLAN.md`, and 143-CSV/32-doc knowledge base directly describe unchanged domain rules (Fact, `discovery.md` §1) | Assumes no domain-rule changes were separately requested — none observed in this conversation |
+| 1 | V1's `case/` pack, `evaluation/EVALUATION_PLAN.md`, and 143-CSV/32-doc knowledge base directly describe unchanged domain rules (Fact, `discovery.md` §1) | Assumes no domain-rule changes were separately requested — none observed in this conversation |
 | 2 | H5 in `discovery.md` §9 (derivation); DDD Stage 06 prompt already requires naming agent authority limits explicitly (`prompts/04_ddd.md` §10, as adapted) | — |
 | 3 | Token waste named explicitly as highest-magnitude AI-specific risk (`waste_register_ai_specific.md`, Token row); `prompts/19_performance_tuning.md` exists specifically for this | Magnitude is hypothesized, not measured — flagged |
 | 4 | Cache-correctness eval requirement is written directly into `prompts/18_eval_ai_cache.md` (Fact — prompt content) | — |

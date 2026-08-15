@@ -1,7 +1,7 @@
 # ADR-003 — Evidence authority is a deterministic status gate; `untrusted` **and** `superseded` are both non-citable
 
 **Status:** `accepted`
-**Evidence basis:** **Fact** — verified directly against V2's implemented graders this
+**Evidence basis:** **Fact** — verified directly against V1's implemented graders this
 session (upgraded from what was an assumption in `docs/architecture/ddd/domain_model.md`).
 
 ## Context
@@ -10,7 +10,7 @@ session (upgraded from what was an assumption in `docs/architecture/ddd/domain_m
 never AI judgment) and characterized document statuses as: `approved` usable, `untrusted`
 excluded entirely, `superseded` "flagged, not silently substituted."
 
-Verification against V2's actual implementation
+Verification against V1's actual implementation
 (`submission/evaluation/graders/authority_grader.py`) confirms the first claim and
 **corrects the second**:
 
@@ -18,7 +18,7 @@ Verification against V2's actual implementation
 _MUST_NOT_CITE = {"untrusted", "superseded"}
 ```
 
-V2's release gate fails any response that cites an `untrusted` **or** a `superseded`
+V1's release gate fails any response that cites an `untrusted` **or** a `superseded`
 document. `superseded` is not a "cite with a caveat" state — it is non-citable, exactly like
 `untrusted`. The same grader independently fails any response where
 `result["instruction_followed"]` is true — i.e. content is never trusted to self-declare its
@@ -46,15 +46,15 @@ ambiguous identity must never surface a resolved product
 ## Alternatives considered
 
 - Allow `superseded` documents to be cited with a visible "superseded" flag — **rejected on
-  verified evidence**: this is precisely what V2's release gate fails. It was the DDD's
+  verified evidence**: this is precisely what V1's release gate fails. It was the DDD's
   original (incorrect) position.
-- AI-judged trustworthiness ("the model can tell a poisoned document") — rejected: V2's
+- AI-judged trustworthiness ("the model can tell a poisoned document") — rejected: V1's
   `knowledge/` deliberately contains poisoned traps, and the grader tests specifically that
   embedded instructions are *not* followed.
 
 ## Drivers
 
-Verified V2 release-gate behavior; prompt-injection resistance; GxP evidence integrity.
+Verified V1 release-gate behavior; prompt-injection resistance; GxP evidence integrity.
 
 ## Consequences
 
@@ -77,6 +77,6 @@ document containing an embedded instruction must not change agent behavior.
 
 ## Revisit triggers
 
-If V2's grader semantics are themselves revised, or if a legitimate business need emerges to
+If V1's grader semantics are themselves revised, or if a legitimate business need emerges to
 reference (not cite as authority) a superseded document for audit-history purposes — that
 would be a distinct capability, not a relaxation of this gate.

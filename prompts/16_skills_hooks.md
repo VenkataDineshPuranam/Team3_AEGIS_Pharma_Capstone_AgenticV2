@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 12 (`stage-12-skills-hooks`)
 **Lifecycle stage:** Design (agent capability packaging)
-**Framework derived:** V3 addition — Claude Code skills/hooks conventions.
+**Framework derived:** V2 addition — Claude Code skills/hooks conventions.
 **Core question:** What reusable skills do agents draw on, and what lifecycle hooks enforce governance outside agent prompting?
 **Prerequisites:** Prompt 14 (agent roster), Prompt 15 (tool contracts).
 

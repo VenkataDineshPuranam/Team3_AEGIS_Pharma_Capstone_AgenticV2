@@ -1,5 +1,5 @@
 {
-  "_note": "Synthetic fixture, Stage 20b Phase 3. No real V2 supply data used (NAB-3). Has options within the constraint set.",
+  "_note": "Synthetic fixture, Stage 20b Phase 3. No real V1 supply data used (NAB-3). Has options within the constraint set.",
   "product_id": "P-100",
   "inventory_snapshot_version": "snap-2026-08-13",
   "options": [

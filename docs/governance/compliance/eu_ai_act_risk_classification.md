@@ -1,7 +1,7 @@
 # EU AI Act — Risk Classification (Stage 19)
 
 **Executes:** `prompts/23_compliance.md` §1
-**Evidence basis:** Derivation, reasoned from this repo's own ADRs/design + V2's
+**Evidence basis:** Derivation, reasoned from this repo's own ADRs/design + V1's
 `case/REGULATORY_BOUNDARY_PACK.md` (real source, read this stage — "research anchors, not
 legal conclusions. Participants must determine applicability").
 **Status: reasoned classification, not a legal determination.** Per the boundary pack's own

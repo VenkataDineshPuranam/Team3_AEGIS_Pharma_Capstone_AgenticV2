@@ -1,21 +1,21 @@
-# ADR-007 — V3 is "degraded-mode-safe," not "offline-capable"
+# ADR-007 — V2 is "degraded-mode-safe," not "offline-capable"
 
 **Status:** `accepted` — sponsor confirmed cloud-connected operation is acceptable
 (EAB-2 closed). The reframing below is ratified, not assumed.
-**Evidence basis:** Fact (V2's `CLAUDE.md` requires "an offline deterministic mode and
+**Evidence basis:** Fact (V1's `CLAUDE.md` requires "an offline deterministic mode and
 AI-disabled continuity path"; ADR-001's stack introduces networked dependencies; sponsor
 decision on EAB-2).
 
 ## Context
 
-V2 was genuinely offline-capable: a static app with zero network dependency. V3's directed
+V1 was genuinely offline-capable: a static app with zero network dependency. V2's directed
 stack (ADR-001) includes an LLM provider, LangSmith, and Redis — two of them networked
 services. This is EAB-2 from `docs/product/discovery/evidence_acquisition_backlog.md`, and
-it is a real departure from a stated V2 non-negotiable, not a detail.
+it is a real departure from a stated V1 non-negotiable, not a detail.
 
 ## Decision
 
-V3 targets **degraded-mode-safe**, defined as: every hosted dependency has an explicit,
+V2 targets **degraded-mode-safe**, defined as: every hosted dependency has an explicit,
 documented fallback that preserves *correctness* even when it sacrifices *capability*.
 Specifically (from `docs/architecture/c4/boundary_and_degraded_mode.md`):
 
@@ -27,7 +27,7 @@ Specifically (from `docs/architecture/c4/boundary_and_degraded_mode.md`):
 | MCP tool server unreachable | Agent abstains and escalates to HITL; never proceeds on unretrieved evidence |
 | Policy Engine unreachable | **Fail closed** — refuse the request (ADR-005) |
 
-V2's "AI-disabled continuity path" requirement is satisfied by the LLM-unreachable row: the
+V1's "AI-disabled continuity path" requirement is satisfied by the LLM-unreachable row: the
 deterministic rules layer (evidence-authority gating per ADR-003, unit/identity checks) runs
 without any model call.
 
@@ -39,7 +39,7 @@ without any model call.
 
 ## Drivers
 
-Honesty about a real constraint change; preserving the *intent* behind V2's rule (the system
+Honesty about a real constraint change; preserving the *intent* behind V1's rule (the system
 must not become unusable or unsafe when a dependency fails).
 
 ## Consequences
@@ -47,7 +47,7 @@ must not become unusable or unsafe when a dependency fails).
 - **Easier:** each dependency's failure behavior is explicit and testable rather than
   assumed.
 - **Harder:** every fallback path needs its own test coverage (Stage 14).
-- **Riskier:** V3 genuinely cannot run air-gapped. If the sponsor requires true air-gap, the
+- **Riskier:** V2 genuinely cannot run air-gapped. If the sponsor requires true air-gap, the
   entire stack decision (ADR-001) reopens.
 
 ## Guardrails
@@ -72,6 +72,6 @@ reading this as a production design rather than discovered later.
 ## Revisit triggers
 
 If the deployment target changes to a GxP manufacturing network or any environment without
-outbound internet, this ADR and ADR-001 both reopen. The V2 non-negotiable that motivated
+outbound internet, this ADR and ADR-001 both reopen. The V1 non-negotiable that motivated
 the original tension ("AI-disabled continuity path") remains satisfied either way by the
 deterministic rules layer.

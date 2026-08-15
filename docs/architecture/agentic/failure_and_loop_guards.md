@@ -113,9 +113,9 @@ default-safe rule.
 
 **Verification note (PV).** The 24 h expiry is chosen on a *principle* — the system must never
 sit on the critical path of a regulatory reporting clock — not by deriving it from a specific
-clock. The actual expedited-reporting windows in scope must be **verified against V2's PV
+clock. The actual expedited-reporting windows in scope must be **verified against V1's PV
 material** (`knowledge/`, and whatever the PV reporting-clock fixtures encode) at Stage 13/14
-before this value is finalized. Per the ADR-002 standing rule, this document does not assert V2
+before this value is finalized. Per the ADR-002 standing rule, this document does not assert V1
 clock semantics it has not read. If a verified clock turns out to be shorter than 24 h for any
 case class, this expiry drops below it.
 
@@ -143,7 +143,7 @@ extends the ladder.
 |---|---|---|---|
 | **Batch Review** | EU Qualified Person | **Chief Quality Officer** | The CQO's stated authority is "quality-system policy and risk acceptance," which covers accepting the risk of releasing a reconciliation summary. It does **not** cover batch certification — and does not need to, because the system never certifies. **Manufacturing VP remains ineligible at every tier** |
 | **PV Intake** | Global Head of Pharmacovigilance | **Chief Medical Officer** | Stated authority: "clinical governance and escalation." The **Patient Safety Representative holds an advisory veto** — see below |
-| **Supply Planning** | Supply Chain VP **and** Quality co-approver | **Quality leg only:** EU QP → Chief Quality Officer. **Supply leg: no escalation** | V2's stakeholder pack names no escalation role above the Supply Chain VP. Rather than invent one, the supply leg simply cannot escalate and expires at T3 |
+| **Supply Planning** | Supply Chain VP **and** Quality co-approver | **Quality leg only:** EU QP → Chief Quality Officer. **Supply leg: no escalation** | V1's stakeholder pack names no escalation role above the Supply Chain VP. Rather than invent one, the supply leg simply cannot escalate and expires at T3 |
 
 **The Patient Safety Representative's advisory veto is not an approval path.** It may be
 registered at any tier and forces `hitl_status = rejected` immediately. It can never count

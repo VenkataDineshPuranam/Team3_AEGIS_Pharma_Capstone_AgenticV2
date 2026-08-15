@@ -61,9 +61,9 @@ Close the loop: audit the built system against **SCQA/PRD outcomes**, **feature 
 - Performance under expected load (vs NFRs in Prompt 08)  
 - Observability useful for failure explanation (avoid observability waste)
 
-### Agentic assurance (V3, required)
+### Agentic assurance (V2, required)
 
-- **Eval-AI-Cache harness results** — run the eval suite in `eval-ai-cache/` / `quality/gates/` against the built graph; report pass/fail per gate, referencing the release-gate categories carried from V2 (schema, fabrication, prohibited-action, security, subgroup, latency/cost).
+- **Eval-AI-Cache harness results** — run the eval suite in `eval-ai-cache/` / `quality/gates/` against the built graph; report pass/fail per gate, referencing the release-gate categories carried from V1 (schema, fabrication, prohibited-action, security, subgroup, latency/cost).
 - **LangSmith trace review** — sample agent-run traces: were tool calls authorized and idempotent, was the HITL interrupt actually exercised where the design required it, did any agent exceed its stated authority limit (Prompt 04 §10)?
 - **Threat-model verification** — confirm each threat in `security/threat-models/` has a corresponding test in `tests/security/` and record pass/fail (prompt injection, tool abuse, data exfiltration, cache poisoning).
 - **Governance gate check** — confirm `.claude/hooks/` guardrails actually fired in at least one recorded trace per governed workflow (not just documented as intended).

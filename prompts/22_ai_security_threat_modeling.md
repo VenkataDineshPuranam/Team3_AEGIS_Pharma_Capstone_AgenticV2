@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 18 (`stage-18-ai-security`)
 **Lifecycle stage:** Design + Verify (security)
-**Framework derived:** V3 addition, extending PROMPT_LIBRARY.md item 4 (threat-model a design) into a full stage; STRIDE-for-AI style.
+**Framework derived:** V2 addition, extending PROMPT_LIBRARY.md item 4 (threat-model a design) into a full stage; STRIDE-for-AI style.
 **Core question:** How could this multi-agent system be attacked or misused, and what stops it?
 **Prerequisites:** Prompt 14 (agent/graph design), Prompt 15 (tool contracts), Prompt 17 (knowledge graph/retrieval).
 
@@ -17,7 +17,7 @@
 
 ### Lean / DMAIC lens (full — security is a designated full-DMAIC stage alongside Discovery/Frame/DDD/C4/ADR)
 
-1. **Define** — which attack surface is new because this is multi-agent/tool-using (vs V2's single-shot app)?
+1. **Define** — which attack surface is new because this is multi-agent/tool-using (vs V1's single-shot app)?
 2. **Measure** — which threats have a negative test today vs none?
 3. **Analyze** — root cause per threat (missing input validation, over-broad tool authority, unbounded retrieval).
 4. **Improve** — the control that closes each gap.

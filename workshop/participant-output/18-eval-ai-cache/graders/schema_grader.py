@@ -2,7 +2,7 @@
 packages/contracts/tool_contracts/*.schema.json.
 
 Hand-rolled minimal validator (type / required / additionalProperties /
-enum / const), same choice V2 made in its own schema_grader.py ("reuses a
+enum / const), same choice V1 made in its own schema_grader.py ("reuses a
 hand-rolled validator... not a copy") -- avoids taking an unpinned
 `jsonschema` dependency in a repo with no packaging yet (Stage 20's job).
 Covers the subset our contracts actually use; not a general JSON Schema

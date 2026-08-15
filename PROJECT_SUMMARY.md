@@ -13,15 +13,15 @@
 
 ## 1. What this project is
 
-**Project AEGIS-PHARMA V3** — an agentic AI evolution of the V2 pharma FDE capstone.
-V2 delivered governed pharma decision-support as a **single-shot** app (one request in, one
-JSON-contracted response out, graded by a deterministic harness). V3 re-architects the same
+**Project AEGIS-PHARMA V2** — an agentic AI evolution of the V1 pharma FDE capstone.
+V1 delivered governed pharma decision-support as a **single-shot** app (one request in, one
+JSON-contracted response out, graded by a deterministic harness). V2 re-architects the same
 three governed workflows as a **governed, observable, multi-agent system**.
 
 **Repo:** `/Users/puranamdinesh/Documents/FDE/Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v3_claude_Agentic`
-**V2 (read-only reference, gitignored):** `./Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/`
+**V1 (read-only reference, gitignored):** `./Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/`
 
-### The three governed workflows (unchanged from V2, verbatim prohibitions)
+### The three governed workflows (unchanged from V1, verbatim prohibitions)
 
 | Workflow | Does | **Must NEVER do** |
 |---|---|---|
@@ -44,14 +44,14 @@ provenance · GxP/privacy boundaries enforced by the governance layer, **not by 
 
 Repo follows a `.claude`-based AI-Assisted SDLC scaffold: `.claude/ docs/ plans/ apps/
 services/ packages/ tests/ quality/ security/ infra/ deploy/ ops/ evidence/ templates/
-workshop/` + V2 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-cache/`).
+workshop/` + V1 carry-overs (`prompts/ knowledge/ evaluation/ runbooks/ eval-ai-cache/`).
 
 - **`SPEC_DRIVEN_DEVELOPMENT.md`** — method + full stage table (each stage's driving prompt)
 - **`STAGES.md`** — live status tracker
 - **`plans/active/EXECUTION_PLAN.md`** — delivery plan for stages 10–21: four waves, the
   **20a/20b split around Gate M** (measurement only exists once code runs), the 5 decisions
   that need a human, and local-first environment guidance
-- **`prompts/`** — 23 prompts: 01–13 adapted from V2, 14–23 new for V3-only concerns.
+- **`prompts/`** — 23 prompts: 01–13 adapted from V1, 14–23 new for V2-only concerns.
   `ADAPTATION_NOTES.md` records what changed and why.
 
 ### Git conventions (important)
@@ -101,7 +101,7 @@ state, per the user's explicit ordering (discovery → SCQA → DDD → C4 → A
 | ADR | Decision |
 |---|---|
 | **001** | Runtime stack: LangGraph (orchestration) + LangSmith (traces/evals) + Redis (cache) |
-| **002** | **V3 built fully separately from V2** — V2 is read-only evidence only, no code reuse |
+| **002** | **V2 built fully separately from V1** — V1 is read-only evidence only, no code reuse |
 | **003** | Evidence authority is a **deterministic status gate**; **`untrusted` AND `superseded` are both non-citable**. Content never self-declares authority (prompt-injection catch) |
 | **004** | Prohibited actions are **structurally unrepresentable** — 3 layers: aggregate schema has no such field, tool has no such method, runtime guard. Not a prompt instruction |
 | **005** | Governance/Policy Engine = **separate container**, **fails closed** |
@@ -111,11 +111,11 @@ state, per the user's explicit ordering (discovery → SCQA → DDD → C4 → A
 | **009** | **Azure** is the target platform (see §7) |
 
 ### ADR-003 origin — worth remembering
-Verifying V2's actual grader code (`submission/evaluation/graders/authority_grader.py`,
+Verifying V1's actual grader code (`submission/evaluation/graders/authority_grader.py`,
 66 lines) **found an error in our own DDD model**: it had claimed `superseded` docs could be
-cited with a flag; V2 defines `_MUST_NOT_CITE = {"untrusted", "superseded"}`. Corrected.
-**Standing rule since:** never claim V2 behavior from a filename inference — verify against
-V2 code/data.
+cited with a flag; V1 defines `_MUST_NOT_CITE = {"untrusted", "superseded"}`. Corrected.
+**Standing rule since:** never claim V1 behavior from a filename inference — verify against
+V1 code/data.
 
 ---
 
@@ -134,7 +134,7 @@ distinct prohibition sets at once.
 `allocated_quantity` field · PV output has no causality/seriousness/reportability field ·
 Supply tool has no allocation write method · zero write integrations to any brownfield system.
 
-### Named HITL approvers (EAB-3, closed — taken verbatim from V2's `case/STAKEHOLDER_PACK.md`)
+### Named HITL approvers (EAB-3, closed — taken verbatim from V1's `case/STAKEHOLDER_PACK.md`)
 
 | Workflow | Approver | Their stated authority |
 |---|---|---|
@@ -212,7 +212,7 @@ approve (adds a role, never replaces or auto-approves) and only proceeds if, che
 moment: an escalation role is named for the workflow, that role has a **live** authorization
 right now, the draft is still guard-clear, the policy version is still current, and the role's
 own authority covers the decision. Any failed condition ⇒ audit-logged skip, run stays with the
-primary on schedule. **Supply's planning leg has no escalation role at all** (V2's stakeholder
+primary on schedule. **Supply's planning leg has no escalation role at all** (V1's stakeholder
 pack names none above the Supply Chain VP — not invented here) and its dual approval survives
 escalation intact (both legs still required). PV's advisory veto (Patient Safety Rep) sits
 outside the ladder — registrable at any tier, never overridden.
@@ -254,7 +254,7 @@ system depend on a model correctly resisting a jailbreak exactly once, with no i
 check — precisely the H5 risk from Stage 01.
 
 Same operational-safety call as Stage 11's `mcp.json`: **`.claude/hooks.json` stays
-`hooks: {}`.** These bindings govern the *deployed* V3 runtime (Stage 20), not this coding
+`hooks: {}`.** These bindings govern the *deployed* V2 runtime (Stage 20), not this coding
 session — populating real PreToolUse/PostToolUse commands now, before the scripts exist, would
 make this repo's own Claude Code session try to run nonexistent hooks on every tool call.
 
@@ -268,16 +268,16 @@ would ask the model to rephrase a near-miss on the system's highest-severity con
 
 ## 6d. Ontology / Knowledge Graph (Stage 13, `docs/architecture/ontology/`)
 
-**NAB-3 half-resolved.** V2's `knowledge/` (32 policy docs) + `knowledge_catalog.csv` (the
+**NAB-3 half-resolved.** V1's `knowledge/` (32 policy docs) + `knowledge_catalog.csv` (the
 provenance/status/trust/supersession index) copied into this repo's own `knowledge/` and
-SHA-256-verified against the catalog's own hashes. V2's `data/`/`evaluation/` fixture half
+SHA-256-verified against the catalog's own hashes. V1's `data/`/`evaluation/` fixture half
 stays cross-repo, left for Stage 14 on the Overproduction argument (copying unused fixtures now
 would be waste). Reasoning: a gitignored, 983MB sibling directory isn't reproducible for anyone
 cloning only this repo, and this stage is the first that needs a stable source to build a KG
 schema against. Not a reopening of ADR-002 ("no code reuse") — this is domain reference data,
 not application code.
 
-**17 classes, 14 edge types, grounded against V2's actual CSV schemas** (`batches.csv`,
+**17 classes, 14 edge types, grounded against V1's actual CSV schemas** (`batches.csv`,
 `icsr_cases.csv`, `knowledge_catalog.csv`, etc.), not derived from DDD prose alone. Two findings
 surfaced only by checking real data:
 
@@ -286,7 +286,7 @@ surfaced only by checking real data:
    Stage 02, recorded honestly rather than silently patched. Consequence: the PV-Intake Agent's
    evidence scope needs an access-group check in addition to bounded-context scope — currently
    unmodeled in `langgraph_design.md` or the MCP contracts; assigned to Stage 16/20.
-2. **`Deviation` has no `batch_id` foreign key anywhere in V2's own relationship model.** The
+2. **`Deviation` has no `batch_id` foreign key anywhere in V1's own relationship model.** The
    deviation-to-batch link that `batch.reconcile` needs isn't a guaranteed structured join —
    Stage 20 will need a defined matching heuristic (site/date/product overlap), not a lookup.
 
@@ -311,13 +311,13 @@ from a document's prose claiming to supersede something.
 `eval-ai-cache/AI_FDE_Brownfield_Evals_Cursor_Runbook/` rather than re-deriving it (NAB-4/T-7)
 — gate-state vocabulary (`PASS`/`FAIL`/`REVIEW`/`NOT_APPLICABLE`/`NOT_OBSERVABLE`/
 `THRESHOLD_NOT_DEFINED`/`BLOCKED_BY_ENVIRONMENT`) and hard/threshold/operational gate taxonomy
-both taken from it directly. Grader **patterns** (not code — ADR-002) verified against V2's
+both taken from it directly. Grader **patterns** (not code — ADR-002) verified against V1's
 actual `submission/evaluation/graders/*.py` and `tool_gateway.py` first.
 
 **63 real scenarios, 15 categories (12 required + 3 agent-specific), executed this session —
 0 FAIL, 0 ERROR.** Honestly scoped: this is a design-pass run against synthetic fixtures shaped
 like our own contracts, since no `apps/`/`services/` code exists yet (Stage 20 last) — not a
-live-system run. 2 `NOT_APPLICABLE` (business outcome, human-rubric, matches V2's own
+live-system run. 2 `NOT_APPLICABLE` (business outcome, human-rubric, matches V1's own
 un-automated category), 1 `THRESHOLD_NOT_DEFINED` (cost-per-task cap — U1 still Unknown,
 refused to guess), 1 `BLOCKED_BY_ENVIRONMENT` (model-substitution check pending ADR-009's route
 decision). Verify with `python3 eval-ai-cache/graders/run_eval_dataset.py` or
@@ -325,7 +325,7 @@ decision). Verify with `python3 eval-ai-cache/graders/run_eval_dataset.py` or
 
 **The harness found 7 real defects in itself before it was trusted** (`scorecard.md` §2) —
 a schema-path doubling, a replay-counter that incorrectly incremented on plain replays
-(contradicting V2's own verified `tool_gateway.py` behavior), an adversarial fixture whose
+(contradicting V1's own verified `tool_gateway.py` behavior), an adversarial fixture whose
 "bad" branch the grader had no way to actually produce, and 3 more. All fixed; recorded rather
 than hidden behind the final green run, since a scorecard showing only the clean pass
 overstates first-try correctness.
@@ -344,7 +344,7 @@ grader, not just documentation. **Cache-correctness evals: 8 checks, all execute
 `K-007` (the real `BATCH_RELEASE_POLICY_OLD.md` supersession pair) after it transitions to
 `superseded` is caught, not served.
 
-**Release gates independently re-derived from our own ADRs**, not copied from V2's 10 gates
+**Release gates independently re-derived from our own ADRs**, not copied from V1's 10 gates
 (ADR-002) — traceability table maps every gate to its owning ADR/DDD invariant and grader.
 
 ## 6f. Performance Tuning (Stage 15, `docs/quality/performance/`, `infra/policies/`)
@@ -510,7 +510,7 @@ making real API calls even during `-m "not live"` filtered runs.
 
 ## 6k. Compliance (Stage 19, `docs/governance/compliance/`)
 
-**EU AI Act classification is reasoned, explicitly not a legal determination** — matches V2's
+**EU AI Act classification is reasoned, explicitly not a legal determination** — matches V1's
 own `REGULATORY_BOUNDARY_PACK.md` framing ("research anchors, not legal conclusions"), read this
 stage per the standing ADR-002 rule rather than inventing classification criteria. Points toward
 decision-support (not an Annex III-listed high-risk category), but whether it's a "safety
@@ -621,7 +621,7 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 | ID | Item | Blocks |
 |---|---|---|
 | NAB-2 | `plans/active/` empty while method doc says specs go there. Recommended fix: **correct the method doc** (prompts already are the spec; duplicating violates "nothing written twice") | Doc accuracy only |
-| NAB-3 | Copy V2's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? — **half-resolved**: `knowledge/` copied and SHA-256 verified (Stage 13), now also live-ingested into Neo4j (Stage 20a). `data/`/`evaluation/` fixtures still cross-repo | Stage 20b |
+| NAB-3 | Copy V1's `knowledge/` (32 docs) + `evaluation/` fixtures locally, or keep as cross-repo reference? — **half-resolved**: `knowledge/` copied and SHA-256 verified (Stage 13), now also live-ingested into Neo4j (Stage 20a). `data/`/`evaluation/` fixtures still cross-repo | Stage 20b |
 | **NAB-4 (partial)** | `eval-ai-cache/`'s OpenTelemetry Brownfield Runbook (`eval-ai-cache/*OpenTelemetry Brownfield Implementation Runbook.docx`) was **never actually cited or consumed** by Stage 17's `packages/observability/` docs, despite the stage's own prompt saying it should draw on it. Stages 14/15 did consume their respective parts of `eval-ai-cache/`; Stage 17 did not | Should be revisited before Stage 20b's real dashboards/alerting are built |
 | **P-07/P-09 closed, P-08 still open** | HITL timeout (P-07) and PV veto (P-09) now both have real evidence against a live graph (`test_assumption_3`, `test_veto_forces_rejected_and_is_never_overridden`, Stage 20b). Escalation (P-08, E1–E5 conditions) is still untested — never actually triggered, since no real HITL clock is wired for any workflow (durations are config values the graph doesn't yet enforce against wall-clock time) | Needs real clock wiring, not scoped to any stage yet |
 | **20a/20b results provisional** | Interim-assumption results (`interim_state_results.md`) and everything run through the app (6m) were run under Groq (dev-only), not Claude. Token-economics numbers are real but not the Route A numbers | Must re-run under `LLM_PROVIDER=anthropic` before Gate M can evaluate real evidence |
@@ -643,7 +643,7 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
    duplicate/clock semantics or Supply's option ranking. Each interim conclusion must be
    **re-checked per workflow**, not assumed to transfer (Stage 20 acceptance condition).
 2. **Shared blast radius** — one deployment serves all three graphs (ADR-008, accepted).
-3. **Vendor concentration** — now Microsoft *and* the model provider. V2's own source-system
+3. **Vendor concentration** — now Microsoft *and* the model provider. V1's own source-system
    pack flags "bundled vendor, weak cost controls" as a known org failure pattern.
 4. **Cache staleness under supersession** — a cache hit must never serve an answer built on
    since-superseded evidence (ADR-003 guardrail; Stage 14 cache-correctness evals).
@@ -664,4 +664,4 @@ until deployment. Stage 20 must not treat Azure as a prerequisite for writing/te
 - Mark artifact status honestly (`provisional` vs `stable`) rather than overclaiming.
 - **Flag disagreements and errors openly** — the ADR-003 correction is the precedent.
 - Record known limitations rather than papering over them (e.g. ADR-007's air-gap note).
-- Don't add scope without a stated requirement (V2 workflows D/E were explicitly rejected).
+- Don't add scope without a stated requirement (V1 workflows D/E were explicitly rejected).

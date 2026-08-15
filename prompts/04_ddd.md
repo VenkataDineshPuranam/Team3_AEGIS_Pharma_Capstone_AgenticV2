@@ -48,7 +48,7 @@ Work through these stages (adapt depth to evidence; do not skip governance stage
 
 8. **Separate rules from AI reasoning** — deterministic business logic vs probabilistic AI outputs; what AI must never decide alone.
 9. **Design RAG from DDD artefacts** — what is retrieved, from which artefacts/sources, and what is out of retrieval scope.
-10. **Design agent responsibilities** — tasks per agent; authority limits; stop conditions. **(V3, multi-agent):** name each agent explicitly (e.g. planner, retriever, domain-workflow agents A/B/C, critic/verifier), state which bounded context each agent is authoritative for, and note where agent-to-agent handoff crosses a context boundary (that crossing is where an anti-corruption layer or explicit contract is required — carry it into Prompt 08 and `docs/architecture/agentic/`).
+10. **Design agent responsibilities** — tasks per agent; authority limits; stop conditions. **(V2, multi-agent):** name each agent explicitly (e.g. planner, retriever, domain-workflow agents A/B/C, critic/verifier), state which bounded context each agent is authoritative for, and note where agent-to-agent handoff crosses a context boundary (that crossing is where an anti-corruption layer or explicit contract is required — carry it into Prompt 08 and `docs/architecture/agentic/`).
 11. **Define HITL & decision ownership** — when humans intervene; who owns the decision.
 12. **Design evidence & audit trail** — what must be recorded for transparency and review.
 13. **Define evaluation using DDD vocabulary** — domain-true success/failure cases and metrics (offline eval intent).

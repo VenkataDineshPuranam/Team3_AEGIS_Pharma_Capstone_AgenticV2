@@ -1,6 +1,6 @@
 # Retention Conflict Resolution — Stage 21 gap-closure (INJ-035, INJ-061)
 
-**Executes:** closes two V2-inherited injects that are the same underlying rule applied
+**Executes:** closes two V1-inherited injects that are the same underlying rule applied
 at two granularities:
 - **INJ-035** (D05, general): legal hold, GxP retention, and privacy deletion obligations
   pointing to different actions for the same record.

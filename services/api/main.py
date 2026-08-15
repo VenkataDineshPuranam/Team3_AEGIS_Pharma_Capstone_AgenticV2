@@ -449,7 +449,7 @@ def evals_scorecard():
 
 @app.get("/api/coverage/injects", response_model=InjectCoverage)
 def inject_coverage():
-    """The curated V2-inject-to-V3-reality coverage mapping. Read-only; there is no
+    """The curated V1-inject-to-V2-reality coverage mapping. Read-only; there is no
     endpoint that can write to this file."""
     try:
         return InjectCoverage(**eval_dashboard.inject_coverage())

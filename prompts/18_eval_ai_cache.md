@@ -2,7 +2,7 @@
 
 **Maps to:** STAGES.md Stage 14 (`stage-14-eval-ai-cache`)
 **Lifecycle stage:** Design + Build (quality infrastructure)
-**Framework derived:** V3 addition, drawing directly on the `eval-ai-cache/AI_FDE_Brownfield_Evals_Cursor_Runbook/` reference library (24-stage brownfield evals methodology) already seeded in this repo.
+**Framework derived:** V2 addition, drawing directly on the `eval-ai-cache/AI_FDE_Brownfield_Evals_Cursor_Runbook/` reference library (24-stage brownfield evals methodology) already seeded in this repo.
 **Core question:** How do we know an agent response is good enough to ship, and when is it safe to reuse a cached one?
 **Prerequisites:** Prompt 08 technical design (contracts), Prompt 14 (agent design), Prompt 15 (tool contracts).
 
@@ -10,8 +10,8 @@
 
 ## Produce
 
-1. **Eval dataset** — scenario suites covering the 12 required categories carried from V2's `evaluation/EVALUATION_PLAN.md` (business outcome, evidence fidelity/provenance, GxP/safety boundary, data integrity, retrieval authority/poisoning/injection, structured-output/abstention, PV duplicate/clock/terminology, agent/tool authorization/idempotency, privacy/cross-border, subgroup/accessibility, latency/cost, model substitution/regression) — extended with agent-specific cases (wrong handoff, loop-guard trip, unauthorized tool call).
-2. **Eval harness** — deterministic graders per category (reuse V2's `submission/evaluation/graders/` pattern as a starting point), release gates, and a LangSmith-backed regression suite.
+1. **Eval dataset** — scenario suites covering the 12 required categories carried from V1's `evaluation/EVALUATION_PLAN.md` (business outcome, evidence fidelity/provenance, GxP/safety boundary, data integrity, retrieval authority/poisoning/injection, structured-output/abstention, PV duplicate/clock/terminology, agent/tool authorization/idempotency, privacy/cross-border, subgroup/accessibility, latency/cost, model substitution/regression) — extended with agent-specific cases (wrong handoff, loop-guard trip, unauthorized tool call).
+2. **Eval harness** — deterministic graders per category (reuse V1's `submission/evaluation/graders/` pattern as a starting point), release gates, and a LangSmith-backed regression suite.
 3. **Cache design** — exact-match and semantic-cache strategy: cache key derivation, embedding model for semantic match, similarity threshold, TTL per workflow risk tier, and an explicit **do-not-cache list** (anything touching a prohibited-decision path, anything with stale-authorization risk).
 4. **Cache correctness evals** — tests proving a cache hit never serves a stale-authority or superseded-evidence answer (this is the failure mode unique to caching in a regulated domain).
 

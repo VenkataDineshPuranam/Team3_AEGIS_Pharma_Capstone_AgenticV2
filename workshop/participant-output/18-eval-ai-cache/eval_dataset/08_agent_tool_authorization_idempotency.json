@@ -1,6 +1,6 @@
 {
   "category": "agent_tool_authorization_idempotency",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #8 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #8 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/trajectory_grader.py:grade_trajectory / graders/security_grader.py:grade_security",
   "scenarios": [

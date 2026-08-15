@@ -1,6 +1,6 @@
 {
   "category": "data_integrity_audit_trail",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #4 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #4 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/audit_trail_grader.py:grade_audit_trail",
   "note": "Grounded in langgraph_design.md node 'finalize' (audit write mandatory before response returns) and memory_design.md SS3-4 (what must/must-not persist).",

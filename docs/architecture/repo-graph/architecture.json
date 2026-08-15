@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_for": "Project AEGIS-PHARMA V3 — governed agentic AI decision support",
+  "generated_for": "Project AEGIS-PHARMA V2 — governed agentic AI decision support",
   "generated_at": "2026-08-14",
   "source_branch": "stage-21-aegis-control-center",
   "description": "Machine-readable architecture graph of the repository: nodes (components), edges (real call/data relationships read from source), and flows (ordered end-to-end paths through the system). Built by reading the code, not from documentation.",

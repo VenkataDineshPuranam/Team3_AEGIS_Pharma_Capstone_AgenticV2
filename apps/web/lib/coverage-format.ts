@@ -35,8 +35,8 @@ export const COVERAGE_STATUS_BAR_CLASS: Record<CoverageStatus, string> = {
 export const COVERAGE_STATUS_MEANING: Record<CoverageStatus, string> = {
   COVERED: "A genuine, working control, test, or document addresses this exact scenario.",
   PARTIAL: "A related structural safeguard exists but does not fully address the specifics.",
-  OUT_OF_SCOPE: "V3 does not build this domain at all -- it was never going to be addressed by this system.",
-  NOT_COVERED: "Within V3's real scope, but nothing addresses it yet -- a genuine gap.",
+  OUT_OF_SCOPE: "V2 does not build this domain at all -- it was never going to be addressed by this system.",
+  NOT_COVERED: "Within V2's real scope, but nothing addresses it yet -- a genuine gap.",
 };
 
 export const COVERAGE_STATUS_ORDER: CoverageStatus[] = [

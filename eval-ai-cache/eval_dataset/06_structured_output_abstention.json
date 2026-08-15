@@ -1,6 +1,6 @@
 {
   "category": "structured_output_abstention",
-  "prompt_source": "evaluation/EVALUATION_PLAN.md #6 (V2, verified)",
+  "prompt_source": "evaluation/EVALUATION_PLAN.md #6 (V1, verified)",
   "grading_mode": "deterministic",
   "grader": "graders/schema_grader.py:grade_schema",
   "scenarios": [

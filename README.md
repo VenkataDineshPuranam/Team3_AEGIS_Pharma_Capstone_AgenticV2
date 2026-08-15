@@ -1,6 +1,6 @@
-# Project AEGIS-PHARMA — V3: Agentic AI
+# Project AEGIS-PHARMA — V2: Agentic AI
 
-V3 evolves the [V2 capstone](./Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/)
+V2 evolves the [V1 capstone](./Project_AEGIS_Pharma_AI_FDE_Capstone_Workshop_Ready_v2_claude/)
 from a document-driven FDE exercise into a governed, observable, multi-agent AI system —
 the **AEGIS Control Center** — covering six pharma workflows (GxP batch review,
 pharmacovigilance intake, supply-shortage planning, preclinical research review, clinical
@@ -9,7 +9,7 @@ trial integrity, regulatory submission completeness), built with **LangGraph**
 security, and compliance layers enforced server-side, not just documented.
 
 Process discovery, SCQA, DDD, C4, and ADR came first, then the app (Stage 20), then a
-real login layer and full gap closure across all 84 V2 tabletop-exercise scenarios
+real login layer and full gap closure across all 84 V1 tabletop-exercise scenarios
 (Stage 21–22). See:
 - [`SPEC_DRIVEN_DEVELOPMENT.md`](./SPEC_DRIVEN_DEVELOPMENT.md) — the method, full stage list, and git workflow
 - [`STAGES.md`](./STAGES.md) — live status tracker for every stage/branch
@@ -68,10 +68,10 @@ packages → stores/providers) — is at
 (86 components, 129 relationships, 14 flows), with its own JSON at
 [`architecture.json`](./docs/architecture/repo-graph/architecture.json).
 
-**Coverage:** every one of the V2 predecessor's 84 tabletop-exercise "inject" scenarios
-is mapped to a real, citable V3 artifact (test, fixture, structural guard, or governance
+**Coverage:** every one of the V1 predecessor's 84 tabletop-exercise "inject" scenarios
+is mapped to a real, citable V2 artifact (test, fixture, structural guard, or governance
 document) — see the in-app Evaluation & Security dashboard (`/coverage`) or
-`evidence/quality-gates/inject_coverage_v2_to_v3.json`.
+`evidence/quality-gates/inject_coverage_v1_to_v2.json`.
 
 ## Repository Pattern
 
@@ -96,12 +96,12 @@ platform-neutral, offline-compatible, workshop-deployable.
 | `templates/` | change-plan, requirement, adr, test-plan, threat-model, privacy-review, runbook, release-readiness, incident-record, ai-change-record |
 | `workshop/` | scenarios, labs, checkpoints, assessments, participant-output |
 
-**Carried forward / extended from V2:** `prompts/` (numbered lifecycle prompts),
+**Carried forward / extended from V1:** `prompts/` (numbered lifecycle prompts),
 `knowledge/` (domain knowledge base), `evaluation/` (public fixtures/contracts),
 `runbooks/` (participant runbooks), `eval-ai-cache/` (seeded brownfield evals +
 Redis + OpenTelemetry runbook library — the direct source material for Stage 14/15).
 
-## Non-negotiables (inherited from V2)
+## Non-negotiables (inherited from V1)
 - Synthetic data only; no real PHI/PII.
 - No agent makes a terminal safety/release/allocation decision — decision **support** only.
 - Every claim traceable to evidence (provenance required).

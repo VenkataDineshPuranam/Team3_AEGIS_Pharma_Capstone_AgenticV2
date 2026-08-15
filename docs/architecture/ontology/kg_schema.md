@@ -32,7 +32,7 @@ One node type per `ontology.md` class, plus the required properties. Every node 
 | `CMOCapacityWindow` | `(cmo, window)` composite | `capacity_batches`, `promised_ntg`, `promised_other_sponsor` | Supply Planning |
 | `AllocationConstraint` | `constraint` | `priority` | Supply Planning |
 
-**`patient_key_ref` and `logger_ref`, not `patient_key`/`logger`.** V2's raw `patient_key`
+**`patient_key_ref` and `logger_ref`, not `patient_key`/`logger`.** V1's raw `patient_key`
 column is a pseudonymization key, not a display value — the KG schema stores a *reference*,
 never the key itself, in line with `knowledge/PRIVACY_AND_PSEUDONYMISATION.md` (K-020). This is
 a schema-level decision this stage makes, not one carried forward from a prior document.
@@ -60,7 +60,7 @@ this document exists to satisfy ("every KG edge type has a stated provenance/aut
 | `constrains` | `AllocationConstraint` | synthesized `ShortageOption` | Not a stored edge — computed at query time by `supply.generate_options`; recorded here so the semantic layer's query contract (§3) has a name for it |
 
 **`declared_exception` vs. `required`-but-missing is a real distinction this schema must
-preserve.** V2's own `RELATIONSHIP_MODEL.csv` already makes this distinction (e.g.
+preserve.** V1's own `RELATIONSHIP_MODEL.csv` already makes this distinction (e.g.
 `sensitive_segments.csv,case_id,icsr_cases.csv,case_id,declared_exception,"PV-1020 is a
 deliberately absent restricted case stub"`). A KG ingestion process that treats every missing
 required edge as a data-quality defect would flag `PV-1020` incorrectly. The schema carries an
