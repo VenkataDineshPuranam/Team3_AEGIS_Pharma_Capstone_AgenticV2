@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evidenceAuthority, evidenceTone, formatAge, terminalStateTone } from "./format";
+import { evidenceAuthority, evidenceTone, formatAge, isHumanPrecedent, terminalStateTone } from "./format";
 
 describe("evidenceAuthority", () => {
   it("labels untrusted items UNTRUSTED regardless of the citable flag", () => {
@@ -22,6 +22,13 @@ describe("evidenceAuthority", () => {
 
   it("labels a draft, citable item DRAFT, not AUTHORITATIVE", () => {
     expect(evidenceAuthority("draft", true)).toBe("DRAFT");
+  });
+
+  it("keeps human precedent as DRAFT rather than a new authority state", () => {
+    expect(evidenceAuthority("draft", true)).toBe("DRAFT");
+    expect(isHumanPrecedent("human_precedent/R-prior.md")).toBe(true);
+    expect(isHumanPrecedent("SOP.md", "human_precedent")).toBe(true);
+    expect(isHumanPrecedent("SOP.md", "NovaCura Global Policy")).toBe(false);
   });
 
   it("never returns AUTHORITATIVE for a non-citable item", () => {

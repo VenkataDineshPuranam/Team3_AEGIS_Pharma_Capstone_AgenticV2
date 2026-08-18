@@ -287,3 +287,11 @@ export const EVIDENCE_AUTHORITY_MEANING: Record<EvidenceAuthority, string> = {
   SUPERSEDED: "Replaced by a newer document. Excluded from retrieval.",
   "NOT CITABLE": "Outside the citable status set enforced by evidence retrieval. No run can cite this.",
 };
+
+/** Status stays draft. This is an additional meaning, not a fifth authority state. */
+export const HUMAN_PRECEDENT_MEANING =
+  "A prior EU Qualified Person refusal of a similar gap pattern. Citable as a fact, not as a disposition.";
+
+export function isHumanPrecedent(source: string, authority?: string | null): boolean {
+  return source.startsWith("human_precedent/") || authority === "human_precedent";
+}

@@ -14,7 +14,7 @@ One node type per `ontology.md` class, plus the required properties. Every node 
 
 | Node type | Key property | Other properties | Bounded context |
 |---|---|---|---|
-| `EvidenceItem` | `evidence_id` | `source_file`, `authority`, `effective_date`, `status`, `trust`, `jurisdiction`, `supersedes_id`, `content_hash` | Evidence & Provenance |
+| `EvidenceItem` | `evidence_id` | `source_file`, `authority`, `effective_date`, `status`, `trust`, `jurisdiction`, `supersedes_id`, `content_hash`. Human-precedent nodes (ADR-010) additionally carry `finding_hash`, `finding_categories`, `source_run_id`, `source_workflow`, `action`, `content_excerpt` | Evidence & Provenance |
 | `Batch` | `batch_id` | `product_id`, `site`, `operational_status`, `manufacture_date` | Batch Review |
 | `MaterialGenealogyRecord` | `(batch_id, material_lot)` composite | `relation`, `source` | Batch Review |
 | `LabResult` | `result_id` | `batch_id`, `test`, `value`, `unit`, `spec`, `status` | Batch Review |

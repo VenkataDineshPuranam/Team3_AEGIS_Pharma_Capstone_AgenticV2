@@ -71,6 +71,13 @@ def get_run_evidence_ids(run_id: str) -> set[str]:
     return _run_evidence_registry.get(run_id, set())
 
 
+def register_run_evidence_ids(run_id: str, evidence_ids: list[str]) -> None:
+    """Record ids returned by a later retrieve in the same run (precedent.retrieve)."""
+    if not evidence_ids:
+        return
+    _run_evidence_registry.setdefault(run_id, set()).update(evidence_ids)
+
+
 _QUERY = """
 MATCH (e:EvidenceItem)
 WHERE e.status IN $citable_statuses

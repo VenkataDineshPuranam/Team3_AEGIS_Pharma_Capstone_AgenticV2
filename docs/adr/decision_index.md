@@ -11,10 +11,11 @@
 | [007](ADR-007-degraded-mode-safe-not-offline-capable.md) | Degraded-mode-safe, not offline-capable | `accepted` | Cross-cutting | All hosted dependencies | Fact (incl. sponsor decision on EAB-2) | No — closed |
 | [008](ADR-008-one-graph-per-workflow-single-deployment.md) | One deployment, one graph per workflow | `accepted` | All three core contexts | Orchestrator API | Derivation | No |
 | [009](ADR-009-azure-platform.md) | Azure is the target cloud platform | `accepted`, fully — LLM-hosting route confirmed **Route A** (Claude via Azure AI Foundry) | Cross-cutting | All hosted containers (Container Apps, Redis, Blob Storage, Key Vault, Entra ID) | Fact (sponsor directive; route confirmed by user ahead of Stage 20a) | No |
+| [010](ADR-010-human-precedent-as-evidence.md) | Cross-run human precedent is evidence, not agent memory | `accepted` | Batch Review + Evidence & Provenance | `precedent.retrieve`, Neo4j `EvidenceItem` | Derivation from `memory_design.md` §2 and ADR-003 | No |
 
 ## Status summary
 
-- **9 of 9 `accepted`**, no open sub-decisions. ADRs 005/006/008 were upgraded when
+- **10 of 10 `accepted`**, no open sub-decisions. ADRs 005/006/008 were upgraded when
   **EAB-3 closed** (DDD reached `stable`); ADR-007 was upgraded when **EAB-2 closed** (sponsor
   confirmed cloud-connected operation); ADR-009's LLM-hosting route was confirmed **Route A**
   ahead of Stage 20a. No ADR rests on an unconfirmed assumption. Trigger **T-6**

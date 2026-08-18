@@ -22,7 +22,8 @@ flowchart TD
     egate -->|insufficient, broaden once| retrieve
     egate -->|insufficient after broaden| abstain
     egate -->|sufficient| reconcile
-    reconcile[reconcile<br/>batch.reconcile, structured] --> synth
+    reconcile[reconcile<br/>batch.reconcile, structured] --> precedent
+    precedent[precedent_retrieve<br/>precedent.retrieve, similar-gap] --> synth
     synth[["synthesize (LLM)<br/>Batch-Review Agent"]] --> guard1
     guard1{prohibited_action_guard} -->|blocked| blocked[[ProhibitedActionBlocked<br/>quarantine draft, escalate]]
     guard1 -->|clear| critic
@@ -59,6 +60,7 @@ without sufficient, citable evidence.
 | 3 | `retrieve` | tool | `abstain` on tool unreachable (never proceed on an unretrieved-evidence guess) |
 | 4 | `evidence_gate` | deterministic | `abstain` on insufficiency; **halt + alert** if a non-citable item is present, because that means the retrieval-boundary filter failed and the run is untrustworthy |
 | 5 | `reconcile` | tool | `abstain` |
+| 5a | `precedent_retrieve` | tool | continue without precedents (never fail the run; ADR-010) |
 | 6 | `synthesize` | **LLM** | `abstain` on budget cap |
 | 7 | `prohibited_action_guard` | deterministic hook | `blocked` |
 | 8 | `critic_verify` | **LLM** | `abstain` on repeated no-progress |
@@ -67,7 +69,7 @@ without sufficient, citable evidence.
 | 11 | `finalize` | deterministic | — audit write is not optional; failure here fails the request |
 | 12 | `abstain` / `blocked` / `refuse` | terminal | — |
 
-Two LLM nodes. Nine deterministic ones. **That ratio is the design.**
+Two LLM nodes. Ten deterministic ones. **That ratio is the design.**
 
 ### Why the guard runs twice
 
@@ -87,6 +89,8 @@ Routing is a pure function of state — never a model decision (`agent_roster.md
 | `evidence_gate` | `any(e.status in {untrusted, superseded})` | `defect_halt` |
 | `evidence_gate` | `not sufficient and broadenings < 1` | `retrieve` (scope-preserving broadening only) |
 | `evidence_gate` | `not sufficient and broadenings >= 1` | `abstain` |
+| `reconcile` | success | `precedent_retrieve` |
+| `precedent_retrieve` | always (empty or STORE_UNAVAILABLE leaves evidence unchanged) | `synthesize` |
 | `guard` | `guard_verdict == blocked` | `blocked` |
 | `critic_verify` | `verdict == reject and reason_code == PROHIBITION_ADJACENT` | `blocked` — **checked first, unconditionally, before the two conditions below.** A prohibition-adjacent verdict is never a candidate for retry, even on its first occurrence (`failure_and_loop_guards.md` §4) |
 | `critic_verify` | `verdict == reject and reason_code not in prior_reasons and reason_code != PROHIBITION_ADJACENT and llm_calls < cap` | `synthesize` |

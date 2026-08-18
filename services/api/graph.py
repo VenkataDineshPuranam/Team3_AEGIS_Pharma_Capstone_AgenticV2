@@ -1,6 +1,7 @@
 """batch_review LangGraph -- Stage 20a Phase 4. Direct transcription of
 docs/architecture/agentic/langgraph_design.md SS1-2's mermaid diagram and edge table.
-11 nodes, 2 of them LLM (pluggable via `llm`, defaults to StubLLM -- see nodes/llm_interface.py).
+12 nodes, 2 of them LLM (pluggable via `llm`, defaults to StubLLM -- see nodes/llm_interface.py).
+`precedent_retrieve` sits after reconcile (ADR-010); it cannot skip HITL.
 
 Read the graph for what it refuses to do: there is no edge from `synthesize` to `finalize`.
 Generated text cannot reach a caller without passing the guard, the Critic, the guard again,
@@ -22,6 +23,9 @@ from infra.policies.denial_of_wallet_guardrail import DenialOfWalletGuard
 from services.integration import audit_store, evidence_gate, hitl_route, prohibited_action_guard, response_cache
 from services.integration.batch_reconcile import ToolError as ReconcileError, reconcile as tool_reconcile
 from services.integration.evidence_retrieve import ToolError as RetrieveError, retrieve as tool_retrieve
+from services.integration.precedent_mint import finding_categories, finding_hash, mint_rejection
+from services.integration.precedent_retrieve import ToolError as PrecedentRetrieveError
+from services.integration.precedent_retrieve import retrieve as tool_precedent_retrieve
 from services.integration.policy_engine import PolicyEngineUnavailable, get_prohibition_contract
 from services.api.nodes.llm_interface import LLMNodes, StubLLM
 
@@ -99,6 +103,26 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
         findings = tuple(ReconciliationFinding(**f) for f in result["findings"])
         payload = BatchPayload(batch_id=batch_id, reconciliation_complete=result["reconciliation_complete"], findings=findings)
         return {"domain_payload": payload, "tool_calls": state["tool_calls"] + 1}
+
+    def precedent_retrieve(state: GovernedState) -> dict:
+        # ADR-010: STORE_UNAVAILABLE or empty leaves evidence unchanged and never
+        # abstains the run. A cited precedent is not a disposition.
+        payload = state.get("domain_payload")
+        findings = payload.findings if payload is not None else ()
+        try:
+            result = tool_precedent_retrieve(
+                run_id=state["run_id"],
+                finding_categories=finding_categories(findings),
+                finding_hash=finding_hash(findings),
+                policy_contract_version=state["policy_contract_version"] or "",
+            )
+        except PrecedentRetrieveError:
+            return {}
+        items = [EvidenceItem(**item) for item in result["items"]]
+        updates: dict = {"tool_calls": state["tool_calls"] + 1}
+        if items:
+            updates["evidence"] = state["evidence"] + items
+        return updates
 
     def synthesize(state: GovernedState) -> dict:
         # Cache lookup, per redis_tuning.md SS2's pipeline placement: only a prior
@@ -199,6 +223,17 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
             action=decision.action, justification=decision.justification,
             recorded_at=datetime.now(UTC).isoformat(),
         )
+        # ADR-010: mint after the audit write. Failure is logged inside mint_rejection
+        # and must not change this return (the human decision already stands).
+        if decision.action == "rejected":
+            payload = state.get("domain_payload")
+            mint_rejection(
+                action=decision.action,
+                workflow=state["workflow"],
+                run_id=state["run_id"],
+                findings=payload.findings if payload is not None else (),
+                justification=decision.justification,
+            )
         return {"hitl_status": decision.action, "terminal_state": "completed"}
 
     def mark_blocked_prohibition_adjacent(state: GovernedState) -> dict:
@@ -241,6 +276,7 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     graph.add_node("retrieve", retrieve)
     graph.add_node("evidence_gate", evidence_gate_node)
     graph.add_node("reconcile", reconcile)
+    graph.add_node("precedent_retrieve", precedent_retrieve)
     graph.add_node("synthesize", synthesize)
     graph.add_node("guard1", guard)
     graph.add_node("guard2", guard2_with_cache_write)
@@ -279,9 +315,10 @@ def build_graph(llm: LLMNodes | None = None, batch_id: str = "B-001", checkpoint
     graph.add_conditional_edges("evidence_gate", route_after_gate, {"terminal": "finalize", "reconcile": "reconcile", "retrieve": "retrieve"})
     graph.add_conditional_edges(
         "reconcile",
-        lambda s: "abstain" if s.get("terminal_state") == "abstained" else "synthesize",
-        {"abstain": "finalize", "synthesize": "synthesize"},
+        lambda s: "abstain" if s.get("terminal_state") == "abstained" else "precedent",
+        {"abstain": "finalize", "precedent": "precedent_retrieve"},
     )
+    graph.add_edge("precedent_retrieve", "synthesize")
     graph.add_conditional_edges(
         "synthesize",
         lambda s: "degraded" if s.get("terminal_state") == "abstained" else "guard1",

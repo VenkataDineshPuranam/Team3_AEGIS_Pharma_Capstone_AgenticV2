@@ -49,7 +49,7 @@ system is implemented by a model.**
 | `policy_load` | Governance | Load the versioned policy contract. **Unreachable ⇒ refuse the request** (ADR-005, BC-3). Not a warning, not a cached-policy fallback |
 | `retrieve` | Evidence & Provenance | Invoke `evidence.retrieve`. The `untrusted`/`superseded` filter lives **inside the tool, at the retrieval boundary** (ADR-003, BC-2) — non-citable documents never reach the graph, let alone a context window |
 | `evidence_gate` | Evidence & Provenance | Assert the post-condition: zero non-citable items in state, evidence sufficient for the request. Insufficient ⇒ route to `abstain`, never to synthesis |
-| `reconcile` / `duplicate_check` / `generate_options` | Per core context | Structured, rule-based tool invocation. Produces the candidate set the agent is allowed to reason *within* |
+| `reconcile` / `precedent_retrieve` / `duplicate_check` / `generate_options` | Per core context | Structured, rule-based tool invocation. `precedent_retrieve` is batch_review only (ADR-010) and cannot skip HITL. |
 | `prohibited_action_guard` | Governance | Runtime hook on every state transition that produces or mutates output. Blocks and emits `ProhibitedActionBlocked` |
 | `hitl_route` | Governance | Resolve the approver role per `hitl_control_model.md` §2, including Supply's dual approval |
 | `hitl_interrupt` | Agent Orchestration | LangGraph durable interrupt; default-safe on timeout |

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/Badge";
 import type { EvidenceCatalogItem, EvidenceRef } from "@/lib/api";
-import { EVIDENCE_AUTHORITY_MEANING, evidenceAuthority, evidenceTone } from "@/lib/format";
+import { EVIDENCE_AUTHORITY_MEANING, evidenceAuthority, evidenceTone, HUMAN_PRECEDENT_MEANING, isHumanPrecedent } from "@/lib/format";
 
 /**
  * One evidence item.
@@ -59,6 +59,11 @@ export function EvidenceCard({
               <Badge tone={tone} size="xs" title={EVIDENCE_AUTHORITY_MEANING[authority]}>
                 {authority}
               </Badge>
+              {isHumanPrecedent(item.source, item.authority) && (
+                <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
+                  human precedent
+                </span>
+              )}
               {item.status !== "approved" && item.status !== authority.toLowerCase() && (
                 <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
                   status: {item.status}
@@ -82,6 +87,10 @@ export function EvidenceCard({
             </span>
           </button>
         </div>
+
+        {isHumanPrecedent(item.source, item.authority) && usable && (
+          <p className="mt-2 text-[12px] text-[var(--text-secondary)]">{HUMAN_PRECEDENT_MEANING}</p>
+        )}
 
         {/* The unmissable line. Present only when it is true. */}
         {!usable && (

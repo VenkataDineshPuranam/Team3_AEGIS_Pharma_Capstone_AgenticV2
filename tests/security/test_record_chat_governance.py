@@ -123,6 +123,29 @@ def test_next_steps_tell_an_eligible_approver_that_they_decide_not_the_system(pa
     assert "the system does not and will not" in text.lower()
 
 
+def test_record_card_counts_human_precedent_evidence():
+    run_id = "R-chat-hp"
+    pending_queue.add(
+        pending_queue.PendingEntry(
+            run_id=run_id, workflow="batch_review", subject_id="B-002",
+            requester_role="EU Qualified Person", approver_roles=["EU Qualified Person"],
+            required_legs=None, approved_legs=[],
+            draft_summary="Genealogy gap; a prior refusal exists for a similar pattern.",
+            draft_claims=[{"text": "Similar gap previously refused", "cites": ["HP-R-prior"]}],
+            evidence=[
+                {"evidence_id": "K-001", "status": "approved", "source": "SOP-12"},
+                {"evidence_id": "HP-R-prior", "status": "draft", "source": "human_precedent/R-prior.md"},
+            ],
+            domain_payload={"batch_id": "B-002", "findings": [{"category": "genealogy", "status": "gap"}]},
+        )
+    )
+    try:
+        card = record_chat.build_record_card(run_id, role="EU Qualified Person")
+        assert card["human_precedent_count"] == 1
+    finally:
+        pending_queue.remove(run_id)
+
+
 def test_a_role_that_cannot_decide_is_told_so_plainly(paused_run):
     card = record_chat.build_record_card(paused_run, role="Auditor")
     steps = record_chat.derive_next_steps(card, role="Auditor")

@@ -2,9 +2,9 @@
 kg_schema.md). One driver, read from env at call time (not import time) so tests can run
 without a live database until they actually need one.
 
-This module holds no query logic -- see kg/ingest.py (writes) and
-services/integration/evidence_retrieve.py (the only reader, per ADR-003/BC-2: filtering
-happens inside the tool, never as a caller-side post-filter).
+This module holds no query logic -- see kg/ingest.py (writes),
+services/integration/evidence_retrieve.py, and services/integration/precedent_retrieve.py
+(readers). ADR-003/BC-2: filtering happens inside the tool, never as a caller-side post-filter.
 """
 from __future__ import annotations
 

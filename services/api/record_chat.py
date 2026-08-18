@@ -161,6 +161,15 @@ def build_record_card(run_id: str, *, role: str) -> dict[str, Any]:
         # items are gone with the pending entry. Ids alone still let the answer cite.
         evidence_ids = list(audited["evidence_ids"])
 
+    human_precedent_count = sum(
+        1
+        for item in evidence
+        if str(item.get("evidence_id") or "").startswith("HP-")
+        or str(item.get("source") or "").startswith("human_precedent/")
+    )
+    if human_precedent_count == 0:
+        human_precedent_count = sum(1 for eid in evidence_ids if str(eid).startswith("HP-"))
+
     timer = None
     if pending is not None:
         computed = hitl_timer.compute(pending.created_at, pending.workflow)
@@ -186,6 +195,7 @@ def build_record_card(run_id: str, *, role: str) -> dict[str, Any]:
         "domain_payload": pending.domain_payload if pending else None,
         "evidence": evidence,
         "evidence_ids": evidence_ids,
+        "human_precedent_count": human_precedent_count,
         "terminal_state": (audited or {}).get("terminal_state"),
         "abstention_reason": (audited or {}).get("abstention_reason"),
         "hitl_status": (audited or {}).get("hitl_status"),

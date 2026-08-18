@@ -67,6 +67,18 @@ class StubLLM:
             else:
                 summary = f"Batch {payload.batch_id}: all reconciliation categories complete."
                 claims = (Claim(text="All categories complete per retrieved evidence.", cites=evidence_ids),)
+            precedent_ids = tuple(
+                e.evidence_id
+                for e in state["evidence"]
+                if e.source.startswith("human_precedent/") or e.evidence_id.startswith("HP-")
+            )
+            if precedent_ids:
+                claims = claims + (
+                    Claim(
+                        text="A prior EU Qualified Person refusal exists for a similar gap or conflict pattern.",
+                        cites=precedent_ids,
+                    ),
+                )
         elif isinstance(payload, PVPayload):
             if payload.duplicate_suspected:
                 candidate_ids = ", ".join(c.candidate_case_id for c in payload.candidates)

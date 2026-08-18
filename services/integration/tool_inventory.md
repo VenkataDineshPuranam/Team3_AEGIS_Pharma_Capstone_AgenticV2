@@ -41,8 +41,13 @@ redundancy, the same pattern `boundary_and_degraded_mode.md` uses for the write 
 | 5 | `pv-intake-tools/` | `pv.duplicate_check` | PV Intake | Read-only | PV-Intake Agent only |
 | 6 | `pv-intake-tools/` | `pv.normalize_terminology` | PV Intake | Read-only, suggestion-only output | PV-Intake Agent only |
 | 7 | `supply-planning-tools/` | `supply.generate_options` | Supply Planning | Read-only, **no allocation/reservation method exists in this contract** | Supply-Planning Agent only |
+| 8 | `batch-review-tools/` | `precedent.retrieve` | Batch Review | Read-only | Batch-Review Agent only |
 
-**Six server processes, seven tool operations.** Servers 1–3 share one JSON Schema
+`precedent.mint` is **not a tool**. It is a best-effort graph side-effect after a QP HITL
+rejection (ADR-010), invoked from `hitl_interrupt` after `write_human_override`. It has no
+agent-callable contract.
+
+**Six server processes, eight tool operations** (`precedent.retrieve` is the eighth, batch_review only). Servers 1–3 share one JSON Schema
 (`evidence_retrieve.schema.json`) with three independent bindings; servers 5–6 are combined
 into one process (`pv-intake-tools/`) because they operate on the same `PVCase` aggregate and
 splitting them into separate processes would add an Integration-waste hop with no
@@ -91,6 +96,7 @@ shape, defensible without measurement) now; a **budget** (from measured traffic)
 |---|---|---|---|
 | `evidence.retrieve` (any scope) | ≤ 2 calls/run (`failure_and_loop_guards.md` G3: 1 initial + 1 scope-preserving broadening) | `hash(query, evidence_snapshot_version, policy_contract_version)` | Same query against the same evidence snapshot must return the same result — required for safe retry after a timeout |
 | `batch.reconcile` | ≤ 1 call/run | `hash(evidence_ids[], policy_contract_version)` | Deterministic given the same evidence set |
+| `precedent.retrieve` | ≤ 1 call/run | `hash(finding_hash, finding_categories, policy_contract_version)` | Similar-gap query after reconcile; empty set is valid; STORE_UNAVAILABLE must not fail the run |
 | `pv.duplicate_check` | ≤ 1 call/run | `hash(case_id, comparison_window_version)` | Must complete before `SignalTriaged` (DDD §7 hard ordering) |
 | `pv.normalize_terminology` | ≤ 1 call/run | `hash(source_text, terminology_table_version)` | Pure function of input + a versioned table |
 | `supply.generate_options` | ≤ 1 call/run | `hash(constraint_set, inventory_snapshot_version)` | Must be re-run, not replayed, if the inventory snapshot has moved — see §6 |

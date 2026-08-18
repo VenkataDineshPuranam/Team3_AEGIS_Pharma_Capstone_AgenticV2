@@ -43,7 +43,9 @@ remembering something is not.
 
 **Revisit trigger:** if Stage 15 shows repeat-request cost is material, the answer is cache
 tuning (ADR-003 guardrail applies), **not** introducing agent memory. Reopening this would
-require an ADR.
+require an ADR. **ADR-010** is that ADR: it does not add agent memory. It mints a citable
+`EvidenceItem` (`authority=human_precedent`) from a QP **rejection** only, retrieved by
+`precedent.retrieve` after reconcile. Approvals remain audit-only. HITL is unchanged.
 
 ## 3. What persists, precisely
 

@@ -31,7 +31,8 @@ class ToolManifestViolation(Exception):
 
 
 def _hash_file(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # Content hash, not checkout hash: CRLF vs LF must not look like a contract change.
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def load_manifest() -> dict:

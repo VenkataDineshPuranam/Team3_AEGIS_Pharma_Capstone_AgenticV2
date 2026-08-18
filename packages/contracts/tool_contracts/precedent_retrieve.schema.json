@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegis-pharma.internal/contracts/tool/precedent.retrieve",
+  "title": "precedent.retrieve",
+  "description": "Read-only retrieval of prior EU Qualified Person batch_review rejections whose finding shape overlaps this run's reconcile output. Called after batch.reconcile, never before. Does not retrieve PV or Supply precedents (ADR-008, ADR-010).",
+  "contract_version": "1.0.0",
+  "owning_context": "Batch Review",
+  "read_only": true,
+  "authorization_requirement": "Caller must present a batch_review graph-run credential. No PV or Supply run may hold this credential (ADR-008).",
+  "rate_limit": {
+    "per_run_ceiling": 1,
+    "server_ceiling_per_minute": 60
+  },
+  "idempotency": {
+    "guarantee": "Deterministic given the same finding_hash / finding_categories against the same evidence snapshot.",
+    "key": "hash(finding_hash, finding_categories, policy_contract_version)"
+  },
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["run_id", "finding_categories", "finding_hash", "policy_contract_version"],
+    "properties": {
+      "run_id": { "type": "string" },
+      "finding_categories": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "gap/conflict categories from this run's BatchPayload.findings. Empty means no similar-gap query; the tool returns zero items."
+      },
+      "finding_hash": {
+        "type": "string",
+        "description": "SHA-256 of sorted (category, status) pairs for gap/conflict findings. Empty string when there are none."
+      },
+      "policy_contract_version": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["items", "tool_accounting"],
+    "properties": {
+      "items": {
+        "type": "array",
+        "description": "Already ADR-003 filtered. status is only approved or draft. Empty is valid.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evidence_id", "source", "status", "effective_date"],
+          "properties": {
+            "evidence_id": { "type": "string" },
+            "source": { "type": "string" },
+            "status": { "type": "string", "enum": ["approved", "draft"] },
+            "effective_date": { "type": "string", "format": "date" },
+            "jurisdiction": { "type": ["string", "null"] },
+            "supersedes": { "type": ["string", "null"] },
+            "content_excerpt": { "type": "string" }
+          }
+        }
+      },
+      "tool_accounting": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["latency_ms"],
+        "properties": { "latency_ms": { "type": "integer", "minimum": 0 } }
+      }
+    }
+  },
+  "what_this_schema_cannot_express": [
+    "release_recommended", "reject_recommended", "auto_approved", "disposition",
+    "A write method, a mint method, a cross-workflow retrieve, or a field that treats a prior approval as authority."
+  ],
+  "errors": [
+    { "code": "POLICY_VERSION_MISMATCH", "meaning": "Missing required input fields or stale policy version.", "graph_response": "continue without precedents — never fail the run" },
+    { "code": "STORE_UNAVAILABLE", "meaning": "Neo4j unreachable.", "graph_response": "continue without precedents — never fail the run" },
+    { "code": "RATE_LIMITED", "meaning": "A second call in the same run_id.", "graph_response": "continue without precedents" }
+  ]
+}

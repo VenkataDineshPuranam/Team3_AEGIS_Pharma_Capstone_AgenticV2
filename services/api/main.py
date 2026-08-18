@@ -112,9 +112,20 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="AEGIS Pharma AI -- Orchestrator API", lifespan=_lifespan)
 
+# Default UI is :3000; Next.js falls back to :3001/:3002 when lower ports are taken.
+# A missing origin here surfaces in the browser as "Could not reach the Orchestrator API."
+_web_origin = os.environ.get("WEB_ORIGIN", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("WEB_ORIGIN", "http://localhost:3000")],
+    allow_origins=list(dict.fromkeys([
+        _web_origin,
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+    ])),
     allow_methods=["*"],
     allow_headers=["*"],
 )
